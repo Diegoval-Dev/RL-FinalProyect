@@ -104,7 +104,7 @@ Cada tarea es una unidad de trabajo con agente: una rama, un PR, sus pruebas. El
 
 ## Estado
 
-- [ ] F1-T01 Esqueleto del repositorio
+- [x] F1-T01 Esqueleto del repositorio
 - [ ] F1-T02 Laboratorio Docker y `vulnapp`
 - [ ] F1-T03 Base de datos instrumentada
 - [ ] F1-T04 Oráculo
@@ -124,4 +124,6 @@ Cada tarea es una unidad de trabajo con agente: una rama, un PR, sus pruebas. El
 
 Problemas encontrados fuera del alcance de la tarea en curso, decisiones pendientes o recortes. Formato: `fecha · tarea · hallazgo · acción`.
 
-_(vacío)_
+- 2026-10-18 · F1-T01 · `docs/` y un `CLAUDE.md` duplicado vivían dentro de `wafarena/`, que es el nombre del paquete · se movió `docs/` a la raíz y se borraron los duplicados.
+- 2026-10-18 · F1-T01 · CI en GitHub Actions sin verificar: el repo aún no tiene remote · confirmar en verde al subir la rama.
+- 2026-10-18 · F1-T01 · `ruff` excluye `docs/` para no formatear los bloques de código de los `.md`.
