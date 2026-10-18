@@ -105,7 +105,7 @@ Cada tarea es una unidad de trabajo con agente: una rama, un PR, sus pruebas. El
 ## Estado
 
 - [x] F1-T01 Esqueleto del repositorio
-- [ ] F1-T02 Laboratorio Docker y `vulnapp`
+- [x] F1-T02 Laboratorio Docker y `vulnapp`
 - [ ] F1-T03 Base de datos instrumentada
 - [ ] F1-T04 Oráculo
 - [ ] F1-T05 ModSecurity PL1–PL4
@@ -127,3 +127,8 @@ Problemas encontrados fuera del alcance de la tarea en curso, decisiones pendien
 - 2026-10-18 · F1-T01 · `docs/` y un `CLAUDE.md` duplicado vivían dentro de `wafarena/`, que es el nombre del paquete · se movió `docs/` a la raíz y se borraron los duplicados.
 - 2026-10-18 · F1-T01 · CI en GitHub Actions sin verificar: el repo aún no tiene remote · confirmar en verde al subir la rama.
 - 2026-10-18 · F1-T01 · `ruff` excluye `docs/` para no formatear los bloques de código de los `.md`.
+- 2026-10-18 · F1-T02 · `internal: true` impide publicar puertos al host · `make test-lab` corre las pruebas dentro de un contenedor `runner` en la red interna; solo `test_isolation.py` corre en el host (usa la CLI de docker). El modo rápido de F1-T11 y el smoke de F1-T14 deberán correr también en `runner`.
+- 2026-10-18 · F1-T02 · `lab/db/init.sql` incluye ya el esquema mínimo (products con `hidden`, users, orders, comments, cart_items) · F1-T03 lo extiende con canarios, `oracle_log` y roles.
+- 2026-10-18 · F1-T02 · Los payloads de referencia viven en `lab/vulnapp/vulnapp/reference.py` (no en JSON) y `ENDPOINTS.md` se genera con `make endpoints-doc` · F1-T04 los importa directamente.
+- 2026-10-18 · F1-T02 · El carrito usa el usuario fijo 2 (sin sesiones reales en `vulnapp`) · el `X-Session-ID` solo lo usa el proxy.
+- 2026-10-18 · F1-T02 · Las dependencias de `runner` y `vulnapp` se instalan al construir la imagen (la red interna no tiene internet) · tras cambiar `pyproject.toml`, `make lab-up` reconstruye.
