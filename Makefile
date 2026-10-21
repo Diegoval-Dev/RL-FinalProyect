@@ -1,4 +1,4 @@
-.PHONY: setup lint test test-lab lab-up lab-down smoke run verify-splits endpoints-doc modsec-baseline
+.PHONY: setup lint test test-lab lab-up lab-down smoke run verify-splits build-splits endpoints-doc modsec-baseline
 
 COMPOSE = docker compose -f lab/docker-compose.yml
 
@@ -40,7 +40,10 @@ smoke:
 	$(call not_implemented,smoke,F1-T14)
 
 verify-splits:
-	$(call not_implemented,verify-splits,F1-T13)
+	uv run python scripts/verify_splits.py
+
+build-splits:
+	VERIFIED_COMMIT=$$(git rev-parse --short HEAD) uv run python scripts/build_splits.py
 
 run:
 	$(call not_implemented,run,F2)

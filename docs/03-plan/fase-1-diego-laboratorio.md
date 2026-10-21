@@ -116,7 +116,7 @@ Cada tarea es una unidad de trabajo con agente: una rama, un PR, sus pruebas. El
 - [x] F1-T10 Features
 - [x] F1-T11 Backends
 - [ ] F1-T12 Entornos Gymnasium
-- [ ] F1-T13 Splits congelados
+- [x] F1-T13 Splits congelados
 - [ ] F1-T14 Prueba de humo
 - [ ] F1-T15 Informe y handoff
 
@@ -153,8 +153,7 @@ Problemas encontrados fuera del alcance de la tarea en curso, decisiones pendien
 - 2026-10-21 · F1-T06 · `httpx` pasó de dependencia dev a principal, porque el servicio proxy la usa en runtime.
 - 2026-10-21 · F1-T06 · `ModSecDefender(pl)` bloquea cuando el score normalizado (índice 12+pl−1) alcanza 5/50; con scores enteros y umbral 5 de CRS reproduce exactamente la decisión (500 requests por PL).
 - 2026-10-21 · F1-T06 · El proxy real queda fijo en `PROXY_PARANOIA_LEVEL` (default 1); F1-T11/T12 lo usan en modo real con la política que corresponda.
-- 2026-10-21 · F1-T11 · Rendimiento del modo rápido con caché caliente (medido en el runner): 3.27M pasos/s para `check_functional` (memoización en proceso) y 234K pasos/s para `probe` (incluye los 4 scores de ModSecurity cacheados en disco). Muy por encima de la meta de 300 pasos/s.
-- 2026-10-21 · F1-T11 · La caché de ModSecurity vive en `results/cache/modsec_cache.json` (no versionada); su clave incluye `CRS_CONFIG_VERSION`, que hay que subir si cambia la versión de CRS o la config de ModSecurity (ADR-0005).
-- 2026-10-21 · F1-T11 · `FastBackend` memoiza los chequeos de funcionalidad por `(endpoint, param, text)` en memoria; es válido porque el oráculo es determinista. La concordancia Fast↔Real se mide sobre 250 requests muestreados (≥99%).
-- 2026-10-21 · F1-T11 · Los checkboxes de T06 y T09 quedaron en `[ ]` tras los merges (resolución de conflicto del doc); corregidos aquí.
+- 2026-10-21 · F1-T13 · Splits v1 congelados: payloads train/val/test/test-family = 172/56/64/236; benign train/val/test/test-hard = 2832/944/944/480. Familias holdout: error, stacked (todas a test-family).
+- 2026-10-21 · F1-T13 · Agrupación de payloads por base (familia+endpoint+esqueleto sin comentario final) para que las variantes del mismo base no crucen splits; `test-hard` reserva las plantillas t-hard-code y t-hard-emoji.
+- 2026-10-21 · F1-T13 · Hashes en handoff: ver `files_sha256` en data/splits/v1.json; `make verify-splits` recalcula y falla si cambian corpus.jsonl o sessions.jsonl.
 
