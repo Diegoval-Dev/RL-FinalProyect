@@ -4,6 +4,9 @@ networks:
   lab:
     internal: true
 
+volumes:
+  modsec-audit:
+
 services:
   db:
     image: postgres:16
@@ -46,6 +49,102 @@ services:
       retries: 30
     networks: [lab]
 
+  audit-init:
+    image: python:3.11-slim
+    command: ["sh", "-c", "chmod 0777 /var/log/modsec-audit"]
+    user: root
+    volumes:
+      - modsec-audit:/var/log/modsec-audit
+    networks: [lab]
+
+  modsec-pl1:
+    image: owasp/modsecurity-crs:nginx
+    environment:
+      BACKEND: http://vulnapp:8000
+      PORT: 8080
+      BLOCKING_PARANOIA: 1
+      DETECTION_PARANOIA: 1
+      MODSEC_RULE_ENGINE: "On"
+      MODSEC_AUDIT_ENGINE: "On"
+      MODSEC_AUDIT_LOG_FORMAT: JSON
+      MODSEC_AUDIT_LOG_TYPE: Serial
+      MODSEC_AUDIT_LOG: /var/log/modsec-audit/pl1.json
+      MODSEC_AUDIT_LOG_PARTS: ABIJDEFHZ
+    volumes:
+      - modsec-audit:/var/log/modsec-audit
+    depends_on:
+      vulnapp:
+        condition: service_healthy
+      audit-init:
+        condition: service_completed_successfully
+    networks: [lab]
+
+  modsec-pl2:
+    image: owasp/modsecurity-crs:nginx
+    environment:
+      BACKEND: http://vulnapp:8000
+      PORT: 8080
+      BLOCKING_PARANOIA: 2
+      DETECTION_PARANOIA: 2
+      MODSEC_RULE_ENGINE: "On"
+      MODSEC_AUDIT_ENGINE: "On"
+      MODSEC_AUDIT_LOG_FORMAT: JSON
+      MODSEC_AUDIT_LOG_TYPE: Serial
+      MODSEC_AUDIT_LOG: /var/log/modsec-audit/pl2.json
+      MODSEC_AUDIT_LOG_PARTS: ABIJDEFHZ
+    volumes:
+      - modsec-audit:/var/log/modsec-audit
+    depends_on:
+      vulnapp:
+        condition: service_healthy
+      audit-init:
+        condition: service_completed_successfully
+    networks: [lab]
+
+  modsec-pl3:
+    image: owasp/modsecurity-crs:nginx
+    environment:
+      BACKEND: http://vulnapp:8000
+      PORT: 8080
+      BLOCKING_PARANOIA: 3
+      DETECTION_PARANOIA: 3
+      MODSEC_RULE_ENGINE: "On"
+      MODSEC_AUDIT_ENGINE: "On"
+      MODSEC_AUDIT_LOG_FORMAT: JSON
+      MODSEC_AUDIT_LOG_TYPE: Serial
+      MODSEC_AUDIT_LOG: /var/log/modsec-audit/pl3.json
+      MODSEC_AUDIT_LOG_PARTS: ABIJDEFHZ
+    volumes:
+      - modsec-audit:/var/log/modsec-audit
+    depends_on:
+      vulnapp:
+        condition: service_healthy
+      audit-init:
+        condition: service_completed_successfully
+    networks: [lab]
+
+  modsec-pl4:
+    image: owasp/modsecurity-crs:nginx
+    environment:
+      BACKEND: http://vulnapp:8000
+      PORT: 8080
+      BLOCKING_PARANOIA: 4
+      DETECTION_PARANOIA: 4
+      MODSEC_RULE_ENGINE: "On"
+      MODSEC_AUDIT_ENGINE: "On"
+      MODSEC_AUDIT_LOG_FORMAT: JSON
+      MODSEC_AUDIT_LOG_TYPE: Serial
+      MODSEC_AUDIT_LOG: /var/log/modsec-audit/pl4.json
+      MODSEC_AUDIT_LOG_PARTS: ABIJDEFHZ
+    volumes:
+      - modsec-audit:/var/log/modsec-audit
+    depends_on:
+      vulnapp:
+        condition: service_healthy
+      audit-init:
+        condition: service_completed_successfully
+    networks: [lab]
+
   runner:
     build:
       context: ..
@@ -58,9 +157,15 @@ services:
       APP_DATABASE_URL: postgresql://app:lab-app-password@db:5432/wafarena
       LOGGER_DATABASE_URL: postgresql://logger:lab-logger-password@db:5432/wafarena
       ORACLE_DATABASE_URL: postgresql://oracle:lab-oracle-password@db:5432/wafarena
+      MODSEC_AUDIT_DIR: /var/log/modsec-audit
     volumes:
       - ..:/workspace
+      - modsec-audit:/var/log/modsec-audit
     depends_on:
       vulnapp:
         condition: service_healthy
+      modsec-pl1:
+        condition: service_started
+      modsec-pl4:
+        condition: service_started
     networks: [lab]
