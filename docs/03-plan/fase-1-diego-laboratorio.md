@@ -109,12 +109,12 @@ Cada tarea es una unidad de trabajo con agente: una rama, un PR, sus pruebas. El
 - [x] F1-T03 Base de datos instrumentada
 - [x] F1-T04 Oráculo
 - [x] F1-T05 ModSecurity PL1–PL4
-- [ ] F1-T06 Proxy defensor y honeypot
+- [x] F1-T06 Proxy defensor y honeypot
 - [x] F1-T07 Corpus de payloads
 - [x] F1-T08 Operadores de mutación
-- [ ] F1-T09 Tráfico benigno
+- [x] F1-T09 Tráfico benigno
 - [x] F1-T10 Features
-- [ ] F1-T11 Backends
+- [x] F1-T11 Backends
 - [ ] F1-T12 Entornos Gymnasium
 - [ ] F1-T13 Splits congelados
 - [ ] F1-T14 Prueba de humo
@@ -153,4 +153,8 @@ Problemas encontrados fuera del alcance de la tarea en curso, decisiones pendien
 - 2026-10-21 · F1-T06 · `httpx` pasó de dependencia dev a principal, porque el servicio proxy la usa en runtime.
 - 2026-10-21 · F1-T06 · `ModSecDefender(pl)` bloquea cuando el score normalizado (índice 12+pl−1) alcanza 5/50; con scores enteros y umbral 5 de CRS reproduce exactamente la decisión (500 requests por PL).
 - 2026-10-21 · F1-T06 · El proxy real queda fijo en `PROXY_PARANOIA_LEVEL` (default 1); F1-T11/T12 lo usan en modo real con la política que corresponda.
+- 2026-10-21 · F1-T11 · Rendimiento del modo rápido con caché caliente (medido en el runner): 3.27M pasos/s para `check_functional` (memoización en proceso) y 234K pasos/s para `probe` (incluye los 4 scores de ModSecurity cacheados en disco). Muy por encima de la meta de 300 pasos/s.
+- 2026-10-21 · F1-T11 · La caché de ModSecurity vive en `results/cache/modsec_cache.json` (no versionada); su clave incluye `CRS_CONFIG_VERSION`, que hay que subir si cambia la versión de CRS o la config de ModSecurity (ADR-0005).
+- 2026-10-21 · F1-T11 · `FastBackend` memoiza los chequeos de funcionalidad por `(endpoint, param, text)` en memoria; es válido porque el oráculo es determinista. La concordancia Fast↔Real se mide sobre 250 requests muestreados (≥99%).
+- 2026-10-21 · F1-T11 · Los checkboxes de T06 y T09 quedaron en `[ ]` tras los merges (resolución de conflicto del doc); corregidos aquí.
 
