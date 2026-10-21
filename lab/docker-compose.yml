@@ -11,8 +11,11 @@ services:
       POSTGRES_DB: wafarena
       POSTGRES_USER: wafarena
       POSTGRES_PASSWORD: lab-only-password
+      APP_DB_PASSWORD: lab-app-password
+      LOGGER_DB_PASSWORD: lab-logger-password
     volumes:
-      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - ./db/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+      - ./db/02-roles-and-canaries.sh:/docker-entrypoint-initdb.d/02-roles-and-canaries.sh:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U wafarena -d wafarena"]
       interval: 2s
@@ -26,7 +29,8 @@ services:
       dockerfile: lab/Dockerfile
       target: vulnapp
     environment:
-      DATABASE_URL: postgresql://wafarena:lab-only-password@db:5432/wafarena
+      APP_DATABASE_URL: postgresql://app:lab-app-password@db:5432/wafarena
+      LOGGER_DATABASE_URL: postgresql://logger:lab-logger-password@db:5432/wafarena
     depends_on:
       db:
         condition: service_healthy
@@ -48,8 +52,10 @@ services:
       target: runner
     profiles: [tools]
     environment:
-      DATABASE_URL: postgresql://wafarena:lab-only-password@db:5432/wafarena
       VULNAPP_URL: http://vulnapp:8000
+      ADMIN_DATABASE_URL: postgresql://wafarena:lab-only-password@db:5432/wafarena
+      APP_DATABASE_URL: postgresql://app:lab-app-password@db:5432/wafarena
+      LOGGER_DATABASE_URL: postgresql://logger:lab-logger-password@db:5432/wafarena
     volumes:
       - ..:/workspace
     depends_on:

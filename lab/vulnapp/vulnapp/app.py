@@ -1,4 +1,5 @@
 import re
+import uuid
 from collections.abc import Callable
 
 from fastapi import FastAPI, HTTPException, Request
@@ -6,11 +7,13 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from starlette.concurrency import run_in_threadpool
 
-from vulnapp.db import PostgresRunner, QueryOutcome
+from vulnapp.db import OracleLog, PostgresRunner, QueryOutcome, QueryRecord
 from vulnapp.queries import ENDPOINTS, EndpointSpec, build_sql
 
 QueryRunner = Callable[..., QueryOutcome]
+QueryRecorder = Callable[[QueryRecord], None]
 
+REQUEST_ID_HEADER = "X-Request-ID"
 FEATURED_PRODUCTS_SQL = (
     "SELECT id, name, price FROM products WHERE hidden = false ORDER BY id LIMIT 3"
 )
@@ -21,6 +24,25 @@ CART_SQL = (
 )
 CART_OWNER_ID = 2
 INTEGER_PATTERN = re.compile(r"^\d{1,9}$")
+
+
+class QueryExecutor:
+    """Runs each query and records it; oracle_log is built from these records."""
+
+    def __init__(self, runner: QueryRunner, recorder: QueryRecorder):
+        self._runner = runner
+        self._recorder = recorder
+
+    async def run(
+        self, request_id: str, endpoint: str, sql: str, params: tuple | None = None
+    ) -> QueryOutcome:
+        outcome = await run_in_threadpool(self._runner, sql, params)
+        await run_in_threadpool(self._recorder, QueryRecord(request_id, endpoint, sql, outcome))
+        return outcome
+
+
+def request_id_of(request: Request) -> str:
+    return request.headers.get(REQUEST_ID_HEADER) or uuid.uuid4().hex
 
 
 def outcome_response(outcome: QueryOutcome) -> JSONResponse:
@@ -48,10 +70,10 @@ async def read_values(request: Request, spec: EndpointSpec) -> dict[str, str]:
     return {param: str(raw[param]) for param in spec.params}
 
 
-def register_vulnerable_endpoint(app: FastAPI, spec: EndpointSpec, runner: QueryRunner) -> None:
+def register_vulnerable_endpoint(app: FastAPI, spec: EndpointSpec, executor: QueryExecutor) -> None:
     async def handle(request: Request) -> JSONResponse:
         values = await read_values(request, spec)
-        outcome = await run_in_threadpool(runner, build_sql(spec, values))
+        outcome = await executor.run(request_id_of(request), spec.name, build_sql(spec, values))
         if spec.returns_rows or outcome.error is not None:
             return outcome_response(outcome)
         return JSONResponse({"ok": True})
@@ -65,10 +87,10 @@ def parse_identifier(raw: str) -> int:
     return int(raw)
 
 
-def register_benign_endpoints(app: FastAPI, runner: QueryRunner) -> None:
+def register_benign_endpoints(app: FastAPI, executor: QueryExecutor) -> None:
     @app.get("/")
-    async def home() -> JSONResponse:
-        outcome = await run_in_threadpool(runner, FEATURED_PRODUCTS_SQL)
+    async def home(request: Request) -> JSONResponse:
+        outcome = await executor.run(request_id_of(request), "home", FEATURED_PRODUCTS_SQL)
         return outcome_response(outcome)
 
     @app.get("/health")
@@ -76,20 +98,22 @@ def register_benign_endpoints(app: FastAPI, runner: QueryRunner) -> None:
         return {"status": "ok"}
 
     @app.get("/comments")
-    async def list_comments(product_id: str) -> JSONResponse:
-        outcome = await run_in_threadpool(runner, COMMENTS_SQL, (parse_identifier(product_id),))
+    async def list_comments(request: Request, product_id: str) -> JSONResponse:
+        outcome = await executor.run(
+            request_id_of(request), "comments", COMMENTS_SQL, (parse_identifier(product_id),)
+        )
         return outcome_response(outcome)
 
     @app.get("/cart")
-    async def list_cart() -> JSONResponse:
-        outcome = await run_in_threadpool(runner, CART_SQL, (CART_OWNER_ID,))
+    async def list_cart(request: Request) -> JSONResponse:
+        outcome = await executor.run(request_id_of(request), "cart", CART_SQL, (CART_OWNER_ID,))
         return outcome_response(outcome)
 
 
-def create_app(runner: QueryRunner | None = None) -> FastAPI:
-    runner = runner or PostgresRunner()
+def create_app(runner: QueryRunner | None = None, recorder: QueryRecorder | None = None) -> FastAPI:
+    executor = QueryExecutor(runner or PostgresRunner(), recorder or OracleLog())
     app = FastAPI(title="vulnapp", docs_url=None, redoc_url=None)
-    register_benign_endpoints(app, runner)
+    register_benign_endpoints(app, executor)
     for spec in ENDPOINTS:
-        register_vulnerable_endpoint(app, spec, runner)
+        register_vulnerable_endpoint(app, spec, executor)
     return app
