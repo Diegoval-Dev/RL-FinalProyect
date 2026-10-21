@@ -106,7 +106,7 @@ Cada tarea es una unidad de trabajo con agente: una rama, un PR, sus pruebas. El
 
 - [x] F1-T01 Esqueleto del repositorio
 - [x] F1-T02 Laboratorio Docker y `vulnapp`
-- [ ] F1-T03 Base de datos instrumentada
+- [x] F1-T03 Base de datos instrumentada
 - [ ] F1-T04 Oráculo
 - [ ] F1-T05 ModSecurity PL1–PL4
 - [ ] F1-T06 Proxy defensor y honeypot
@@ -132,3 +132,9 @@ Problemas encontrados fuera del alcance de la tarea en curso, decisiones pendien
 - 2026-10-18 · F1-T02 · Los payloads de referencia viven en `lab/vulnapp/vulnapp/reference.py` (no en JSON) y `ENDPOINTS.md` se genera con `make endpoints-doc` · F1-T04 los importa directamente.
 - 2026-10-18 · F1-T02 · El carrito usa el usuario fijo 2 (sin sesiones reales en `vulnapp`) · el `X-Session-ID` solo lo usa el proxy.
 - 2026-10-18 · F1-T02 · Las dependencias de `runner` y `vulnapp` se instalan al construir la imagen (la red interna no tiene internet) · tras cambiar `pyproject.toml`, `make lab-up` reconstruye.
+- 2026-10-21 · F1-T03 · `init.sql` y los scripts de `lab/db/` solo corren en un volumen vacío; `make lab-up` sobre un contenedor existente no los vuelve a ejecutar · tras cambiarlos, `make lab-down` (con `-v`) antes de `make lab-up`.
+- 2026-10-21 · F1-T03 · El token del canario se genera en `02-roles-and-canaries.sh` en el primer arranque del volumen; cada `make lab-down` + `lab-up` produce uno nuevo (verificado).
+- 2026-10-21 · F1-T03 · `OracleLog` abre una conexión por consulta, lo que es caro en el lote de entrenamiento · F1-T11 debe usar un pool o el modo rápido en proceso.
+- 2026-10-21 · F1-T03 · `oracle_log` crece sin límite durante los entrenamientos · F1-T11 decide purga o rotación por run.
+- 2026-10-21 · F1-T03 · El rol `logger` solo tiene acceso a `oracle_log`; F1-T04 leerá `canary_secrets` y `canary_writes` con un rol propio o con el administrador · decidir al implementar el oráculo.
+- 2026-10-21 · F1-T03 · La fila oculta de `products` contiene el token en el nombre; una tautología sobre `catalog` la devuelve (prueba `test_tautology_on_catalog_exposes_the_hidden_canary_row`), lo que confirma el canario de evidencia.

@@ -70,3 +70,26 @@ INSERT INTO comments (product_id, author, body) VALUES
     (7, 'maria', 'Un clásico que vale la pena releer');
 
 INSERT INTO cart_items (user_id, product_id, qty) VALUES (2, 4, 1);
+
+CREATE TABLE canary_secrets (
+    id    serial PRIMARY KEY,
+    token text NOT NULL
+);
+
+CREATE TABLE canary_writes (
+    id         serial PRIMARY KEY,
+    request_id text,
+    written_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE TABLE oracle_log (
+    id            bigserial PRIMARY KEY,
+    request_id    text NOT NULL,
+    endpoint      text NOT NULL,
+    sql           text NOT NULL,
+    error         text,
+    rows_returned integer NOT NULL,
+    logged_at     timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE INDEX oracle_log_request_id_idx ON oracle_log (request_id);
