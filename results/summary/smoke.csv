@@ -1,0 +1,11 @@
+mode,pl,role,episodes,random_evasion_rate
+fast,1,attacker,100,0.0000
+fast,2,attacker,100,0.0000
+fast,3,attacker,100,0.0000
+fast,4,attacker,100,0.0000
+fast,-,defender,100,-
+real,1,attacker,15,0.0000
+real,2,attacker,15,0.0000
+real,3,attacker,15,0.0000
+real,4,attacker,15,0.0000
+real,-,defender,15,-

@@ -119,6 +119,8 @@ Cada tarea es una unidad de trabajo con agente: una rama, un PR, sus pruebas. El
 - [x] F1-T13 Splits congelados
 - [ ] F1-T14 Prueba de humo
 - [x] F1-T15 Informe y handoff
+- [x] F1-T14 Prueba de humo
+- [ ] F1-T15 Informe y handoff
 
 ## Hallazgos
 
@@ -161,4 +163,6 @@ Problemas encontrados fuera del alcance de la tarea en curso, decisiones pendien
 - 2026-10-21 · F1-T12 · `AttackerDriver`/`DefenderDriver` implementan la interfaz de políticas para enchufar agentes de F2+; `AttackerDriver` necesita un backend para verificar funcionalidad tras cada mutación.
 - 2026-10-21 · F1-T12 · `gt_oracle` en el info del atacante se copia (dict nuevo) para cumplir `check_env` (no compartir objetos entre llamadas).
 - 2026-10-21 · F1-T15 · Contrato del oráculo actualizado a 1.1 en README y en `wafarena.CONTRACT_VERSIONS`. Capítulos 01, 03 y 08 del informe escritos; HANDOFF-1 completado. El tag `v0.1-fase1` se crea en `main` tras mergear los PR de la fase.
+- 2026-10-21 · F1-T14 · Smoke corre sin errores; evasión aleatoria 0.0 en los 4 PL en modo rápido y real (línea base de cordura: un atacante aleatorio no vence al WAF, lo que motiva el aprendizaje). Resultados en results/summary/smoke.csv.
+- 2026-10-21 · F1-T14 · Modo rápido corre 100 episodios por PL (meta del contrato); modo real corre 15 episodios con 25 pasos máx como sanity (el modo real es HTTP por paso y 100×4 excedía 10 min). Ajustar si se requiere más cobertura en real.
 

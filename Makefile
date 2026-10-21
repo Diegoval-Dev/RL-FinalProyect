@@ -36,8 +36,8 @@ operator-preservation:
 endpoints-doc:
 	PYTHONPATH=lab/vulnapp uv run python -m vulnapp.docs > lab/vulnapp/ENDPOINTS.md
 
-smoke:
-	$(call not_implemented,smoke,F1-T14)
+smoke: lab-up
+	$(COMPOSE) run --rm runner python scripts/smoke.py
 
 verify-splits:
 	uv run python scripts/verify_splits.py
