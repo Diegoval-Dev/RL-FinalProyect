@@ -22,7 +22,7 @@ test-lab: lab-up
 
 lab-up:
 	$(COMPOSE) build runner
-	$(COMPOSE) up -d --build --wait db vulnapp modsec-pl1 modsec-pl2 modsec-pl3 modsec-pl4
+	$(COMPOSE) up -d --build --wait db vulnapp honeypot proxy modsec-pl1 modsec-pl2 modsec-pl3 modsec-pl4
 
 lab-down:
 	$(COMPOSE) --profile tools down -v

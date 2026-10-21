@@ -149,4 +149,8 @@ Problemas encontrados fuera del alcance de la tarea en curso, decisiones pendien
 - 2026-10-21 · F1-T05 · `make lab-up` ahora espera también a `modsec-pl1`…`pl4`; la imagen `owasp/modsecurity-crs:nginx` debe descargarse en el host antes de levantar (la red interna no tiene internet).
 - 2026-10-21 · F1-T05 · `modsec_baseline_corpus.csv` se generó con los payloads de referencia y los benignos del registro (corpus en F1-T07); ataques bloqueados 100% en todos los PL, benignos 0% en PL1–2, 12.5% en PL3 y 25% en PL4.
 - 2026-10-21 · F1-T05 · `AuditEngine=On` registra todos los requests, así que `plN.json` crece durante el entrenamiento · el modo rápido (F1-T11) cachea por `(PL, hash)` y no relee el archivo en cada paso.
+- 2026-10-21 · F1-T06 · La equivalencia proxy↔ModSecurity se prueba al nivel de la decisión (`ModSecDefender(pl)` sobre la obs real vs `would_block` de ModSecurity), no por HTTP en proceso, porque `httpx` síncrono dentro de una ruta async con ASGITransport falla. El servicio proxy real se prueba aparte por su healthcheck.
+- 2026-10-21 · F1-T06 · `httpx` pasó de dependencia dev a principal, porque el servicio proxy la usa en runtime.
+- 2026-10-21 · F1-T06 · `ModSecDefender(pl)` bloquea cuando el score normalizado (índice 12+pl−1) alcanza 5/50; con scores enteros y umbral 5 de CRS reproduce exactamente la decisión (500 requests por PL).
+- 2026-10-21 · F1-T06 · El proxy real queda fijo en `PROXY_PARANOIA_LEVEL` (default 1); F1-T11/T12 lo usan en modo real con la política que corresponda.
 

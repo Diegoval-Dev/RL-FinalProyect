@@ -11,6 +11,7 @@ dependencies = [
     "psycopg[binary]>=3.3.6",
     "python-multipart>=0.0.32",
     "pglast>=8.7",
+    "httpx>=0.28.1",
 ]
 
 [dependency-groups]
@@ -18,7 +19,6 @@ dev = [
     "pytest",
     "hypothesis",
     "ruff",
-    "httpx>=0.28.1",
     "pyyaml>=6.0.3",
 ]
 
@@ -42,6 +42,6 @@ known-first-party = ["wafarena", "vulnapp"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-pythonpath = ["lab/vulnapp"]
+pythonpath = ["lab/vulnapp", "lab/proxy", "lab/honeypot"]
 markers = ["lab: requires the Docker laboratory (make lab-up)"]
 addopts = "-m 'not lab'"

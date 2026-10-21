@@ -145,6 +145,44 @@ services:
         condition: service_completed_successfully
     networks: [lab]
 
+  honeypot:
+    build:
+      context: ..
+      dockerfile: lab/Dockerfile
+      target: honeypot
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+    networks: [lab]
+
+  proxy:
+    build:
+      context: ..
+      dockerfile: lab/Dockerfile
+      target: proxy
+    environment:
+      VULNAPP_URL: http://vulnapp:8000
+      HONEYPOT_URL: http://honeypot:8000
+      MODSEC_AUDIT_DIR: /var/log/modsec-audit
+      PROXY_PARANOIA_LEVEL: 1
+    volumes:
+      - modsec-audit:/var/log/modsec-audit
+    depends_on:
+      vulnapp:
+        condition: service_healthy
+      honeypot:
+        condition: service_healthy
+      modsec-pl1:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+    networks: [lab]
+
   runner:
     build:
       context: ..
@@ -168,4 +206,6 @@ services:
         condition: service_started
       modsec-pl4:
         condition: service_started
+      proxy:
+        condition: service_healthy
     networks: [lab]
