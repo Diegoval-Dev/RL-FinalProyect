@@ -30,6 +30,9 @@ lab-down:
 build-corpus:
 	$(COMPOSE) run --rm -e VERIFIED_COMMIT=$$(git rev-parse --short HEAD) runner python scripts/build_corpus.py
 
+operator-preservation:
+	$(COMPOSE) run --rm runner python scripts/operator_preservation.py
+
 endpoints-doc:
 	PYTHONPATH=lab/vulnapp uv run python -m vulnapp.docs > lab/vulnapp/ENDPOINTS.md
 

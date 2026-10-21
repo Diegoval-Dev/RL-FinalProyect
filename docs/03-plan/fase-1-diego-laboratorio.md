@@ -111,7 +111,7 @@ Cada tarea es una unidad de trabajo con agente: una rama, un PR, sus pruebas. El
 - [ ] F1-T05 ModSecurity PL1–PL4
 - [ ] F1-T06 Proxy defensor y honeypot
 - [x] F1-T07 Corpus de payloads
-- [ ] F1-T08 Operadores de mutación
+- [x] F1-T08 Operadores de mutación
 - [ ] F1-T09 Tráfico benigno
 - [ ] F1-T10 Features
 - [ ] F1-T11 Backends
@@ -147,4 +147,7 @@ Problemas encontrados fuera del alcance de la tarea en curso, decisiones pendien
 - 2026-10-21 · F1-T07 · El corpus se genera de plantillas curadas por contexto de inyección (no de un archivo externo descargado), verificadas por el oráculo; 528 payloads funcionales (tautology 120, boolean_blind 120, error 196, union 52, stacked 40). Reproducible (mismo hash al reconstruir).
 - 2026-10-21 · F1-T07 · El commit de verificación se pasa al runner por `VERIFIED_COMMIT` porque `git` no está dentro del contenedor.
 - 2026-10-21 · F1-T07 · Las plantillas de `stacked`/`error` apuntan a `canary_secrets`/`canary_writes`, así que dependen del esquema de F1-T03; si cambia, regenerar el corpus.
+- 2026-10-21 · F1-T08 · `location_switch` se construye con las ubicaciones permitidas (no las conoce `apply`); el registro usa las tres por defecto y el entorno (F1-T12) lo reconstruye con las del endpoint activo.
+- 2026-10-21 · F1-T08 · `url_encode`/`double_url_encode` usan el campo `url_encoding_layers` del Payload y no se aplican si ya hay 2 capas; es intencional que rompan en endpoints que decodifican una sola vez.
+- 2026-10-21 · F1-T08 · `operator_preservation.csv` se generó sobre todo el corpus (no solo `train`, que llega en F1-T13); regenerar con `train` tras congelar los splits.
 
