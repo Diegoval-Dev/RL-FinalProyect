@@ -113,7 +113,7 @@ Cada tarea es una unidad de trabajo con agente: una rama, un PR, sus pruebas. El
 - [ ] F1-T07 Corpus de payloads
 - [ ] F1-T08 Operadores de mutación
 - [ ] F1-T09 Tráfico benigno
-- [ ] F1-T10 Features
+- [x] F1-T10 Features
 - [ ] F1-T11 Backends
 - [ ] F1-T12 Entornos Gymnasium
 - [ ] F1-T13 Splits congelados
@@ -144,4 +144,6 @@ Problemas encontrados fuera del alcance de la tarea en curso, decisiones pendien
 - 2026-10-21 · F1-T04 · `Payload` vive en `wafarena/mutations/payload.py` (contrato de operadores) para que el oráculo lo use sin esperar a F1-T08 · T08 debe importarlo de ahí.
 - 2026-10-21 · F1-T04 · `wafarena` importa `vulnapp.queries` y `vulnapp.db` (modo rápido, ADR-0005); `pyproject.toml` incluye `lab/vulnapp/vulnapp` como paquete.
 - 2026-10-21 · F1-T04 · `check_request` cuenta `canary_writes` por `request_id`; `check_direct` lo hace dentro de la transacción revertida, así que el conteo no contamina la base.
+- 2026-10-21 · F1-T10 · `req_rate` (índice 16) se aproxima con el total de requests de la sesión, porque las features aún no reciben timestamps; el tiempo simulado lo aporta el entorno en F1-T12 · ajustar a la ventana de 10 s cuando el entorno pase el tiempo.
+- 2026-10-21 · F1-T10 · Los índices 12–15 (scores de ModSecurity) no los calcula este módulo: los aporta el backend (F1-T11) y el entorno los ensambla (F1-T12). `request.py` cubre 0–11 y `session.py` cubre 16–36.
 
