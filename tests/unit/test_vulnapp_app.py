@@ -15,7 +15,7 @@ class RecordingRunner:
         self.outcome = QueryOutcome(rows=[{"id": 1}], error=None)
         self.calls: list[tuple[str, tuple | None]] = []
 
-    def __call__(self, sql: str, params: tuple | None = None) -> QueryOutcome:
+    def __call__(self, request_id: str, sql: str, params: tuple | None = None) -> QueryOutcome:
         self.calls.append((sql, params))
         return self.outcome
 

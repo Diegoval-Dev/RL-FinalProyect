@@ -131,5 +131,9 @@ def build_sql(spec: EndpointSpec, values: Mapping[str, str]) -> str:
     return spec.template.format_map(values)
 
 
+def find_endpoint(name: str) -> EndpointSpec | None:
+    return next((spec for spec in ENDPOINTS if spec.name == name), None)
+
+
 def get_endpoint(name: str) -> EndpointSpec:
     return next(spec for spec in ENDPOINTS if spec.name == name)
