@@ -107,7 +107,7 @@ Cada tarea es una unidad de trabajo con agente: una rama, un PR, sus pruebas. El
 - [x] F1-T01 Esqueleto del repositorio
 - [x] F1-T02 Laboratorio Docker y `vulnapp`
 - [x] F1-T03 Base de datos instrumentada
-- [ ] F1-T04 Oráculo
+- [x] F1-T04 Oráculo
 - [ ] F1-T05 ModSecurity PL1–PL4
 - [ ] F1-T06 Proxy defensor y honeypot
 - [ ] F1-T07 Corpus de payloads
@@ -138,3 +138,10 @@ Problemas encontrados fuera del alcance de la tarea en curso, decisiones pendien
 - 2026-10-21 · F1-T03 · `oracle_log` crece sin límite durante los entrenamientos · F1-T11 decide purga o rotación por run.
 - 2026-10-21 · F1-T03 · El rol `logger` solo tiene acceso a `oracle_log`; F1-T04 leerá `canary_secrets` y `canary_writes` con un rol propio o con el administrador · decidir al implementar el oráculo.
 - 2026-10-21 · F1-T03 · La fila oculta de `products` contiene el token en el nombre; una tautología sobre `catalog` la devuelve (prueba `test_tautology_on_catalog_exposes_the_hidden_canary_row`), lo que confirma el canario de evidencia.
+- 2026-10-21 · F1-T04 · Los payloads de la familia `error` solo mostraban un error de tipo, sin token; con la tabla del contrato daban `effect = False`, lo que contradecía la garantía 1 · se cambiaron para que el error contenga el token (`CAST((SELECT token FROM canary_secrets) AS int)`), que es el caso `canary_error`.
+- 2026-10-21 · F1-T04 · El rol `app` no podía contar `canary_writes` para la transacción de `check_direct` · se añadió `count_canary_writes(text)`, `SECURITY DEFINER`, que solo devuelve un conteo. Requiere volumen nuevo (`make lab-down` antes de `make lab-up`).
+- 2026-10-21 · F1-T04 · Garantía 2 cerrada sobre los endpoints del registro (sus valores benignos), no sobre `data/benign/sessions.jsonl`, que llega con F1-T09 · en T09 añadir la prueba sobre las sesiones.
+- 2026-10-21 · F1-T04 · `Payload` vive en `wafarena/mutations/payload.py` (contrato de operadores) para que el oráculo lo use sin esperar a F1-T08 · T08 debe importarlo de ahí.
+- 2026-10-21 · F1-T04 · `wafarena` importa `vulnapp.queries` y `vulnapp.db` (modo rápido, ADR-0005); `pyproject.toml` incluye `lab/vulnapp/vulnapp` como paquete.
+- 2026-10-21 · F1-T04 · `check_request` cuenta `canary_writes` por `request_id`; `check_direct` lo hace dentro de la transacción revertida, así que el conteo no contamina la base.
+

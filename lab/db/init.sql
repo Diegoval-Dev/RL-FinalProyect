@@ -78,7 +78,7 @@ CREATE TABLE canary_secrets (
 
 CREATE TABLE canary_writes (
     id         serial PRIMARY KEY,
-    request_id text,
+    request_id text DEFAULT current_setting('app.request_id', true),
     written_at timestamptz NOT NULL DEFAULT now()
 );
 
@@ -89,7 +89,12 @@ CREATE TABLE oracle_log (
     sql           text NOT NULL,
     error         text,
     rows_returned integer NOT NULL,
+    rows_json     jsonb NOT NULL DEFAULT '[]',
     logged_at     timestamptz NOT NULL DEFAULT now()
 );
 
 CREATE INDEX oracle_log_request_id_idx ON oracle_log (request_id);
+
+CREATE FUNCTION count_canary_writes(rid text) RETURNS bigint
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public
+AS $$ SELECT count(*) FROM canary_writes WHERE request_id = rid $$;

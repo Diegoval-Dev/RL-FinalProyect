@@ -36,7 +36,7 @@ class QueryExecutor:
     async def run(
         self, request_id: str, endpoint: str, sql: str, params: tuple | None = None
     ) -> QueryOutcome:
-        outcome = await run_in_threadpool(self._runner, sql, params)
+        outcome = await run_in_threadpool(self._runner, request_id, sql, params)
         await run_in_threadpool(self._recorder, QueryRecord(request_id, endpoint, sql, outcome))
         return outcome
 

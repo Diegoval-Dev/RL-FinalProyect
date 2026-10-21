@@ -13,6 +13,7 @@ services:
       POSTGRES_PASSWORD: lab-only-password
       APP_DB_PASSWORD: lab-app-password
       LOGGER_DB_PASSWORD: lab-logger-password
+      ORACLE_DB_PASSWORD: lab-oracle-password
     volumes:
       - ./db/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
       - ./db/02-roles-and-canaries.sh:/docker-entrypoint-initdb.d/02-roles-and-canaries.sh:ro
@@ -56,6 +57,7 @@ services:
       ADMIN_DATABASE_URL: postgresql://wafarena:lab-only-password@db:5432/wafarena
       APP_DATABASE_URL: postgresql://app:lab-app-password@db:5432/wafarena
       LOGGER_DATABASE_URL: postgresql://logger:lab-logger-password@db:5432/wafarena
+      ORACLE_DATABASE_URL: postgresql://oracle:lab-oracle-password@db:5432/wafarena
     volumes:
       - ..:/workspace
     depends_on:

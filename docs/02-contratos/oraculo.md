@@ -15,11 +15,11 @@ class OracleResult:
     detail: str               # texto corto para depuración
 
 class Oracle(Protocol):
-    def check_direct(self, payload: Payload, endpoint: str) -> OracleResult: ...
+    def check_direct(self, payload: Payload, endpoint: str, param: str) -> OracleResult: ...
     def check_request(self, request_id: str) -> OracleResult: ...
 ```
 
-- `check_direct` ejecuta el endpoint de `vulnapp` en proceso, sin WAF. Lo usan los entornos para saber si una mutación rompió el payload.
+- `check_direct` ejecuta el endpoint de `vulnapp` en proceso, sin WAF, dentro de una transacción que se revierte al final. `param` es el parámetro del endpoint donde viaja el payload (`Payload` no lo declara). Lo usan los entornos para saber si una mutación rompió el payload.
 - `check_request` evalúa un request que ya pasó por el defensor, buscando en el log del oráculo por `request_id`.
 
 ## Cómo decide
@@ -57,3 +57,4 @@ La huella detecta cualquier familia, incluida `boolean_blind`, porque toda inyec
 ## Historial
 
 - 1.0 — versión inicial.
+- 1.1 — `check_direct` recibe `param`. Sin consumidores previos, por lo que no es incompatible en la práctica. `oracle_log` guarda `rows_json`, `canary_writes` toma `request_id` del `app.request_id` de la sesión y el conteo de escrituras se hace con `count_canary_writes`, función `SECURITY DEFINER` que no expone filas al rol de la app.
