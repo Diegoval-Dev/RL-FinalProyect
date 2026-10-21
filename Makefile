@@ -1,4 +1,4 @@
-.PHONY: setup lint test test-lab lab-up lab-down smoke run verify-splits build-benign endpoints-doc
+.PHONY: setup lint test test-lab lab-up lab-down smoke run verify-splits endpoints-doc modsec-baseline
 
 COMPOSE = docker compose -f lab/docker-compose.yml
 
@@ -22,13 +22,16 @@ test-lab: lab-up
 
 lab-up:
 	$(COMPOSE) build runner
-	$(COMPOSE) up -d --build --wait db vulnapp
+	$(COMPOSE) up -d --build --wait db vulnapp modsec-pl1 modsec-pl2 modsec-pl3 modsec-pl4
 
 lab-down:
 	$(COMPOSE) --profile tools down -v
 
-build-benign:
-	$(COMPOSE) run --rm runner python -m traffic.builder
+modsec-baseline:
+	$(COMPOSE) run --rm runner python scripts/modsec_baseline.py
+
+operator-preservation:
+	$(COMPOSE) run --rm runner python scripts/operator_preservation.py
 
 endpoints-doc:
 	PYTHONPATH=lab/vulnapp uv run python -m vulnapp.docs > lab/vulnapp/ENDPOINTS.md

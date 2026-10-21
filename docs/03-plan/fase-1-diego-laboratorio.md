@@ -108,12 +108,12 @@ Cada tarea es una unidad de trabajo con agente: una rama, un PR, sus pruebas. El
 - [x] F1-T02 Laboratorio Docker y `vulnapp`
 - [x] F1-T03 Base de datos instrumentada
 - [x] F1-T04 Oráculo
-- [ ] F1-T05 ModSecurity PL1–PL4
+- [x] F1-T05 ModSecurity PL1–PL4
 - [ ] F1-T06 Proxy defensor y honeypot
-- [ ] F1-T07 Corpus de payloads
-- [ ] F1-T08 Operadores de mutación
-- [x] F1-T09 Tráfico benigno
-- [ ] F1-T10 Features
+- [x] F1-T07 Corpus de payloads
+- [x] F1-T08 Operadores de mutación
+- [ ] F1-T09 Tráfico benigno
+- [x] F1-T10 Features
 - [ ] F1-T11 Backends
 - [ ] F1-T12 Entornos Gymnasium
 - [ ] F1-T13 Splits congelados
@@ -144,7 +144,9 @@ Problemas encontrados fuera del alcance de la tarea en curso, decisiones pendien
 - 2026-10-21 · F1-T04 · `Payload` vive en `wafarena/mutations/payload.py` (contrato de operadores) para que el oráculo lo use sin esperar a F1-T08 · T08 debe importarlo de ahí.
 - 2026-10-21 · F1-T04 · `wafarena` importa `vulnapp.queries` y `vulnapp.db` (modo rápido, ADR-0005); `pyproject.toml` incluye `lab/vulnapp/vulnapp` como paquete.
 - 2026-10-21 · F1-T04 · `check_request` cuenta `canary_writes` por `request_id`; `check_direct` lo hace dentro de la transacción revertida, así que el conteo no contamina la base.
-- 2026-10-21 · F1-T09 · Se usó un generador determinista (traffic/generator.py) en lugar de Locust/Playwright, para que el dataset sea reproducible y corra en CI; las mismas sesiones pueden reproducirse por HTTP contra el proxy en modo real. 5200 sesiones (1200 hard, 240 por tag). Decisión de alcance, registrada también en el handoff.
-- 2026-10-21 · F1-T09 · El builder verifica efecto=False con el oráculo sobre cada valor distinto (endpoint, param, value), no sobre las 5200 sesiones completas, para ser eficiente; cualquier valor con efecto corta el build.
-- 2026-10-21 · F1-T09 · La garantía 2 del oráculo (F1-T04) ahora puede extenderse a estas sesiones; añadir esa prueba de laboratorio en una iteración.
+- 2026-10-21 · F1-T05 · El anomaly score por request se obtiene del audit log JSON en un volumen compartido, correlacionado por `X-Request-ID` (ADR-0008); se reconstruye por severidad y se valida contra la regla 949110.
+- 2026-10-21 · F1-T05 · El entrypoint de la imagen de ModSecurity corre sin privilegios y no puede preparar el volumen del audit log · se añadió el servicio de un solo uso `audit-init` (root) del que dependen las cuatro instancias.
+- 2026-10-21 · F1-T05 · `make lab-up` ahora espera también a `modsec-pl1`…`pl4`; la imagen `owasp/modsecurity-crs:nginx` debe descargarse en el host antes de levantar (la red interna no tiene internet).
+- 2026-10-21 · F1-T05 · `modsec_baseline_corpus.csv` se generó con los payloads de referencia y los benignos del registro (corpus en F1-T07); ataques bloqueados 100% en todos los PL, benignos 0% en PL1–2, 12.5% en PL3 y 25% en PL4.
+- 2026-10-21 · F1-T05 · `AuditEngine=On` registra todos los requests, así que `plN.json` crece durante el entrenamiento · el modo rápido (F1-T11) cachea por `(PL, hash)` y no relee el archivo en cada paso.
 
