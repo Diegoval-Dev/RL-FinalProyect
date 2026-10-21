@@ -13,6 +13,7 @@ Un ADR aceptado no se edita: si la decisión cambia, se crea uno nuevo que lo re
 | [0005](adr-0005-dos-velocidades.md) | Entorno de dos velocidades con caché de ModSecurity | Aceptado |
 | [0006](adr-0006-cleanrl-y-tabulares-propios.md) | Tabulares propios y deep RL estilo CleanRL | Aceptado |
 | [0007](adr-0007-app-propia-python.md) | App objetivo propia y stack único en Python | Aceptado |
+| [0008](adr-0008-modsec-score-por-audit-log.md) | ModSecurity: anomaly score por audit log JSON | Aceptado |
 
 Próximo número libre: **0008**. La tarea F1-T05 debe producir el ADR sobre cómo se obtiene el anomaly score de ModSecurity.
 
