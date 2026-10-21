@@ -117,10 +117,8 @@ Cada tarea es una unidad de trabajo con agente: una rama, un PR, sus pruebas. El
 - [x] F1-T11 Backends
 - [x] F1-T12 Entornos Gymnasium
 - [x] F1-T13 Splits congelados
-- [ ] F1-T14 Prueba de humo
-- [x] F1-T15 Informe y handoff
 - [x] F1-T14 Prueba de humo
-- [ ] F1-T15 Informe y handoff
+- [x] F1-T15 Informe y handoff
 
 ## Hallazgos
 
