@@ -1,0 +1,9 @@
+pl,set,n,block_rate
+1,attack,17,1.0000
+1,benign,8,0.0000
+2,attack,17,1.0000
+2,benign,8,0.0000
+3,attack,17,1.0000
+3,benign,8,0.1250
+4,attack,17,1.0000
+4,benign,8,0.2500
