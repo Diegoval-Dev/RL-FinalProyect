@@ -30,6 +30,9 @@ lab-down:
 modsec-baseline:
 	$(COMPOSE) run --rm runner python scripts/modsec_baseline.py
 
+operator-preservation:
+	$(COMPOSE) run --rm runner python scripts/operator_preservation.py
+
 endpoints-doc:
 	PYTHONPATH=lab/vulnapp uv run python -m vulnapp.docs > lab/vulnapp/ENDPOINTS.md
 
