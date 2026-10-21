@@ -115,7 +115,7 @@ Cada tarea es una unidad de trabajo con agente: una rama, un PR, sus pruebas. El
 - [x] F1-T09 Tráfico benigno
 - [x] F1-T10 Features
 - [x] F1-T11 Backends
-- [ ] F1-T12 Entornos Gymnasium
+- [x] F1-T12 Entornos Gymnasium
 - [x] F1-T13 Splits congelados
 - [ ] F1-T14 Prueba de humo
 - [ ] F1-T15 Informe y handoff
@@ -156,4 +156,8 @@ Problemas encontrados fuera del alcance de la tarea en curso, decisiones pendien
 - 2026-10-21 · F1-T13 · Splits v1 congelados: payloads train/val/test/test-family = 172/56/64/236; benign train/val/test/test-hard = 2832/944/944/480. Familias holdout: error, stacked (todas a test-family).
 - 2026-10-21 · F1-T13 · Agrupación de payloads por base (familia+endpoint+esqueleto sin comentario final) para que las variantes del mismo base no crucen splits; `test-hard` reserva las plantillas t-hard-code y t-hard-emoji.
 - 2026-10-21 · F1-T13 · Hashes en handoff: ver `files_sha256` en data/splits/v1.json; `make verify-splits` recalcula y falla si cambian corpus.jsonl o sessions.jsonl.
+- 2026-10-21 · F1-T12 · Los entornos reciben el backend inyectado; un `FakeBackend` determinista permite correr `check_env`, determinismo y la tabla de recompensas sin laboratorio. Las pruebas de laboratorio corren un rollout con `FastBackend` real.
+- 2026-10-21 · F1-T12 · El hashing de n-gramas usa un hash estable (sha1) en lugar de `hash()` de Python, que no es determinista entre procesos; indispensable para el determinismo del entorno del atacante.
+- 2026-10-21 · F1-T12 · `AttackerDriver`/`DefenderDriver` implementan la interfaz de políticas para enchufar agentes de F2+; `AttackerDriver` necesita un backend para verificar funcionalidad tras cada mutación.
+- 2026-10-21 · F1-T12 · `gt_oracle` en el info del atacante se copia (dict nuevo) para cumplir `check_env` (no compartir objetos entre llamadas).
 
