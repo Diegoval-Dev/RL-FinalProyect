@@ -6,6 +6,10 @@ requires-python = ">=3.11,<3.12"
 dependencies = [
     "numpy",
     "gymnasium",
+    "fastapi>=0.146.0",
+    "uvicorn>=0.54.0",
+    "psycopg[binary]>=3.3.6",
+    "python-multipart>=0.0.32",
 ]
 
 [dependency-groups]
@@ -13,6 +17,8 @@ dev = [
     "pytest",
     "hypothesis",
     "ruff",
+    "httpx>=0.28.1",
+    "pyyaml>=6.0.3",
 ]
 
 [build-system]
@@ -30,7 +36,11 @@ extend-exclude = ["docs"]
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]
 
+[tool.ruff.lint.isort]
+known-first-party = ["wafarena", "vulnapp"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["lab/vulnapp"]
 markers = ["lab: requires the Docker laboratory (make lab-up)"]
 addopts = "-m 'not lab'"

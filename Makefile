@@ -1,4 +1,6 @@
-.PHONY: setup lint test test-lab lab-up lab-down smoke run verify-splits
+.PHONY: setup lint test test-lab lab-up lab-down smoke run verify-splits endpoints-doc
+
+COMPOSE = docker compose -f lab/docker-compose.yml
 
 define not_implemented
 	@echo "$(1) is created by task $(2)" >&2; exit 1
@@ -14,14 +16,19 @@ lint:
 test:
 	uv run pytest tests/unit
 
-test-lab:
-	uv run pytest tests/lab -m lab
+test-lab: lab-up
+	uv run pytest tests/lab/test_isolation.py -m lab
+	$(COMPOSE) run --rm runner pytest tests/lab --ignore=tests/lab/test_isolation.py -m lab
 
 lab-up:
-	$(call not_implemented,lab-up,F1-T02)
+	$(COMPOSE) build runner
+	$(COMPOSE) up -d --build --wait db vulnapp
 
 lab-down:
-	$(call not_implemented,lab-down,F1-T02)
+	$(COMPOSE) --profile tools down -v
+
+endpoints-doc:
+	PYTHONPATH=lab/vulnapp uv run python -m vulnapp.docs > lab/vulnapp/ENDPOINTS.md
 
 smoke:
 	$(call not_implemented,smoke,F1-T14)
