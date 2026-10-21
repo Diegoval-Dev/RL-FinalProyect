@@ -109,12 +109,12 @@ Cada tarea es una unidad de trabajo con agente: una rama, un PR, sus pruebas. El
 - [x] F1-T03 Base de datos instrumentada
 - [x] F1-T04 Oráculo
 - [x] F1-T05 ModSecurity PL1–PL4
-- [ ] F1-T06 Proxy defensor y honeypot
+- [x] F1-T06 Proxy defensor y honeypot
 - [x] F1-T07 Corpus de payloads
 - [x] F1-T08 Operadores de mutación
-- [ ] F1-T09 Tráfico benigno
+- [x] F1-T09 Tráfico benigno
 - [x] F1-T10 Features
-- [ ] F1-T11 Backends
+- [x] F1-T11 Backends
 - [ ] F1-T12 Entornos Gymnasium
 - [x] F1-T13 Splits congelados
 - [ ] F1-T14 Prueba de humo
