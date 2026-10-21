@@ -8,9 +8,10 @@ with ModSecDefender(pl) reproduces ModSecurity at that PL.
 import httpx
 import pytest
 from proxy.app import build_observation
+
 from vulnapp.queries import get_endpoint
 from wafarena.defenders.base import Action
-from wafarena.defenders.modsec import modsec_base_url, modsec_score
+from wafarena.defenders.modsec import modsec_score
 from wafarena.defenders.modsec_defender import ModSecDefender
 from wafarena.features.modsec import PARANOIA_LEVELS, modsec_feature_index
 
