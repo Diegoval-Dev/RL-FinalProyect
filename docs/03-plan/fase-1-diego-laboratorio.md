@@ -113,7 +113,7 @@ Cada tarea es una unidad de trabajo con agente: una rama, un PR, sus pruebas. El
 - [ ] F1-T07 Corpus de payloads
 - [ ] F1-T08 Operadores de mutación
 - [ ] F1-T09 Tráfico benigno
-- [ ] F1-T10 Features
+- [x] F1-T10 Features
 - [ ] F1-T11 Backends
 - [ ] F1-T12 Entornos Gymnasium
 - [ ] F1-T13 Splits congelados
