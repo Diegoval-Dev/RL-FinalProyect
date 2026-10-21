@@ -1,4 +1,4 @@
-.PHONY: setup lint test test-lab lab-up lab-down smoke run verify-splits endpoints-doc
+.PHONY: setup lint test test-lab lab-up lab-down smoke run verify-splits build-benign endpoints-doc
 
 COMPOSE = docker compose -f lab/docker-compose.yml
 
@@ -26,6 +26,9 @@ lab-up:
 
 lab-down:
 	$(COMPOSE) --profile tools down -v
+
+build-benign:
+	$(COMPOSE) run --rm runner python -m traffic.builder
 
 endpoints-doc:
 	PYTHONPATH=lab/vulnapp uv run python -m vulnapp.docs > lab/vulnapp/ENDPOINTS.md

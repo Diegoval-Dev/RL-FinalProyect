@@ -112,7 +112,7 @@ Cada tarea es una unidad de trabajo con agente: una rama, un PR, sus pruebas. El
 - [ ] F1-T06 Proxy defensor y honeypot
 - [ ] F1-T07 Corpus de payloads
 - [ ] F1-T08 Operadores de mutación
-- [ ] F1-T09 Tráfico benigno
+- [x] F1-T09 Tráfico benigno
 - [ ] F1-T10 Features
 - [ ] F1-T11 Backends
 - [ ] F1-T12 Entornos Gymnasium
@@ -144,4 +144,7 @@ Problemas encontrados fuera del alcance de la tarea en curso, decisiones pendien
 - 2026-10-21 · F1-T04 · `Payload` vive en `wafarena/mutations/payload.py` (contrato de operadores) para que el oráculo lo use sin esperar a F1-T08 · T08 debe importarlo de ahí.
 - 2026-10-21 · F1-T04 · `wafarena` importa `vulnapp.queries` y `vulnapp.db` (modo rápido, ADR-0005); `pyproject.toml` incluye `lab/vulnapp/vulnapp` como paquete.
 - 2026-10-21 · F1-T04 · `check_request` cuenta `canary_writes` por `request_id`; `check_direct` lo hace dentro de la transacción revertida, así que el conteo no contamina la base.
+- 2026-10-21 · F1-T09 · Se usó un generador determinista (traffic/generator.py) en lugar de Locust/Playwright, para que el dataset sea reproducible y corra en CI; las mismas sesiones pueden reproducirse por HTTP contra el proxy en modo real. 5200 sesiones (1200 hard, 240 por tag). Decisión de alcance, registrada también en el handoff.
+- 2026-10-21 · F1-T09 · El builder verifica efecto=False con el oráculo sobre cada valor distinto (endpoint, param, value), no sobre las 5200 sesiones completas, para ser eficiente; cualquier valor con efecto corta el build.
+- 2026-10-21 · F1-T09 · La garantía 2 del oráculo (F1-T04) ahora puede extenderse a estas sesiones; añadir esa prueba de laboratorio en una iteración.
 
