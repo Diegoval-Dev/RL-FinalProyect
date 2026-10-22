@@ -25,7 +25,7 @@ Documentos de cada fase:
 - [Fase 3 — Joaquín](docs/03-plan/fase-3-joaquin-deep-rl.md)
 - [Fase 4 — Nelson](docs/03-plan/fase-4-nelson-planning-selfplay.md)
 
-**Fase activa:** 1 (actualizar esta línea en cada relevo).
+**Fase activa:** 2 (actualizar esta línea en cada relevo).
 
 ## Cómo trabajar en una sesión (resumen)
 

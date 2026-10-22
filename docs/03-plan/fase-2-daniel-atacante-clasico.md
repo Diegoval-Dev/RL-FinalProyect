@@ -79,7 +79,7 @@ Construir la maquinaria con la que el resto del proyecto corre y mide experiment
 
 ## Estado
 
-- [ ] F2-T01 Aceptación del relevo
+- [x] F2-T01 Aceptación del relevo
 - [ ] F2-T02 Interfaz `Agent` y checkpoints
 - [ ] F2-T03 Runner
 - [ ] F2-T04 Métricas y suites
@@ -93,4 +93,4 @@ Construir la maquinaria con la que el resto del proyecto corre y mide experiment
 
 ## Hallazgos
 
-_(vacío)_
+- **F2-T01 (heredado de F1-T12):** `gym.make("WafArena/Attacker-v0", backend="fast", defender={...})` y `Defender-v0` con `backend="fast"` / `attacker="corpus_replay"` no funcionaban como lo documentan los contratos (los entornos solo aceptaban objetos). Corregido en esta fase con `wafarena/envs/resolve.py`; los tipos `checkpoint` y `pool` lanzan `NotImplementedError` hasta F2-T02/T10. El contrato no cambia (el código se alineó con él).
