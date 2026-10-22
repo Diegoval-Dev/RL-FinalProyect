@@ -233,3 +233,22 @@ def test_defender_environment_is_not_runnable_yet(tmp_path):
     raw["eval"] = {"suites": ["defender-eval-v1"]}
     with pytest.raises(NotImplementedError, match="Phase 3"):
         go(tmp_path, raw)
+
+
+def test_cli_runs_a_config_file(tmp_path, monkeypatch):
+    path = tmp_path / "exp.yaml"
+    raw = config(seeds=[0])
+    raw["eval"] = {"suites": ["attacker-eval-v1"], "every_steps": 400, "final": True}
+    path.write_text(yaml.safe_dump(raw))
+    monkeypatch.setattr(runner, "resolve_backend", lambda kind: FakeBackend())
+    runner.main(["--config", str(path), "--results", str(tmp_path / "out"), "--allow-dirty"])
+    assert (tmp_path / "out" / "EXP-D1" / "toy" / "s0" / "final_eval.json").exists()
+
+
+def test_cli_reports_config_errors_without_a_traceback(tmp_path, capsys):
+    path = tmp_path / "bad.yaml"
+    path.write_text(yaml.safe_dump({**config(), "exp_id": "EXP-ZZ"}))
+    with pytest.raises(SystemExit) as exit_info:
+        runner.main(["--config", str(path), "--results", str(tmp_path / "out")])
+    assert exit_info.value.code == 2
+    assert "EXP-ZZ" in capsys.readouterr().err

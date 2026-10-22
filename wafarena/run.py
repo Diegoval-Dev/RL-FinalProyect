@@ -1,7 +1,9 @@
 """Experiment runner: train, select on `val`, evaluate the best checkpoint (experimentos.md)."""
 
+import argparse
 import csv
 import json
+import sys
 import time
 from pathlib import Path
 from typing import Any
@@ -15,7 +17,8 @@ from wafarena.envs.attacker_obs import OBS_SIZE
 from wafarena.envs.backends.base import Backend
 from wafarena.envs.resolve import resolve_backend
 from wafarena.eval import harness
-from wafarena.runconfig import resolve_config
+from wafarena.runconfig import ConfigError, load_config, resolve_config
+from wafarena.runmeta import DirtyTreeError
 from wafarena.trainer import train
 
 PROJECT_ROOT = Path(__file__).parents[1]
@@ -174,3 +177,32 @@ def _final_eval(config, directory: Path, backend, selection: dict) -> None:
         "suites": suites,
     }
     (directory / "final_eval.json").write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n")
+
+
+def main(argv: list[str] | None = None) -> None:
+    parser = argparse.ArgumentParser(description="Run an experiment config (one run per seed)")
+    parser.add_argument("--config", type=Path, required=True)
+    parser.add_argument("--results", type=Path, default=RESULTS_ROOT)
+    parser.add_argument(
+        "--allow-dirty",
+        action="store_true",
+        help="run with uncommitted changes; marked in meta.yaml and not valid for the report",
+    )
+    parser.add_argument("--overwrite", action="store_true", help="replace existing runs")
+    args = parser.parse_args(argv)
+    try:
+        config = load_config(args.config)
+        directories = run_experiment(
+            config,
+            results_root=args.results,
+            allow_dirty=args.allow_dirty,
+            overwrite=args.overwrite,
+        )
+    except (ConfigError, DirtyTreeError, FileExistsError) as error:
+        parser.exit(2, f"error: {error}\n")
+    for directory in directories:
+        print(f"finished {directory}")
+
+
+if __name__ == "__main__":
+    sys.exit(main())
