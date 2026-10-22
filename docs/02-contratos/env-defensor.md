@@ -1,6 +1,6 @@
 # Contrato: entorno del defensor `WafArena/Defender-v0`
 
-**Versión:** 1.0 · **Implementa:** Fase 1 (F1-T12) · **Archivo:** `wafarena/envs/defender_env.py`
+**Versión:** 1.1 · **Implementa:** Fase 1 (F1-T12) · **Archivo:** `wafarena/envs/defender_env.py`
 
 ## Episodio
 
@@ -13,12 +13,15 @@ gymnasium.make(
     "WafArena/Defender-v0",
     backend="fast",
     attacker={"type": "corpus_replay"},     # "corpus_replay" | "random_mutation" | {"type": "checkpoint", "path": ...} | {"type": "pool", "paths": [...], "weights": [...]}
-    split="train",                          # aplica a sesiones benignas y a payloads base
+    split="train",                          # sesiones benignas (y payloads base si no se da attack_split)
+    attack_split=None,                      # opcional: split de los payloads base de ataque; None = igual a split
     attack_ratio=0.1,                       # fracción de sesiones maliciosas
     reward={"alpha": 4.0, "beta": 1.0, "gamma": 0.5},
     benign_abandon_prob=0.0,                # prob. de que un usuario benigno bloqueado abandone la sesión
 )
 ```
+
+`reset(seed=..., options={"base_id": ...})` fija la sesión de ataque sobre ese payload base; `options={"session_id": ...}` fija una sesión benigna. Son excluyentes; sin opciones, el tipo y la sesión se muestrean con el RNG del entorno. Un id fuera del split lanza `ValueError`.
 
 ## Observación
 
@@ -87,3 +90,4 @@ Igual que en el entorno del atacante: misma semilla, mismo atacante determinista
 ## Historial
 
 - 1.0 — versión inicial.
+- 1.1 — `attack_split` opcional en la construcción y `options` (`base_id`, `session_id`) en `reset`, para las suites de evaluación del defensor (F2-T04). Compatible hacia atrás.
