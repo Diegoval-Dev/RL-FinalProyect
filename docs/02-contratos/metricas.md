@@ -1,6 +1,6 @@
 # Contrato: métricas
 
-**Versión:** 1.0 · **Implementa:** Fase 2 (F2-T03) · **Archivos:** `wafarena/eval/metrics.py`, `wafarena/eval/stats.py`
+**Versión:** 1.1 · **Implementa:** Fase 2 (F2-T04) · **Archivos:** `wafarena/eval/metrics.py`, `wafarena/eval/stats.py`
 
 Una métrica que no está definida aquí no aparece en el informe. Si una fase necesita una nueva, la agrega aquí (cambio MENOR) antes de usarla.
 
@@ -43,6 +43,7 @@ Definidas en `wafarena/eval/harness.py`. Son fijas: mismas semillas, mismos payl
 
 | Suite | Contenido |
 |---|---|
+| `attacker-val-v1` | Solo selección de modelo: 200 episodios sobre payloads `val`, semillas 2000–2199, `query_budget = 50`. Nunca se reporta |
 | `attacker-eval-v1` | 200 episodios sobre payloads `test`, semillas 1000–1199, `query_budget = 50` |
 | `attacker-eval-family-v1` | 200 episodios sobre `test-family` |
 | `defender-eval-v1` | 2 000 sesiones de `test`, `attack_ratio = 0.1`; atacantes: `corpus-replay`, `random-mutation` y, desde la Fase 3, `ATK-REF-0` |
@@ -59,3 +60,4 @@ Definidas en `wafarena/eval/harness.py`. Son fijas: mismas semillas, mismos payl
 ## Historial
 
 - 1.0 — versión inicial. Aclaraciones sin cambio de versión (F2-T04): definición de las métricas por sesión y valores `nan` con denominador vacío.
+- 1.1 — Suite de validación `attacker-val-v1` para selección de modelo en el runner. Compatible hacia atrás.
