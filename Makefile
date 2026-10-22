@@ -1,4 +1,4 @@
-.PHONY: setup lint test test-lab lab-up lab-down smoke run verify-splits build-splits endpoints-doc modsec-baseline
+.PHONY: setup lint test test-lab lab-up lab-down smoke run summarize verify-splits build-splits endpoints-doc modsec-baseline
 
 COMPOSE = docker compose -f lab/docker-compose.yml
 
@@ -45,5 +45,10 @@ verify-splits:
 build-splits:
 	VERIFIED_COMMIT=$$(git rev-parse --short HEAD) uv run python scripts/build_splits.py
 
-run:
-	$(call not_implemented,run,F2)
+run: lab-up
+	@test -n "$(CONFIG)" || { echo "usage: make run CONFIG=configs/exp/<file>.yaml" >&2; exit 1; }
+	$(COMPOSE) run --rm runner python -m wafarena.run --config $(CONFIG) $(RUN_ARGS)
+
+summarize:
+	@test -n "$(EXP)" || { echo "usage: make summarize EXP=<exp_id>" >&2; exit 1; }
+	uv run python -m wafarena.summarize --exp $(EXP)
