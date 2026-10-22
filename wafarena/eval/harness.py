@@ -3,13 +3,18 @@
 The same seeds produce the same base payloads, so every agent is judged on the same episodes.
 """
 
+import json
 from dataclasses import dataclass
+
+import numpy as np
 
 from wafarena.agents.base import Agent, strip_ground_truth
 from wafarena.envs.attacker_env import SEND_ACTION, AttackerEnv
 from wafarena.envs.backends.base import Backend
+from wafarena.envs.defender_env import DefenderEnv
 from wafarena.envs.resolve import resolve_backend, resolve_defender
-from wafarena.eval.metrics import EpisodeResult
+from wafarena.eval.metrics import EpisodeResult, RequestRecord
+from wafarena.splits.builder import SPLITS_PATH
 
 
 @dataclass(frozen=True)
@@ -75,3 +80,131 @@ def _play_episode(agent: Agent, env: AttackerEnv, seed: int) -> EpisodeResult:
         broken=broken,
         payload=info["payload"],
     )
+
+
+@dataclass(frozen=True)
+class SessionPlan:
+    """One session of a defender suite: which attack payload or benign session, and the env seed."""
+
+    is_attack: bool
+    ref: str  # payload base_id (attack) or session_id (benign)
+    seed: int
+
+
+@dataclass(frozen=True)
+class DefenderSuite:
+    name: str
+    benign_split: str
+    attack_split: str
+    attackers: tuple[str, ...]
+    n_sessions: int = 2000
+    attack_ratio: float = 0.1
+    all_benign: bool = False  # use every session of `benign_split` once instead of sampling
+    attacks_like: str | None = None  # reuse the attack sessions of another suite
+
+
+PLAN_SEEDS = {"benign": 2000, "attack": 2001, "order": 2002}
+ENV_SEED_BASE = 5000
+SCRIPTED_ATTACKERS = ("corpus-replay", "random-mutation")
+DEFENDER_SUITES = {
+    "defender-eval-v1": DefenderSuite("defender-eval-v1", "test", "test", SCRIPTED_ATTACKERS),
+    "defender-eval-hard-v1": DefenderSuite(
+        "defender-eval-hard-v1",
+        "test-hard",
+        "test",
+        SCRIPTED_ATTACKERS,
+        all_benign=True,
+        attacks_like="defender-eval-v1",
+    ),
+    "defender-eval-family-v1": DefenderSuite(
+        "defender-eval-family-v1", "test", "test-family", SCRIPTED_ATTACKERS
+    ),
+}
+
+
+def _split_ids(kind: str, split: str) -> list[str]:
+    return sorted(json.loads(SPLITS_PATH.read_text())[kind][split])
+
+
+def _sample(ids: list[str], n: int, seed: int) -> list[str]:
+    rng = np.random.default_rng(seed)
+    return [ids[i] for i in rng.integers(len(ids), size=n)]
+
+
+def _attack_refs(spec: DefenderSuite) -> list[str]:
+    source = DEFENDER_SUITES[spec.attacks_like] if spec.attacks_like else spec
+    n_attacks = round(source.n_sessions * source.attack_ratio)
+    return _sample(_split_ids("payloads", source.attack_split), n_attacks, PLAN_SEEDS["attack"])
+
+
+def _benign_refs(spec: DefenderSuite) -> list[str]:
+    ids = _split_ids("benign", spec.benign_split)
+    if spec.all_benign:
+        return ids
+    n_benign = spec.n_sessions - round(spec.n_sessions * spec.attack_ratio)
+    return _sample(ids, n_benign, PLAN_SEEDS["benign"])
+
+
+def build_session_plan(spec: DefenderSuite) -> list[SessionPlan]:
+    """Deterministic, shuffled list of the suite's sessions; identical for every defender."""
+    entries = [(True, ref) for ref in _attack_refs(spec)]
+    entries += [(False, ref) for ref in _benign_refs(spec)]
+    order = np.random.default_rng(PLAN_SEEDS["order"]).permutation(len(entries))
+    return [
+        SessionPlan(entries[i][0], entries[i][1], ENV_SEED_BASE + position)
+        for position, i in enumerate(order)
+    ]
+
+
+def run_defender_suite(
+    defender,
+    suite: str,
+    *,
+    attacker: str,
+    backend: Backend | str = "fast",
+) -> list[RequestRecord]:
+    """Play every session of the suite against one scripted attacker; one record per request.
+
+    `defender` is an `Agent` (role "defender") or a `DefenderPolicy`. Agents only see `info`
+    without `gt_*` keys and are never updated here.
+    """
+    if hasattr(defender, "role") and defender.role != "defender":
+        raise ValueError(f"defender suites need a defender, got role {defender.role!r}")
+    spec = DEFENDER_SUITES[suite]
+    if attacker not in spec.attackers:
+        raise ValueError(f"suite {suite} does not include attacker {attacker!r}")
+    env = DefenderEnv(
+        backend=resolve_backend(backend),
+        attacker=attacker.replace("-", "_"),
+        split=spec.benign_split,
+        attack_split=spec.attack_split,
+    )
+    records: list[RequestRecord] = []
+    for item in build_session_plan(spec):
+        records.extend(_play_session(defender, env, item))
+    return records
+
+
+def _play_session(defender, env: DefenderEnv, item: SessionPlan) -> list[RequestRecord]:
+    options = {"base_id": item.ref} if item.is_attack else {"session_id": item.ref}
+    obs, info = env.reset(seed=item.seed, options=options)
+    is_policy = hasattr(defender, "reset_session")
+    if is_policy:
+        defender.reset_session(info["session_id"])
+    records, done = [], False
+    while not done:
+        if is_policy:
+            action = int(defender.act(obs))
+        else:
+            action = int(defender.act(obs, strip_ground_truth(info), explore=False))
+        obs, _reward, terminated, truncated, info = env.step(action)
+        records.append(
+            RequestRecord(
+                is_attack=info["gt_label"] == "attack",
+                action=action,
+                effect=bool(info["gt_effect"]),
+                session_id=info["session_id"],
+            )
+        )
+        done = terminated or truncated
+    return records
