@@ -13,6 +13,7 @@ from wafarena.envs.attacker_env import SEND_ACTION, AttackerEnv
 from wafarena.envs.backends.base import Backend
 from wafarena.envs.defender_env import DefenderEnv
 from wafarena.envs.resolve import resolve_backend, resolve_defender
+from wafarena.eval import metrics
 from wafarena.eval.metrics import EpisodeResult, RequestRecord
 from wafarena.splits.builder import SPLITS_PATH
 
@@ -32,6 +33,10 @@ ATTACKER_SUITES = {
         "attacker-eval-family-v1", "test-family", EVAL_SEEDS, 50
     ),
 }
+# Model selection runs on `val`; these suites are never part of the reported evaluation.
+VALIDATION_SUITES = {
+    "attacker-val-v1": AttackerSuite("attacker-val-v1", "val", range(2000, 2200), 50),
+}
 
 
 def run_attacker_suite(
@@ -47,7 +52,7 @@ def run_attacker_suite(
     """
     if agent.role != "attacker":
         raise ValueError(f"attacker suites need an attacker agent, got role {agent.role!r}")
-    spec = ATTACKER_SUITES[suite]
+    spec = {**ATTACKER_SUITES, **VALIDATION_SUITES}[suite]
     env = AttackerEnv(
         backend=resolve_backend(backend),
         defender=resolve_defender(defender),
@@ -55,6 +60,21 @@ def run_attacker_suite(
         query_budget=spec.query_budget,
     )
     return [_play_episode(agent, env, seed) for seed in spec.seeds]
+
+
+def summarize_attacker(results: list[EpisodeResult], *, query_budget: int) -> dict[str, float]:
+    """All attacker metrics of metricas.md for one suite run."""
+    winners = [r.payload for r in results if r.evaded]
+    return {
+        "episodes": len(results),
+        "evasions": sum(r.evaded for r in results),
+        "evasion_rate": metrics.evasion_rate(results),
+        "qfe": metrics.queries_to_first_evasion(results),
+        "qfe_c": metrics.censored_queries(results, query_budget),
+        "diversity": metrics.diversity(winners),
+        "uniqueness": metrics.uniqueness(winners),
+        "break_rate": metrics.break_rate(results),
+    }
 
 
 def _play_episode(agent: Agent, env: AttackerEnv, seed: int) -> EpisodeResult:

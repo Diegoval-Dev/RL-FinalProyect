@@ -103,3 +103,25 @@ def test_non_attacker_agent_is_rejected():
 def test_numpy_scalar_actions_are_accepted():
     agent = CycleAgent(cycle=(np.int64(SEND_ACTION),))
     assert run(agent)
+
+
+def test_validation_suite_uses_val_and_is_not_a_reportable_suite():
+    val = harness.VALIDATION_SUITES["attacker-val-v1"]
+    assert val.split == "val" and len(val.seeds) == 200
+    assert not set(val.seeds) & set(harness.EVAL_SEEDS)
+    assert "attacker-val-v1" not in harness.ATTACKER_SUITES
+    assert all(s.split.startswith("test") for s in harness.ATTACKER_SUITES.values())
+
+
+def test_validation_suite_can_be_run():
+    results = run(CycleAgent(), suite="attacker-val-v1")
+    assert [r.seed for r in results] == list(harness.VALIDATION_SUITES["attacker-val-v1"].seeds)
+
+
+def test_summarize_attacker_reports_every_attacker_metric():
+    results = run(CycleAgent())
+    summary = harness.summarize_attacker(results, query_budget=50)
+    assert summary["episodes"] == 200
+    assert summary["evasion_rate"] == evasion_rate(results)
+    assert {"qfe", "qfe_c", "diversity", "uniqueness", "break_rate"} <= summary.keys()
+    assert summary["evasions"] == sum(r.evaded for r in results)
