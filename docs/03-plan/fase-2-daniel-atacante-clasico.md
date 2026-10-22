@@ -80,7 +80,7 @@ Construir la maquinaria con la que el resto del proyecto corre y mide experiment
 ## Estado
 
 - [x] F2-T01 Aceptación del relevo
-- [ ] F2-T02 Interfaz `Agent` y checkpoints
+- [x] F2-T02 Interfaz `Agent` y checkpoints
 - [ ] F2-T03 Runner
 - [ ] F2-T04 Métricas y suites
 - [ ] F2-T05 Bandits
@@ -94,3 +94,5 @@ Construir la maquinaria con la que el resto del proyecto corre y mide experiment
 ## Hallazgos
 
 - **F2-T01 (heredado de F1-T12):** `gym.make("WafArena/Attacker-v0", backend="fast", defender={...})` y `Defender-v0` con `backend="fast"` / `attacker="corpus_replay"` no funcionaban como lo documentan los contratos (los entornos solo aceptaban objetos). Corregido en esta fase con `wafarena/envs/resolve.py`; los tipos `checkpoint` y `pool` lanzan `NotImplementedError` hasta F2-T02/T10. El contrato no cambia (el código se alineó con él).
+- **F2-T01 (hallazgo, afecta F2-T10):** `AttackerDriver` y `DefenderDriver` figuran como entregados en HANDOFF-1 §2 y en el contrato de agentes, pero no existen en el código (`grep` sin resultados). Hay que implementarlos antes de usar `ATK-REF-0` dentro de `Defender-v0`; `{"type": "checkpoint"|"pool"}` sigue lanzando `NotImplementedError` hasta entonces.
+- **F2-T02:** el contrato nombra las versiones en `meta.yaml` como `env_attacker`, `operators`, `features`, distintos de las claves de `wafarena.CONTRACT_VERSIONS`; `wafarena/agents/base.py` mantiene la correspondencia (`META_CONTRACT_KEYS`). `pyyaml` pasó a dependencia de runtime.
