@@ -18,7 +18,7 @@ class RandomMutationAttacker:
     def reset(self, base: Payload, endpoint: str, rng: np.random.Generator) -> None:
         self._payload = base
         self._rng = rng
-        self._budget = int(rng.integers(self._max_mutations + 1))
+        self._budget = 1 + int(rng.integers(self._max_mutations))
 
     def next_request(self, last_response: int) -> Payload | None:
         if self._budget <= 0:
