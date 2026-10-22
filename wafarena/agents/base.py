@@ -42,7 +42,7 @@ class Transition:
     next_obs: np.ndarray
     terminated: bool
     truncated: bool
-    info: Mapping[str, Any]  # never carries gt_ keys
+    info: Mapping[str, Any]  # info after the step (the one of next_obs); never carries gt_ keys
 
 
 class Agent(Protocol):
@@ -72,6 +72,25 @@ def register_agent(algo: str) -> Callable[[type], type]:
         return cls
 
     return decorator
+
+
+def build_agent(
+    algo: str,
+    params: Mapping[str, Any],
+    *,
+    obs_dim: int,
+    n_actions: int,
+    seed: int,
+    agent_id: str,
+) -> Agent:
+    """Instantiate the registered agent class for `algo` from experiment-config parameters."""
+    try:
+        cls = _AGENT_CLASSES[algo]
+    except KeyError:
+        raise KeyError(f"no agent registered for algo {algo!r}") from None
+    return cls.from_config(
+        params=params, obs_dim=obs_dim, n_actions=n_actions, seed=seed, agent_id=agent_id
+    )
 
 
 def current_contract_versions(role: str) -> dict[str, str]:
