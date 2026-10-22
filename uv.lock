@@ -1,5 +1,5 @@
 version = 1
-revision = 3
+revision = 5
 requires-python = "==3.11.*"
 
 [[package]]
@@ -539,6 +539,7 @@ dependencies = [
     { name = "pglast" },
     { name = "psycopg", extra = ["binary"] },
     { name = "python-multipart" },
+    { name = "pyyaml" },
     { name = "uvicorn" },
 ]
 
@@ -546,7 +547,6 @@ dependencies = [
 dev = [
     { name = "hypothesis" },
     { name = "pytest" },
-    { name = "pyyaml" },
     { name = "ruff" },
 ]
 
@@ -559,6 +559,7 @@ requires-dist = [
     { name = "pglast", specifier = ">=8.7" },
     { name = "psycopg", extras = ["binary"], specifier = ">=3.3.6" },
     { name = "python-multipart", specifier = ">=0.0.32" },
+    { name = "pyyaml", specifier = ">=6.0.3" },
     { name = "uvicorn", specifier = ">=0.54.0" },
 ]
 
@@ -566,6 +567,5 @@ requires-dist = [
 dev = [
     { name = "hypothesis" },
     { name = "pytest" },
-    { name = "pyyaml", specifier = ">=6.0.3" },
     { name = "ruff" },
 ]
