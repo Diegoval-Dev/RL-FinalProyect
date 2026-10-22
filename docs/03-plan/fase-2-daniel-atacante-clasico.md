@@ -82,7 +82,7 @@ Construir la maquinaria con la que el resto del proyecto corre y mide experiment
 - [x] F2-T01 Aceptación del relevo
 - [x] F2-T02 Interfaz `Agent` y checkpoints
 - [ ] F2-T03 Runner
-- [ ] F2-T04 Métricas y suites (parcial: estadística, métricas y suites del atacante listas; faltan las suites del defensor)
+- [x] F2-T04 Métricas y suites
 - [ ] F2-T05 Bandits
 - [ ] F2-T06 MDP abstracto y DP
 - [ ] F2-T07 Monte Carlo
@@ -96,4 +96,4 @@ Construir la maquinaria con la que el resto del proyecto corre y mide experiment
 - **F2-T01 (heredado de F1-T12):** `gym.make("WafArena/Attacker-v0", backend="fast", defender={...})` y `Defender-v0` con `backend="fast"` / `attacker="corpus_replay"` no funcionaban como lo documentan los contratos (los entornos solo aceptaban objetos). Corregido en esta fase con `wafarena/envs/resolve.py`; los tipos `checkpoint` y `pool` lanzan `NotImplementedError` hasta F2-T02/T10. El contrato no cambia (el código se alineó con él).
 - **F2-T01 (hallazgo, afecta F2-T10):** `AttackerDriver` y `DefenderDriver` figuran como entregados en HANDOFF-1 §2 y en el contrato de agentes, pero no existen en el código (`grep` sin resultados). Hay que implementarlos antes de usar `ATK-REF-0` dentro de `Defender-v0`; `{"type": "checkpoint"|"pool"}` sigue lanzando `NotImplementedError` hasta entonces.
 - **F2-T02:** el contrato nombra las versiones en `meta.yaml` como `env_attacker`, `operators`, `features`, distintos de las claves de `wafarena.CONTRACT_VERSIONS`; `wafarena/agents/base.py` mantiene la correspondencia (`META_CONTRACT_KEYS`). `pyyaml` pasó a dependencia de runtime.
-- **F2-T04 (pendiente):** `DefenderEnv` usa un solo `split` para sesiones benignas y payloads de ataque, por lo que `defender-eval-family-v1` (benignas `test` + ataques `test-family`) y `defender-eval-hard-v1` no se pueden construir sin ampliar el entorno (p. ej. una opción `attack_split`, cambio MENOR del contrato). Las suites del defensor no se necesitan hasta la Fase 3; se resuelven antes del handoff.
+- **F2-T04:** `DefenderEnv` usaba un solo `split` para sesiones benignas y payloads de ataque, lo que impedía las suites `family` y `hard`. Se agregó `attack_split` y `options` (`base_id`, `session_id`) en `reset` (contrato env-defensor 1.1, compatible). Además `RandomMutationAttacker` podía sortear presupuesto 0 y producir una sesión de ataque sin requests, que rompía `DefenderEnv.reset`; ahora envía entre 1 y 5 requests. `ATK-REF-0` se agrega a `defender-eval-v1` en F2-T10.
