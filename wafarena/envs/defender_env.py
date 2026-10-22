@@ -13,6 +13,7 @@ from wafarena.attackers.random_mutation import RandomMutationAttacker
 from wafarena.defenders.base import Action
 from wafarena.envs.attacker_env import PARAM_BY_ENDPOINT, _load_bases
 from wafarena.envs.backends.base import Backend
+from wafarena.envs.resolve import resolve_attacker_type, resolve_backend
 from wafarena.features.modsec import modsec_features
 from wafarena.features.request import RequestInput, request_features
 from wafarena.features.session import SessionTracker
@@ -31,7 +32,7 @@ class DefenderEnv(gym.Env):
 
     def __init__(
         self,
-        backend: Backend,
+        backend: Backend | str,
         attacker=None,
         split="train",
         attack_ratio=0.1,
@@ -40,8 +41,8 @@ class DefenderEnv(gym.Env):
     ):
         self.observation_space = spaces.Box(0.0, 1.0, shape=(OBS_SIZE,), dtype=np.float32)
         self.action_space = spaces.Discrete(N_ACTIONS)
-        self._backend = backend
-        self._attacker_factory = ATTACKERS[(attacker or {"type": "corpus_replay"})["type"]]
+        self._backend = resolve_backend(backend)
+        self._attacker_factory = ATTACKERS[resolve_attacker_type(attacker)]
         self._attack_ratio = attack_ratio
         self._reward = reward or {"alpha": 4.0, "beta": 1.0, "gamma": 0.5}
         self._abandon_prob = benign_abandon_prob
