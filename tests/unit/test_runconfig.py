@@ -143,6 +143,21 @@ def test_unknown_eval_suite_is_rejected():
         resolve_config(config(eval__suites=["no-such-suite"]))
 
 
+def test_eval_suites_must_match_the_environment_role():
+    with pytest.raises(ConfigError, match="defender-eval-v1"):
+        resolve_config(config(eval__suites=["defender-eval-v1"]))
+    defender = config(env__id="WafArena/Defender-v0", eval__suites=["defender-eval-v1"])
+    assert resolve_config(defender)["eval"]["suites"] == ["defender-eval-v1"]
+    with pytest.raises(ConfigError, match="attacker-eval-v1"):
+        resolve_config(config(env__id="WafArena/Defender-v0"))
+
+
+def test_defender_environment_defaults_to_the_defender_suite():
+    raw = {k: v for k, v in VALID.items() if k != "eval"}
+    raw["env"] = {"id": "WafArena/Defender-v0"}
+    assert resolve_config(raw)["eval"]["suites"] == ["defender-eval-v1"]
+
+
 def test_wandb_is_not_supported_yet():
     with pytest.raises(ConfigError, match="wandb"):
         resolve_config(config(logging__wandb=True))

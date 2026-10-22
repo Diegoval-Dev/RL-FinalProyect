@@ -14,7 +14,14 @@ ENVIRONMENTS = ("WafArena/Attacker-v0", "WafArena/Defender-v0")
 BACKENDS = ("fast", "real")
 TRAIN_SPLIT = "train"
 RUN_NAME_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
-EVAL_SUITES = {*ATTACKER_SUITES, *DEFENDER_SUITES}
+SUITES_BY_ENV = {
+    "WafArena/Attacker-v0": ATTACKER_SUITES,
+    "WafArena/Defender-v0": DEFENDER_SUITES,
+}
+DEFAULT_SUITE = {
+    "WafArena/Attacker-v0": "attacker-eval-v1",
+    "WafArena/Defender-v0": "defender-eval-v1",
+}
 
 DEFAULTS: dict[str, Any] = {
     "owner": None,
@@ -26,7 +33,7 @@ DEFAULTS: dict[str, Any] = {
         "query_budget": 50,
     },
     "agent": {"params": {}},
-    "eval": {"suites": ["attacker-eval-v1"], "every_steps": 10000, "final": True},
+    "eval": {"every_steps": 10000, "final": True},
     "logging": {"tensorboard": True, "wandb": False},
     "checkpoint": {"save_best_on": "val"},
 }
@@ -134,9 +141,10 @@ def resolve_config(raw: dict[str, Any]) -> dict[str, Any]:
         raise ConfigError("train.total_steps must be a positive integer")
 
     eval_cfg = config["eval"]
+    eval_cfg.setdefault("suites", [DEFAULT_SUITE[env["id"]]])
     for suite in eval_cfg["suites"]:
-        if suite not in EVAL_SUITES:
-            raise ConfigError(f"unknown eval suite {suite!r}")
+        if suite not in SUITES_BY_ENV[env["id"]]:
+            raise ConfigError(f"eval suite {suite!r} does not apply to {env['id']}")
     if type(eval_cfg["every_steps"]) is not int or eval_cfg["every_steps"] <= 0:
         raise ConfigError("eval.every_steps must be a positive integer")
     if config["checkpoint"]["save_best_on"] != "val":
