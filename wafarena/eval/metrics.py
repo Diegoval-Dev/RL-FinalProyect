@@ -98,3 +98,88 @@ def cumulative_regret(arm_means: Sequence[float], chosen_arms: Sequence[int]) ->
     """R(t) = Σ (μ* − μ_{a_t}) for a bandit, with `arm_means` estimated offline."""
     means = np.asarray(arm_means, dtype=float)
     return np.cumsum(means.max() - means[np.asarray(chosen_arms, dtype=int)])
+
+
+@dataclass(frozen=True)
+class RequestRecord:
+    """One request seen by the defender; `effect` is whether an attack would succeed if allowed."""
+
+    is_attack: bool
+    action: int
+    effect: bool
+    session_id: str
+
+
+ALLOW = 0
+HARD_ACTIONS = frozenset({1, 4})  # BLOCK, HONEYPOT
+
+
+def _fraction(numerator: int, denominator: int) -> float:
+    return numerator / denominator if denominator else math.nan
+
+
+def tpr(records: Sequence[RequestRecord]) -> float:
+    """TPR: attack requests with action ≠ ALLOW / attack requests."""
+    attacks = [r for r in records if r.is_attack]
+    return _fraction(sum(r.action != ALLOW for r in attacks), len(attacks))
+
+
+def evasion_suffered(records: Sequence[RequestRecord]) -> float:
+    """ER-d: attack requests allowed with effect / attack requests with effect."""
+    effective = [r for r in records if r.is_attack and r.effect]
+    return _fraction(sum(r.action == ALLOW for r in effective), len(effective))
+
+
+def fpr(records: Sequence[RequestRecord]) -> float:
+    """FPR: benign requests with action ≠ ALLOW / benign requests."""
+    benign = [r for r in records if not r.is_attack]
+    return _fraction(sum(r.action != ALLOW for r in benign), len(benign))
+
+
+def fpr_hard(records: Sequence[RequestRecord]) -> float:
+    """FPR-h: benign requests with BLOCK or HONEYPOT / benign requests."""
+    benign = [r for r in records if not r.is_attack]
+    return _fraction(sum(r.action in HARD_ACTIONS for r in benign), len(benign))
+
+
+def _benign_sessions(records: Sequence[RequestRecord]) -> dict[str, list[int]]:
+    sessions: dict[str, list[int]] = {}
+    for r in records:
+        if not r.is_attack:
+            sessions.setdefault(r.session_id, []).append(r.action)
+    return sessions
+
+
+def fpr_by_session(records: Sequence[RequestRecord]) -> float:
+    """FPR (s): benign sessions with at least one action ≠ ALLOW / benign sessions."""
+    sessions = _benign_sessions(records)
+    return _fraction(
+        sum(any(a != ALLOW for a in acts) for acts in sessions.values()), len(sessions)
+    )
+
+
+def fpr_hard_by_session(records: Sequence[RequestRecord]) -> float:
+    """FPR-h (s): benign sessions with at least one BLOCK or HONEYPOT / benign sessions."""
+    sessions = _benign_sessions(records)
+    hard = sum(any(a in HARD_ACTIONS for a in acts) for acts in sessions.values())
+    return _fraction(hard, len(sessions))
+
+
+def f1(records: Sequence[RequestRecord]) -> float:
+    """F1 over the binarization action ≠ ALLOW (positive class = attack)."""
+    tp = sum(r.is_attack and r.action != ALLOW for r in records)
+    fp = sum(not r.is_attack and r.action != ALLOW for r in records)
+    fn = sum(r.is_attack and r.action == ALLOW for r in records)
+    denominator = 2 * tp + fp + fn
+    return 2 * tp / denominator if denominator else math.nan
+
+
+def latency_percentiles(added_ms: Sequence[float]) -> tuple[float, float]:
+    """LAT: p50 and p95 (ms) of the time the proxy adds over ModSecurity alone (real mode)."""
+    p50, p95 = np.percentile(np.asarray(added_ms, dtype=float), [50, 95])
+    return float(p50), float(p95)
+
+
+def gap(fast: float, real: float) -> float:
+    """GAP(m) = |m_fast − m_real| between backends for the same metric and seeds."""
+    return abs(fast - real)
