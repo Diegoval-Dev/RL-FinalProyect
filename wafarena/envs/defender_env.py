@@ -38,6 +38,7 @@ class DefenderEnv(gym.Env):
         attack_ratio=0.1,
         reward=None,
         benign_abandon_prob=0.0,
+        attack_split=None,
     ):
         self.observation_space = spaces.Box(0.0, 1.0, shape=(OBS_SIZE,), dtype=np.float32)
         self.action_space = spaces.Discrete(N_ACTIONS)
@@ -46,31 +47,45 @@ class DefenderEnv(gym.Env):
         self._attack_ratio = attack_ratio
         self._reward = reward or {"alpha": 4.0, "beta": 1.0, "gamma": 0.5}
         self._abandon_prob = benign_abandon_prob
-        self._bases = _load_bases(split)
+        self._bases = _load_bases(attack_split or split)
         self._benign = _load_benign_sessions(split)
 
     def reset(self, *, seed=None, options=None):
         super().reset(seed=seed)
+        options = options or {}
+        if "base_id" in options and "session_id" in options:
+            raise ValueError("reset options base_id and session_id are exclusive: got both")
         self._tracker = SessionTracker()
-        self._is_attack = self.np_random.random() < self._attack_ratio
+        if "base_id" in options:
+            self._is_attack = True
+        elif "session_id" in options:
+            self._is_attack = False
+        else:
+            self._is_attack = self.np_random.random() < self._attack_ratio
         self._step_index = 0
         if self._is_attack:
-            self._start_attack_session()
+            self._start_attack_session(options.get("base_id"))
         else:
-            self._start_benign_session()
+            self._start_benign_session(options.get("session_id"))
         self._pending = self._next_request()
         return self._obs(), self._info()
 
-    def _start_attack_session(self):
-        base = self._bases[int(self.np_random.integers(len(self._bases)))]
+    def _start_attack_session(self, base_id=None):
+        if base_id is None:
+            base = self._bases[int(self.np_random.integers(len(self._bases)))]
+        else:
+            base = _find(self._bases, lambda b: b.base_id == base_id, base_id)
         self._session_id = f"atk-{base.base_id}"
         self._endpoint, self._param = base.endpoint, PARAM_BY_ENDPOINT[base.endpoint]
         self._attacker = self._attacker_factory()
         self._attacker.reset(Payload(base.text, base.location, 0), base.endpoint, self.np_random)
         self._last_response = 0
 
-    def _start_benign_session(self):
-        session = self._benign[int(self.np_random.integers(len(self._benign)))]
+    def _start_benign_session(self, session_id=None):
+        if session_id is None:
+            session = self._benign[int(self.np_random.integers(len(self._benign)))]
+        else:
+            session = _find(self._benign, lambda s: s["session_id"] == session_id, session_id)
         self._session_id = session["session_id"]
         self._benign_requests = list(session["requests"])
         self._benign_cursor = 0
@@ -163,6 +178,13 @@ class DefenderEnv(gym.Env):
             "gt_hard_tags": [],
         }
         return info
+
+
+def _find(items, matches, name):
+    for item in items:
+        if matches(item):
+            return item
+    raise ValueError(f"{name!r} is not in the environment's split")
 
 
 def _load_benign_sessions(split: str) -> list[dict]:
