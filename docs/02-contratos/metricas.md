@@ -29,6 +29,8 @@ Todas se calculan por request; las marcadas con (s) también por sesión.
 | F1 | F1 | Sobre la binarización acción ≠ `ALLOW` |
 | Latencia agregada | LAT | p50 y p95 en ms del tiempo agregado por el proxy respecto a ModSecurity solo, en modo real |
 
+Las versiones por sesión (s) cuentan sesiones benignas con al menos un request con acción ≠ `ALLOW` (FPR) o con `BLOCK`/`HONEYPOT` (FPR-h), sobre el total de sesiones benignas. Las métricas con denominador vacío (por ejemplo, TPR sin requests de ataque) valen `nan`; QFE, DIV y UNQ también son `nan` sin episodios exitosos.
+
 Para comparar contra ModSecurity, que solo bloquea o permite, se usan TPR y FPR. FPR-h se reporta aparte para no esconder fricción detrás de captchas.
 
 ## Brecha entre modos
@@ -56,4 +58,4 @@ Definidas en `wafarena/eval/harness.py`. Son fijas: mismas semillas, mismos payl
 
 ## Historial
 
-- 1.0 — versión inicial.
+- 1.0 — versión inicial. Aclaraciones sin cambio de versión (F2-T04): definición de las métricas por sesión y valores `nan` con denominador vacío.
