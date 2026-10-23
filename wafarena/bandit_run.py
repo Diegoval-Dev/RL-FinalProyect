@@ -213,9 +213,19 @@ def main(argv: list[str] | None = None) -> None:
         help="run with uncommitted changes; marked in meta.yaml and not valid for the report",
     )
     parser.add_argument("--overwrite", action="store_true", help="replace existing runs")
+    parser.add_argument(
+        "--seed",
+        type=int,
+        default=None,
+        help="run only this one seed instead of every config seed",
+    )
     args = parser.parse_args(argv)
     try:
         config = load_config(args.config)
+        if args.seed is not None:
+            if args.seed not in config["seeds"]:
+                parser.exit(2, f"error: seed {args.seed} is not in config.seeds\n")
+            config["seeds"] = [args.seed]
         directories = run_experiment(
             config,
             results_root=args.results,

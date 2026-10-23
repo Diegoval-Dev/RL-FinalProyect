@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 
 import pytest
+import yaml
 
 from wafarena import bandit_run
 from wafarena.envs.backends.fake import FakeBackend
@@ -177,3 +178,27 @@ def test_backend_is_constructed_once_and_shared_across_all_seeds(tmp_path, monke
     )
     assert len(built) == 1
     assert closed == built
+
+
+def test_cli_seed_flag_runs_only_that_seed(tmp_path, monkeypatch):
+    path = tmp_path / "exp.yaml"
+    raw = copy.deepcopy(CONFIG)
+    raw["seeds"] = [0, 1, 2]
+    path.write_text(yaml.safe_dump(raw))
+    monkeypatch.setattr(bandit_run, "resolve_backend", lambda kind: FakeBackend())
+    bandit_run.main(
+        [
+            "--config",
+            str(path),
+            "--results",
+            str(tmp_path / "out"),
+            "--allow-dirty",
+            "--seed",
+            "1",
+            "--arm-means",
+            str(write_arm_means(tmp_path / "means.csv")),
+        ]
+    )
+    out = tmp_path / "out" / "EXP-A1" / "toy"
+    assert not (out / "s0").exists() and not (out / "s2").exists()
+    assert (out / "s1" / "final_eval.json").exists()
