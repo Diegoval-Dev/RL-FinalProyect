@@ -5,6 +5,7 @@ The same seeds produce the same base payloads, so every agent is judged on the s
 
 import json
 from dataclasses import dataclass
+from pathlib import Path
 
 import numpy as np
 
@@ -126,8 +127,11 @@ class DefenderSuite:
 PLAN_SEEDS = {"benign": 2000, "attack": 2001, "order": 2002}
 ENV_SEED_BASE = 5000
 SCRIPTED_ATTACKERS = ("corpus-replay", "random-mutation")
+REFS_DIR = Path("checkpoints/refs")
 DEFENDER_SUITES = {
-    "defender-eval-v1": DefenderSuite("defender-eval-v1", "test", "test", SCRIPTED_ATTACKERS),
+    "defender-eval-v1": DefenderSuite(
+        "defender-eval-v1", "test", "test", (*SCRIPTED_ATTACKERS, "ATK-REF-0")
+    ),
     "defender-eval-hard-v1": DefenderSuite(
         "defender-eval-hard-v1",
         "test-hard",
@@ -193,9 +197,14 @@ def run_defender_suite(
     spec = DEFENDER_SUITES[suite]
     if attacker not in spec.attackers:
         raise ValueError(f"suite {suite} does not include attacker {attacker!r}")
+    attacker_arg = (
+        attacker.replace("-", "_")
+        if attacker in SCRIPTED_ATTACKERS
+        else {"type": "checkpoint", "path": str(REFS_DIR / attacker)}
+    )
     env = DefenderEnv(
         backend=resolve_backend(backend),
-        attacker=attacker.replace("-", "_"),
+        attacker=attacker_arg,
         split=spec.benign_split,
         attack_split=spec.attack_split,
     )

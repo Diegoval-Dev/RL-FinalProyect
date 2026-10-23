@@ -135,3 +135,30 @@ def test_every_suite_runs_with_every_scripted_attacker(suite, attacker):
 def test_attacker_outside_the_suite_is_rejected():
     with pytest.raises(ValueError, match="ATK-REF-0"):
         run(ModSecDefender(1), attacker="ATK-REF-0")
+
+
+def test_defender_eval_v1_also_lists_atk_ref_0():
+    assert "ATK-REF-0" in harness.DEFENDER_SUITES["defender-eval-v1"].attackers
+    assert "ATK-REF-0" not in harness.DEFENDER_SUITES["defender-eval-hard-v1"].attackers
+    assert "ATK-REF-0" not in harness.DEFENDER_SUITES["defender-eval-family-v1"].attackers
+
+
+def test_reference_checkpoint_attacker_is_loaded_from_checkpoints_refs(tmp_path, monkeypatch):
+    from wafarena.agents.base import save_checkpoint
+    from wafarena.agents.dp import DPPolicyAgent
+    from wafarena.envs.abstract_state import N_STATES
+    from wafarena.envs.attacker_env import N_ACTIONS, SEND_ACTION
+    from wafarena.envs.attacker_obs import OBS_SIZE
+
+    policy = __import__("numpy").full(N_STATES, SEND_ACTION, dtype=int)
+    ref_dir = tmp_path / "refs" / "ATK-REF-0"
+    save_checkpoint(
+        DPPolicyAgent("ATK-REF-0", policy),
+        ref_dir,
+        algo="dp",
+        obs_dim=OBS_SIZE,
+        n_actions=N_ACTIONS,
+    )
+    monkeypatch.setattr(harness, "REFS_DIR", tmp_path / "refs")
+    records = run(ModSecDefender(1), suite="defender-eval-v1", attacker="ATK-REF-0")
+    assert any(r.is_attack for r in records)
