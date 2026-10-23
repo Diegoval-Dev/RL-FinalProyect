@@ -194,7 +194,7 @@ class HexString:
     def apply(self, payload: Payload, rng: np.random.Generator) -> Payload | None:
         # hex-of-hex is always valid hex, so the oracle accepts this forever; without this guard
         # it reapplies to its own output and the payload grows without bound (found in F2-T05).
-        if HEX_STRING_MARKER in payload.text:
+        if HEX_STRING_MARKER in payload.text.lower():  # case_swap can scramble the marker's case
             return None
         match = STRING_LITERAL.search(payload.text)
         if match is None or not match.group(1):

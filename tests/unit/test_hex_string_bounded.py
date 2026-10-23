@@ -44,3 +44,30 @@ def test_bounded_on_arbitrary_text_too(seed):
     rng = np.random.default_rng(seed)
     lengths = chain(rng, start=Payload("'a' OR 'b'='b'", "query", 0), n=30)
     assert max(lengths) < 500
+
+
+def test_marker_check_is_case_insensitive():
+    """F2-T08: case_swap can scramble the marker's letters (convert_from -> convert_fROm),
+    which a case-sensitive check would no longer recognize, letting hex_string reapply forever
+    and the payload balloon (found running EXP-D1 against the real lab: an 8 KB URL with 40
+    nested wraps, after case_swap had mangled the marker on every previous layer)."""
+    mangled = "' AND 'x' LIKE 'x' -- convert_fROm(decode('ab','hex'),'UTF8')"
+    assert OPERATOR.apply(Payload(mangled, "query", 0), np.random.default_rng(0)) is None
+
+
+def test_bounded_even_when_case_swap_runs_between_applications():
+    from wafarena.mutations.operators import CaseSwap
+
+    rng = np.random.default_rng(0)
+    case_swap = CaseSwap()
+    current = BASE
+    lengths = [len(current.text)]
+    for _ in range(100):
+        mutated = OPERATOR.apply(current, rng)
+        if mutated is not None:
+            current = mutated
+        mutated = case_swap.apply(current, rng)
+        if mutated is not None:
+            current = mutated
+        lengths.append(len(current.text))
+    assert max(lengths) < 500
