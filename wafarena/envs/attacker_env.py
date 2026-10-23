@@ -89,6 +89,10 @@ class AttackerEnv(gym.Env):
         self._ban_threshold = ban_threshold
         self._max_steps = max_steps
 
+    def set_defender(self, defender) -> None:
+        """Replace the defender mid-run (non-stationary runs); applies from the next SEND."""
+        self._defender = resolve_defender(defender)
+
     def reset(self, *, seed=None, options=None):
         super().reset(seed=seed)
         options = options or {}
