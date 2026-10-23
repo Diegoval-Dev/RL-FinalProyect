@@ -1,4 +1,4 @@
-.PHONY: setup lint test test-lab lab-up lab-down smoke run summarize verify-splits build-splits endpoints-doc modsec-baseline operator-preservation bandit-arm-means evasion-reachability
+.PHONY: setup lint test test-lab lab-up lab-down smoke run run-bandit summarize verify-splits build-splits endpoints-doc modsec-baseline operator-preservation bandit-arm-means evasion-reachability
 
 COMPOSE = docker compose -f lab/docker-compose.yml
 
@@ -54,6 +54,10 @@ build-splits:
 run: lab-up
 	@test -n "$(CONFIG)" || { echo "usage: make run CONFIG=configs/exp/<file>.yaml" >&2; exit 1; }
 	$(COMPOSE) run --rm runner python -m wafarena.run --config $(CONFIG) $(RUN_ARGS)
+
+run-bandit: lab-up
+	@test -n "$(CONFIG)" || { echo "usage: make run-bandit CONFIG=configs/exp/<file>.yaml" >&2; exit 1; }
+	$(COMPOSE) run --rm runner python -m wafarena.bandit_run --config $(CONFIG) $(RUN_ARGS)
 
 summarize:
 	@test -n "$(EXP)" || { echo "usage: make summarize EXP=<exp_id>" >&2; exit 1; }
