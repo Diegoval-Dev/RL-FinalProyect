@@ -96,3 +96,26 @@ def test_load_arm_means_rejects_unknown_defender(tmp_path):
     write_csv(path, [["modsec-pl1", a, f"op{a}", 0.0, 2000, 0, "abc"] for a in range(16)])
     with pytest.raises(KeyError, match="modsec-pl9"):
         load_arm_means(path, "modsec-pl9")
+
+
+def test_regret_curve_is_zero_when_always_choosing_the_best_arm():
+    from wafarena.eval.arm_means import regret_curve
+
+    mu = np.array([0.1, 0.5, 0.2])
+    assert np.allclose(regret_curve([1, 1, 1], mu), [0.0, 0.0, 0.0])
+
+
+def test_regret_curve_accumulates_the_gap_to_the_best_arm():
+    from wafarena.eval.arm_means import regret_curve
+
+    mu = np.array([0.1, 0.5, 0.2])
+    assert np.allclose(regret_curve([0, 2, 1], mu), [0.4, 0.7, 0.7])
+
+
+def test_regret_curve_supports_a_schedule_that_changes_mid_run():
+    from wafarena.eval.arm_means import regret_curve
+
+    before = np.array([0.1, 0.5])  # best arm 1
+    after = np.array([0.6, 0.2])  # best arm 0
+    schedule = np.vstack([before, before, after, after])
+    assert np.allclose(regret_curve([1, 0, 0, 1], schedule), [0.0, 0.4, 0.4, 0.8])

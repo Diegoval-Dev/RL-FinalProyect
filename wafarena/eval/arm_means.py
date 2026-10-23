@@ -58,3 +58,13 @@ def load_arm_means(path: Path, defender: str) -> np.ndarray:
     if not means:
         raise KeyError(f"no arm means recorded for defender {defender!r} in {path}")
     return np.array([means[arm] for arm in sorted(means)])
+
+
+def regret_curve(chosen_arms, mu_per_step) -> np.ndarray:
+    """Cumulative R(t) = Σ (μ* − μ_{a_t}); `mu_per_step` is one μ vector or one row per step."""
+    chosen = np.asarray(chosen_arms, dtype=int)
+    mu = np.asarray(mu_per_step, dtype=float)
+    if mu.ndim == 1:
+        mu = np.broadcast_to(mu, (len(chosen), mu.shape[0]))
+    instant = mu.max(axis=1) - mu[np.arange(len(chosen)), chosen]
+    return np.cumsum(instant)
