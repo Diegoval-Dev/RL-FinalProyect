@@ -70,3 +70,4 @@ class FastBackend:
     def close(self) -> None:
         self._pool.shutdown(wait=True)
         self._cache.flush()
+        getattr(self._oracle, "close", lambda: None)()
