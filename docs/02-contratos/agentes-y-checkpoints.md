@@ -1,6 +1,6 @@
 # Contrato: agentes, políticas y checkpoints
 
-**Versión:** 1.0 · **Implementa:** Fase 1 (`DefenderPolicy`, `AttackerPolicy`, `AttackerDriver`) y Fase 2 (`Agent`, checkpoints) · **Archivos:** `wafarena/defenders/base.py`, `wafarena/attackers/base.py`, `wafarena/agents/base.py`
+**Versión:** 1.0 · **Implementa:** Fase 1 (`DefenderPolicy`, `AttackerPolicy`, `AttackerDriver`) y Fase 2 (`Agent`, checkpoints) · **Archivos:** `wafarena/defenders/base.py`, `wafarena/attackers/base.py`, `wafarena/attackers/driver.py`, `wafarena/agents/base.py`
 
 Este contrato es lo que permite enchufar un agente entrenado por una fase como oponente en la fase siguiente sin tocar su código.
 
@@ -90,4 +90,4 @@ Se guardan en `checkpoints/refs/<ID>/` y sí se versionan en git (con Git LFS si
 
 ## Historial
 
-- 1.0 — versión inicial.
+- 1.0 — versión inicial. `AttackerDriver` estaba documentado desde Fase 1 pero no existía en el código (ver Hallazgos de la Fase 2); se implementó en F2-T10 (`wafarena/attackers/driver.py`), sin cambiar esta interfaz.
