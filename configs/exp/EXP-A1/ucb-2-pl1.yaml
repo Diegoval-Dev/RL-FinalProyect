@@ -1,0 +1,27 @@
+exp_id: EXP-A1
+run_name: ucb-2-pl1
+owner: daniel
+rq: [RQ1]
+seeds: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+
+env:
+  id: WafArena/AttackerBandit-v0
+  backend: fast
+  defender: {type: modsec, paranoia_level: 1}
+  query_budget: 50
+
+agent:
+  algo: bandit
+  params:
+    policy: ucb
+    c: 2.0
+
+train:
+  total_steps: 20000
+
+eval:
+  suites: [attacker-eval-v1]
+  final: true
+
+logging:
+  tensorboard: false
