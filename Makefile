@@ -1,4 +1,4 @@
-.PHONY: setup lint test test-lab lab-up lab-down smoke run summarize verify-splits build-splits endpoints-doc modsec-baseline
+.PHONY: setup lint test test-lab lab-up lab-down smoke run summarize verify-splits build-splits endpoints-doc modsec-baseline operator-preservation bandit-arm-means evasion-reachability
 
 COMPOSE = docker compose -f lab/docker-compose.yml
 
