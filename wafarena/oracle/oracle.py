@@ -37,6 +37,7 @@ class Oracle:
         self._app_dsn = app_dsn
         self._oracle_dsn = oracle_dsn
         self._token: str | None = None
+        self._app_connection: psycopg.Connection | None = None
 
     def check_direct(self, payload: Payload, endpoint: str, param: str) -> OracleResult:
         spec = find_endpoint(endpoint)
@@ -82,21 +83,59 @@ class Oracle:
         return self._token
 
     def _execute_in_rollback(self, sql: str) -> Execution:
+        try:
+            return self._run_in_rollback(sql)
+        except psycopg.OperationalError:
+            self._drop_app_connection()  # the lab restarted or the link dropped: retry once
+            return self._run_in_rollback(sql)
+
+    def _run_in_rollback(self, sql: str) -> Execution:
         request_id = f"{DIRECT_REQUEST_PREFIX}{uuid.uuid4().hex}"
-        dsn = self._app_dsn or os.environ[APP_DATABASE_URL_ENV]
-        with psycopg.connect(dsn, autocommit=False, row_factory=dict_row) as connection:
+        connection = self._app_connection_for_use()
+        try:
+            connection.execute(SET_REQUEST_ID_SQL, (request_id,))
+            cursor = connection.execute(sql)
+            rows = cursor.fetchall() if cursor.description else []
+            writes = connection.execute(COUNT_WRITES_SQL, (request_id,)).fetchone()[
+                "count_canary_writes"
+            ]
+            return Execution(None, serialize_rows(rows), writes)
+        except psycopg.Error as error:
+            if connection.broken:
+                raise  # a dead link is not a SQL error; the caller reconnects
+            return Execution(str(error), "", 0)
+        finally:
+            if not connection.broken and not connection.closed:
+                self._reset_session(connection)
+
+    @staticmethod
+    def _reset_session(connection: psycopg.Connection) -> None:
+        """Undo the check completely: roll back and drop session state a stacked payload could
+        leave behind (prepared statements, temp tables), so checks stay independent."""
+        connection.rollback()
+        connection.autocommit = True
+        try:
+            connection.execute("DISCARD ALL")
+        finally:
+            connection.autocommit = False
+
+    def _app_connection_for_use(self) -> psycopg.Connection:
+        """One persistent connection: opening one per payload dominated the cost of a check."""
+        if self._app_connection is None or self._app_connection.closed:
+            dsn = self._app_dsn or os.environ[APP_DATABASE_URL_ENV]
+            self._app_connection = psycopg.connect(dsn, autocommit=False, row_factory=dict_row)
+        return self._app_connection
+
+    def _drop_app_connection(self) -> None:
+        if self._app_connection is not None:
             try:
-                connection.execute(SET_REQUEST_ID_SQL, (request_id,))
-                cursor = connection.execute(sql)
-                rows = cursor.fetchall() if cursor.description else []
-                writes = connection.execute(COUNT_WRITES_SQL, (request_id,)).fetchone()[
-                    "count_canary_writes"
-                ]
-                return Execution(None, serialize_rows(rows), writes)
-            except psycopg.Error as error:
-                return Execution(str(error), "", 0)
-            finally:
-                connection.rollback()
+                self._app_connection.close()
+            except psycopg.Error:
+                pass
+        self._app_connection = None
+
+    def close(self) -> None:
+        self._drop_app_connection()
 
     def _log_entries(self, request_id: str) -> list[tuple]:
         with self._oracle_connection() as connection:
