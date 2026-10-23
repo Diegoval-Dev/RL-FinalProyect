@@ -1,6 +1,6 @@
 # Contrato: operadores de mutación
 
-**Versión:** 1.0 · **Implementa:** Fase 1 (F1-T08) · **Archivo:** `wafarena/mutations/`
+**Versión:** 1.1 · **Implementa:** Fase 1 (F1-T08) · **Archivo:** `wafarena/mutations/`
 
 Los operadores son el espacio de acciones del atacante. Siguen las categorías de la literatura de evasión de WAF por mutación (WAF-A-MoLE y trabajos relacionados, ver [referencias](../08-informe/referencias.md)), adaptadas a la sintaxis de PostgreSQL.
 
@@ -59,3 +59,4 @@ F1-T08 genera `results/summary/operator_preservation.csv` con, por operador y po
 ## Historial
 
 - 1.0 — versión inicial.
+- 1.1 — `hex_string` se niega a reaplicarse sobre su propia salida (hex de hex siempre es hex válido para el oráculo, así que sin este límite el payload crece sin cota). El ejemplo documentado no cambia. Encontrado corriendo EXP-A1 contra el laboratorio real (F2-T05).
