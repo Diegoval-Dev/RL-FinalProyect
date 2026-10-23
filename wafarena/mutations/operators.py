@@ -185,16 +185,23 @@ class DollarQuote:
         return _rebuild(payload, text)
 
 
+HEX_STRING_MARKER = "convert_from(decode("
+
+
 class HexString:
     name = "hex_string"
 
     def apply(self, payload: Payload, rng: np.random.Generator) -> Payload | None:
+        # hex-of-hex is always valid hex, so the oracle accepts this forever; without this guard
+        # it reapplies to its own output and the payload grows without bound (found in F2-T05).
+        if HEX_STRING_MARKER in payload.text:
+            return None
         match = STRING_LITERAL.search(payload.text)
         if match is None or not match.group(1):
             return None
         literal = match.group(1)
         hex_text = literal.encode().hex()
-        replacement = f"convert_from(decode('{hex_text}','hex'),'UTF8')"
+        replacement = f"{HEX_STRING_MARKER}'{hex_text}','hex'),'UTF8')"
         text = payload.text[: match.start()] + replacement + payload.text[match.end() :]
         return _rebuild(payload, text)
 
