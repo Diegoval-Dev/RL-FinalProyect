@@ -1,6 +1,6 @@
 """Learning agents: the `Agent` interface, checkpoints and the ground-truth firewall."""
 
-from wafarena.agents import bandits, dp, random_agent  # noqa: F401  (register algos)
+from wafarena.agents import bandits, dp, mc, random_agent  # noqa: F401  (register algos)
 from wafarena.agents.base import (
     Agent,
     ContractVersionError,
