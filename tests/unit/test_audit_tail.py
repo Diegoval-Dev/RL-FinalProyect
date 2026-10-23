@@ -107,3 +107,31 @@ def test_wait_for_entry_times_out(tmp_path, monkeypatch):
     monkeypatch.setattr("wafarena.defenders.modsec.AUDIT_POLL_TIMEOUT_SECONDS", 0.05)
     with pytest.raises(TimeoutError, match="missing"):
         wait_for_entry(tmp_path / "pl1.json", "missing")
+
+
+def test_skip_existing_ignores_entries_already_in_the_file(tmp_path):
+    """F2-T08: a fresh reader must not have to scan old, unrelated entries left by a past
+    process — found when the (never-rotated) audit log had grown to hundreds of MB and scanning
+    it from byte 0 on every new process started taking longer than the 5 s poll timeout."""
+    path = tmp_path / "pl1.json"
+    append(path, line("old-left-over-from-a-previous-process"))
+    tail = AuditTail(path, skip_existing=True)
+    assert tail.take("old-left-over-from-a-previous-process") is None
+    assert tail.offset == path.stat().st_size
+    append(path, line("new"))
+    assert tail.take("new") is not None
+
+
+def test_skip_existing_is_safe_when_the_file_does_not_exist_yet(tmp_path):
+    tail = AuditTail(tmp_path / "pl1.json", skip_existing=True)
+    assert tail.offset == 0
+
+
+def test_audit_tail_factory_skips_existing_content(tmp_path, monkeypatch):
+    from wafarena.defenders import modsec
+
+    monkeypatch.setattr(modsec, "_tails", {})
+    path = tmp_path / "pl1.json"
+    append(path, line("old-left-over-from-a-previous-process"))
+    tail = modsec.audit_tail(path)
+    assert tail.take("old-left-over-from-a-previous-process") is None

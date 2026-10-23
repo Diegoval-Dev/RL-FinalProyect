@@ -41,9 +41,9 @@ class AuditTail:
     call, so lookups stay O(new data) however large the log grows. Thread-safe.
     """
 
-    def __init__(self, path: Path):
+    def __init__(self, path: Path, *, skip_existing: bool = False):
         self._path = Path(path)
-        self._offset = 0
+        self._offset = self._path.stat().st_size if skip_existing and self._path.exists() else 0
         self._bytes_read = 0
         self._entries: dict[str, AuditEntry] = {}
         self._lock = threading.Lock()
@@ -101,8 +101,13 @@ _tails_lock = threading.Lock()
 
 
 def audit_tail(path: Path) -> AuditTail:
+    """The tail of `path`, created on first use. Skips whatever is already in the file: every
+    request this reads for is one we are about to send, from a request_id generated just before
+    (never a historical one), and the audit log is never rotated — by the time this process
+    starts, past experiments can have left it hundreds of MB long, enough to blow the 5 s poll
+    timeout if a fresh reader had to scan all of it first (found running EXP-D1)."""
     with _tails_lock:
-        return _tails.setdefault(Path(path), AuditTail(path))
+        return _tails.setdefault(Path(path), AuditTail(path, skip_existing=True))
 
 
 def wait_for_entry(path: Path, request_id: str) -> AuditEntry:
