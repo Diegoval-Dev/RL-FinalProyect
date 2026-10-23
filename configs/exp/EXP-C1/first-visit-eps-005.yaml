@@ -1,0 +1,29 @@
+exp_id: EXP-C1
+run_name: first-visit-eps-005
+owner: daniel
+rq: [RQ1]
+seeds: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+
+env:
+  id: WafArena/Attacker-v0
+  backend: fast
+  defender: {type: modsec, paranoia_level: 1}
+  query_budget: 50
+
+agent:
+  algo: mc
+  params:
+    variant: first_visit
+    epsilon: 0.05
+    gamma: 0.99
+
+train:
+  total_steps: 200000
+
+eval:
+  suites: [attacker-eval-v1]
+  every_steps: 10000
+  final: true
+
+logging:
+  tensorboard: false
