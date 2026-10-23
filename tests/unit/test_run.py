@@ -273,3 +273,17 @@ def test_backend_is_constructed_once_and_shared_across_all_seeds(tmp_path, monke
     runner.run_experiment(raw, results_root=tmp_path, repo=REPO, allow_dirty=True)
     assert len(built) == 1
     assert closed == built
+
+
+def test_cli_seed_flag_runs_only_that_seed(tmp_path, monkeypatch):
+    path = tmp_path / "exp.yaml"
+    raw = config(seeds=[0, 1, 2])
+    raw["eval"] = {"suites": ["attacker-eval-v1"], "every_steps": 400, "final": True}
+    path.write_text(yaml.safe_dump(raw))
+    monkeypatch.setattr(runner, "resolve_backend", lambda kind: FakeBackend())
+    runner.main(
+        ["--config", str(path), "--results", str(tmp_path / "out"), "--allow-dirty", "--seed", "1"]
+    )
+    out = tmp_path / "out" / "EXP-D1" / "toy"
+    assert not (out / "s0").exists() and not (out / "s2").exists()
+    assert (out / "s1" / "final_eval.json").exists()
