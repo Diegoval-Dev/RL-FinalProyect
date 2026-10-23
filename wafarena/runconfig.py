@@ -10,16 +10,18 @@ import yaml
 from wafarena.eval.harness import ATTACKER_SUITES, DEFENDER_SUITES
 
 CATALOG_PATH = Path(__file__).parents[1] / "docs" / "07-experimentos" / "catalogo.md"
-ENVIRONMENTS = ("WafArena/Attacker-v0", "WafArena/Defender-v0")
+ENVIRONMENTS = ("WafArena/Attacker-v0", "WafArena/AttackerBandit-v0", "WafArena/Defender-v0")
 BACKENDS = ("fast", "real")
 TRAIN_SPLIT = "train"
 RUN_NAME_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
 SUITES_BY_ENV = {
     "WafArena/Attacker-v0": ATTACKER_SUITES,
+    "WafArena/AttackerBandit-v0": ATTACKER_SUITES,  # bandits deploy their policy on Attacker-v0
     "WafArena/Defender-v0": DEFENDER_SUITES,
 }
 DEFAULT_SUITE = {
     "WafArena/Attacker-v0": "attacker-eval-v1",
+    "WafArena/AttackerBandit-v0": "attacker-eval-v1",
     "WafArena/Defender-v0": "defender-eval-v1",
 }
 
@@ -49,6 +51,8 @@ SECTION_KEYS = {
         "ban_threshold",
         "max_steps",
         "families",
+        "switch_at",
+        "switch_defender",
         "attack_ratio",
         "reward",
         "benign_abandon_prob",
@@ -128,6 +132,8 @@ def resolve_config(raw: dict[str, Any]) -> dict[str, Any]:
         raise ConfigError(f"env.id must be one of {ENVIRONMENTS}, got {env.get('id')!r}")
     if env["backend"] not in BACKENDS:
         raise ConfigError(f"env.backend must be one of {BACKENDS}, got {env['backend']!r}")
+    if ("switch_at" in env) != ("switch_defender" in env):
+        raise ConfigError("env.switch_at and env.switch_defender must be given together")
     if env["split"] != TRAIN_SPLIT:
         raise ConfigError(
             f"env.split must be {TRAIN_SPLIT!r} for training, got {env['split']!r}: "

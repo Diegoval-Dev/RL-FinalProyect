@@ -180,3 +180,35 @@ def test_every_committed_experiment_config_is_valid():
     root = Path(__file__).parents[2] / "configs" / "exp"
     for path in sorted(root.rglob("*.yaml")):
         assert load_config(path)["exp_id"] in catalog_ids(), path
+
+
+BANDIT_CONFIG = {
+    "exp_id": "EXP-A1",
+    "run_name": "greedy-pl1",
+    "seeds": [0],
+    "env": {
+        "id": "WafArena/AttackerBandit-v0",
+        "defender": {"type": "modsec", "paranoia_level": 1},
+    },
+    "agent": {"algo": "bandit", "params": {"policy": "greedy"}},
+    "train": {"total_steps": 20000},
+}
+
+
+def test_bandit_environment_defaults_to_the_attacker_suite():
+    assert resolve_config(BANDIT_CONFIG)["eval"]["suites"] == ["attacker-eval-v1"]
+
+
+def test_bandit_switch_options_are_accepted_together():
+    raw = copy.deepcopy(BANDIT_CONFIG)
+    raw["env"]["switch_at"] = 10000
+    raw["env"]["switch_defender"] = {"type": "modsec", "paranoia_level": 3}
+    resolved = resolve_config(raw)
+    assert resolved["env"]["switch_at"] == 10000
+
+
+def test_bandit_switch_options_must_come_together():
+    raw = copy.deepcopy(BANDIT_CONFIG)
+    raw["env"]["switch_at"] = 10000
+    with pytest.raises(ConfigError, match="switch"):
+        resolve_config(raw)
