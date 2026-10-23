@@ -93,17 +93,33 @@ def test_constant_step_weighs_recent_pulls_more(monkeypatch):
 def test_deployment_alternates_mutation_then_send():
     agent = make("greedy")
     pull(agent, 9, 1.0)
-    first = agent.act(OBS, {"queries_used": 0}, explore=False)
-    second = agent.act(OBS, {"queries_used": 1}, explore=False)
+    first = agent.act(OBS, {"mutations": 0, "queries_used": 0}, explore=False)
+    second = agent.act(OBS, {"mutations": 1, "queries_used": 0}, explore=False)
     assert first == 9 and second == SEND_ACTION
+
+
+def test_deployment_keeps_alternating_even_when_every_send_is_blocked():
+    """F2-T05: a bandit agent must not get stuck mutating forever when nothing ever evades.
+
+    `queries_used` only advances once a SEND actually lands, so using it to detect "haven't sent
+    yet" made the agent re-arm "mutate next" on every call and never return SEND (found running
+    EXP-A1 against the real lab: 150 mutations in a row, queries_used stuck at 0, no evasion ever
+    attempted). `mutations` is the right signal: it is 0 only once, at the very start of a episode.
+    """
+    agent = make("greedy")
+    pull(agent, 9, 1.0)
+    actions = []
+    for mutations in (0, 1, 1, 2, 2, 3):  # mutate, send(blocked), mutate, send(blocked), ...
+        actions.append(agent.act(OBS, {"mutations": mutations, "queries_used": 0}, explore=False))
+    assert actions == [9, SEND_ACTION, 9, SEND_ACTION, 9, SEND_ACTION]
 
 
 def test_deployment_resets_to_mutation_at_the_start_of_every_episode():
     agent = make("greedy")
     pull(agent, 1, 1.0)
-    agent.act(OBS, {"queries_used": 0}, explore=False)  # mutate
-    agent.act(OBS, {"queries_used": 0}, explore=False)  # a new episode started before SEND fired
-    assert agent.act(OBS, {"queries_used": 0}, explore=False) == 1
+    agent.act(OBS, {"mutations": 0}, explore=False)  # mutate
+    agent.act(OBS, {"mutations": 0}, explore=False)  # a new episode started before SEND fired
+    assert agent.act(OBS, {"mutations": 0}, explore=False) == 1
 
 
 def test_checkpoint_round_trip_preserves_q_values_and_behaviour(tmp_path):
@@ -115,8 +131,8 @@ def test_checkpoint_round_trip_preserves_q_values_and_behaviour(tmp_path):
     loaded = load_checkpoint(tmp_path / "ck")
     assert np.array_equal(loaded.q, agent.q)
     assert np.array_equal(loaded.counts, agent.counts)
-    assert loaded.act(OBS, {"queries_used": 5}, explore=False) == 4  # loaded agent starts fresh
-    assert loaded.act(OBS, {"queries_used": 5}, explore=False) == SEND_ACTION
+    assert loaded.act(OBS, {"mutations": 3}, explore=False) == 4  # loaded agent starts fresh
+    assert loaded.act(OBS, {"mutations": 4}, explore=False) == SEND_ACTION
     assert loaded.q.argmax() == 4
 
 

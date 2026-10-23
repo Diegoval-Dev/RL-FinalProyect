@@ -76,7 +76,10 @@ class BanditAgent:
     def act(self, obs: np.ndarray, info: dict[str, Any], *, explore: bool) -> int:
         if explore:
             return self._select_training_arm()
-        if info.get("queries_used", 0) == 0:
+        # `mutations` is 0 only once, at the very start of an episode — unlike `queries_used`,
+        # it does not stay 0 for as long as every SEND keeps getting blocked, so it cannot get
+        # the agent stuck re-arming "mutate next" forever and never reaching SEND (F2-T05).
+        if info.get("mutations", 0) == 0:
             self._awaiting_mutation = True
         if self._awaiting_mutation:
             self._awaiting_mutation = False
