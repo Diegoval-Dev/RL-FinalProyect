@@ -145,5 +145,12 @@ def send_through_modsec(method: str, path: str, pl: int, **kwargs) -> tuple[http
 
 
 def modsec_score(method: str, path: str, pl: int, **kwargs) -> AuditEntry:
-    _response, request_id = send_through_modsec(method, path, pl, **kwargs)
-    return wait_for_entry(audit_path(pl), request_id)
+    """A missing audit entry is rare but not impossible under sustained load (found running
+    EXP-D1, hours into a run, after a fresh-offset reader ruled out a slow scan as the cause):
+    one resend before giving up is far cheaper than losing an otherwise-fine multi-hour run."""
+    try:
+        _response, request_id = send_through_modsec(method, path, pl, **kwargs)
+        return wait_for_entry(audit_path(pl), request_id)
+    except TimeoutError:
+        _response, request_id = send_through_modsec(method, path, pl, **kwargs)
+        return wait_for_entry(audit_path(pl), request_id)

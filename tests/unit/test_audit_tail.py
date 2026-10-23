@@ -135,3 +135,45 @@ def test_audit_tail_factory_skips_existing_content(tmp_path, monkeypatch):
     append(path, line("old-left-over-from-a-previous-process"))
     tail = modsec.audit_tail(path)
     assert tail.take("old-left-over-from-a-previous-process") is None
+
+
+def test_modsec_score_retries_once_after_an_audit_timeout(monkeypatch):
+    """F2-T08: running EXP-D1 for a long time, a single request's audit entry occasionally
+    never showed up within the poll timeout, even on a fresh-offset reader (skip_existing alone
+    did not fix it) — killing an otherwise-fine multi-hour run over one lost log line is too
+    costly, so one resend is worth it before giving up for real."""
+    from wafarena.defenders import modsec
+
+    sent_ids = []
+
+    def fake_send(method, path, pl, **kwargs):
+        request_id = f"id-{len(sent_ids)}"
+        sent_ids.append(request_id)
+        return None, request_id
+
+    calls = []
+
+    def fake_wait(path, request_id):
+        calls.append(request_id)
+        if len(calls) == 1:
+            raise TimeoutError("no audit entry")
+        return "ok"
+
+    monkeypatch.setattr(modsec, "send_through_modsec", fake_send)
+    monkeypatch.setattr(modsec, "wait_for_entry", fake_wait)
+    assert modsec.modsec_score("GET", "/x", 1) == "ok"
+    assert sent_ids == ["id-0", "id-1"]  # the lost request was resent, not just re-awaited
+    assert calls == ["id-0", "id-1"]
+
+
+def test_modsec_score_still_raises_if_the_retry_also_times_out(monkeypatch):
+    from wafarena.defenders import modsec
+
+    monkeypatch.setattr(modsec, "send_through_modsec", lambda *a, **k: (None, "id"))
+
+    def always_timeout(path, request_id):
+        raise TimeoutError("no audit entry")
+
+    monkeypatch.setattr(modsec, "wait_for_entry", always_timeout)
+    with pytest.raises(TimeoutError):
+        modsec.modsec_score("GET", "/x", 1)
