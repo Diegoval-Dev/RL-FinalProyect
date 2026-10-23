@@ -130,3 +130,22 @@ def test_checkpoint_attacker_is_reused_across_episodes(tmp_path):
     for base_id in sorted(SPLITS["payloads"]["test"])[:3]:
         env.reset(seed=0, options={"base_id": base_id})
         env.step(0)
+
+
+def test_atk_ref_0_runs_100_sessions_without_errors():
+    """F2-T10 acceptance: load_checkpoint("checkpoints/refs/ATK-REF-0") works, and
+    AttackerDriver drives it inside Defender-v0 without errors over 100 sessions."""
+    env = DefenderEnv(
+        backend=FakeBackend(),
+        attacker={"type": "checkpoint", "path": "checkpoints/refs/ATK-REF-0"},
+        split="test",
+        attack_ratio=0.5,
+    )
+    for seed in range(100):
+        env.reset(seed=seed)
+        done, steps = False, 0
+        while not done:
+            _obs, _reward, terminated, truncated, _info = env.step(0)
+            done = terminated or truncated
+            steps += 1
+            assert steps <= 300, f"session {seed} did not terminate"
