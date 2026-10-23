@@ -81,7 +81,7 @@ Construir la maquinaria con la que el resto del proyecto corre y mide experiment
 
 - [x] F2-T01 Aceptación del relevo
 - [x] F2-T02 Interfaz `Agent` y checkpoints
-- [ ] F2-T03 Runner
+- [x] F2-T03 Runner
 - [x] F2-T04 Métricas y suites
 - [ ] F2-T05 Bandits
 - [ ] F2-T06 MDP abstracto y DP
@@ -97,3 +97,5 @@ Construir la maquinaria con la que el resto del proyecto corre y mide experiment
 - **F2-T01 (hallazgo, afecta F2-T10):** `AttackerDriver` y `DefenderDriver` figuran como entregados en HANDOFF-1 §2 y en el contrato de agentes, pero no existen en el código (`grep` sin resultados). Hay que implementarlos antes de usar `ATK-REF-0` dentro de `Defender-v0`; `{"type": "checkpoint"|"pool"}` sigue lanzando `NotImplementedError` hasta entonces.
 - **F2-T02:** el contrato nombra las versiones en `meta.yaml` como `env_attacker`, `operators`, `features`, distintos de las claves de `wafarena.CONTRACT_VERSIONS`; `wafarena/agents/base.py` mantiene la correspondencia (`META_CONTRACT_KEYS`). `pyyaml` pasó a dependencia de runtime.
 - **F2-T04:** `DefenderEnv` usaba un solo `split` para sesiones benignas y payloads de ataque, lo que impedía las suites `family` y `hard`. Se agregó `attack_split` y `options` (`base_id`, `session_id`) en `reset` (contrato env-defensor 1.1, compatible). Además `RandomMutationAttacker` podía sortear presupuesto 0 y producir una sesión de ataque sin requests, que rompía `DefenderEnv.reset`; ahora envía entre 1 y 5 requests. `ATK-REF-0` se agrega a `defender-eval-v1` en F2-T10.
+- **F2-T03 (rendimiento):** un run de humo con el agente aleatorio contra `modsec-pl1` en el laboratorio real (2 000 pasos de entrenamiento + 3 evaluaciones de 200 episodios) tardó 2 192 s con la caché fría, unos 40 pasos/s, porque cada payload nuevo cuesta una conexión al oráculo más cuatro consultas HTTP a ModSecurity (el problema de «una conexión por consulta» ya anotado en HANDOFF-1 §8). Una segunda semilla con la caché de la primera tampoco bajó de 35 min, porque las trayectorias aleatorias casi no repiten payloads. Los atacantes tabulares repiten estados y payloads mucho más; antes de las corridas de 200 000 pasos hay que medir su tasa de aciertos de caché y, si hace falta, agregar un *pool* de conexiones al oráculo (R3 de los riesgos de esta fase).
+- **F2-T03 (decisión):** `make run` ejecuta el runner dentro del contenedor `runner` (único con acceso a la red del laboratorio); por eso la imagen incluye `git`.
