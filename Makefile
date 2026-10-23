@@ -33,6 +33,12 @@ modsec-baseline:
 operator-preservation:
 	$(COMPOSE) run --rm runner python scripts/operator_preservation.py
 
+bandit-arm-means:
+	$(COMPOSE) run --rm runner python scripts/bandit_arm_means.py
+
+evasion-reachability:
+	$(COMPOSE) run --rm runner python scripts/evasion_reachability.py
+
 endpoints-doc:
 	PYTHONPATH=lab/vulnapp uv run python -m vulnapp.docs > lab/vulnapp/ENDPOINTS.md
 
