@@ -26,13 +26,14 @@ CONFIG = {
 }
 
 
-def write_arm_means(path: Path, pl1=0.0, pl3=0.0) -> None:
+def write_arm_means(path: Path, pl1=0.0, pl3=0.0) -> Path:
     with path.open("w", newline="") as handle:
         writer = csv.writer(handle)
         writer.writerow(["defender", "arm", "operator", "mu", "pulls", "seed", "git_sha"])
         for arm in range(16):
             writer.writerow([defender_label(PL1), arm, f"op{arm}", pl1, 10, 0, "x"])
             writer.writerow([defender_label(PL3), arm, f"op{arm}", pl3, 10, 0, "x"])
+    return path
 
 
 def go(tmp_path: Path, raw=None, **kwargs):
@@ -147,3 +148,32 @@ def test_non_bandit_environment_is_rejected(tmp_path):
     raw["env"]["id"] = "WafArena/Attacker-v0"
     with pytest.raises(NotImplementedError, match="Bandit"):
         go(tmp_path, raw)
+
+
+def test_backend_is_constructed_once_and_shared_across_all_seeds(tmp_path, monkeypatch):
+    """F2-T05: a fresh backend per seed reloads the (large, disk-persisted) ModSec cache every
+    time; on a memory-constrained host that repeated reload was enough to tip it into OOM."""
+    built, closed = [], []
+
+    class CountingBackend(FakeBackend):
+        def __init__(self):
+            super().__init__()
+            built.append(self)
+
+        def close(self):
+            closed.append(self)
+            super().close()
+
+    monkeypatch.setattr(bandit_run, "resolve_backend", lambda kind: CountingBackend())
+    raw = copy.deepcopy(CONFIG)
+    raw["run_name"] = "shared-backend"
+    raw["seeds"] = [0, 1, 2]
+    bandit_run.run_experiment(
+        raw,
+        results_root=tmp_path / "out",
+        repo=REPO,
+        allow_dirty=True,
+        arm_means_path=write_arm_means(tmp_path / "means.csv") or (tmp_path / "means.csv"),
+    )
+    assert len(built) == 1
+    assert closed == built

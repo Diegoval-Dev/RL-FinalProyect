@@ -47,24 +47,35 @@ def run_experiment(
     backend: Backend | None = None,
     arm_means_path: Path = DEFAULT_ARM_MEANS_PATH,
 ) -> list[Path]:
-    """Run every seed of `config`; returns the run directories."""
+    """Run every seed of `config`; returns the run directories.
+
+    One backend is built and reused across every seed (and closed once at the end): a fresh one
+    per seed reloads the disk-persisted ModSec cache from scratch each time, which on a
+    memory-constrained host was enough extra pressure to OOM (found running EXP-A1).
+    """
     config = resolve_config(config)
     if config["env"]["id"] != ENV_ID:
         raise NotImplementedError(f"wafarena.bandit_run only runs {ENV_ID} configs")
     runmeta.ensure_clean(repo, allow_dirty=allow_dirty)
-    return [
-        run_seed(
-            config,
-            seed,
-            results_root=results_root,
-            repo=repo,
-            allow_dirty=allow_dirty,
-            overwrite=overwrite,
-            backend=backend,
-            arm_means_path=arm_means_path,
-        )
-        for seed in config["seeds"]
-    ]
+    owns_backend = backend is None
+    backend = backend or resolve_backend(config["env"]["backend"])
+    try:
+        return [
+            run_seed(
+                config,
+                seed,
+                results_root=results_root,
+                repo=repo,
+                allow_dirty=allow_dirty,
+                overwrite=overwrite,
+                backend=backend,
+                arm_means_path=arm_means_path,
+            )
+            for seed in config["seeds"]
+        ]
+    finally:
+        if owns_backend:
+            backend.close()
 
 
 def run_seed(
@@ -85,6 +96,7 @@ def run_seed(
     runmeta.write_meta(directory, meta)
     (directory / "config.resolved.yaml").write_text(yaml.safe_dump(config, sort_keys=False))
 
+    owns_backend = backend is None
     backend = backend or resolve_backend(config["env"]["backend"])
     started = time.monotonic()
     try:
@@ -109,7 +121,8 @@ def run_seed(
         if config["eval"]["final"]:
             _final_eval(config, agent, backend, directory)
     finally:
-        backend.close()
+        if owns_backend:  # called directly (not via run_experiment): this call owns the backend
+            backend.close()
     runmeta.finalize_meta(directory, duration_s=round(time.monotonic() - started, 3))
     return directory
 
