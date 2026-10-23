@@ -85,3 +85,24 @@ def test_summary_is_deterministic(tmp_path):
 def test_unknown_experiment_without_runs_is_an_error(tmp_path):
     with pytest.raises(FileNotFoundError, match="EXP-D1"):
         summarize.summarize_experiment("EXP-D1", tmp_path, tmp_path)
+
+
+def fake_eval_csv(
+    root: Path, run_name: str, seed: int, steps_and_er: list[tuple[int, float]]
+) -> None:
+    directory = root / "EXP-C1" / run_name / f"s{seed}"
+    directory.mkdir(parents=True)
+    with (directory / "eval.csv").open("w", newline="") as handle:
+        writer = csv.writer(handle)
+        writer.writerow(["step", "suite", "evasion_rate"])
+        for step, er in steps_and_er:
+            writer.writerow([step, "attacker-val-v1", er])
+
+
+def test_load_val_curves_reads_step_and_evasion_rate_per_seed(tmp_path):
+    fake_eval_csv(tmp_path, "mc", 0, [(10000, 0.0), (20000, 0.1)])
+    fake_eval_csv(tmp_path, "mc", 1, [(10000, 0.05), (20000, 0.2)])
+    curves = summarize.load_val_curves("EXP-C1", tmp_path)
+    assert set(curves["mc"]) == {0, 1}
+    assert curves["mc"][0]["step"].tolist() == [10000, 20000]
+    assert curves["mc"][1]["evasion_rate"].tolist() == [0.05, 0.2]

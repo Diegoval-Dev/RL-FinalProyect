@@ -6,6 +6,7 @@ import json
 import math
 from pathlib import Path
 
+import numpy as np
 import yaml
 
 from wafarena.eval.stats import bootstrap_ci
@@ -86,3 +87,17 @@ def main(argv: list[str] | None = None) -> None:
 
 if __name__ == "__main__":
     main()
+
+
+def load_val_curves(exp_id: str, results_root: Path) -> dict[str, dict[int, dict]]:
+    """{run_name: {seed: {"step": array, "evasion_rate": array}}} from every run's eval.csv."""
+    curves: dict[str, dict[int, dict]] = {}
+    for eval_csv in sorted((Path(results_root) / exp_id).glob("*/s*/eval.csv")):
+        run_name, seed = eval_csv.parent.parent.name, int(eval_csv.parent.name[1:])
+        with eval_csv.open() as handle:
+            rows = list(csv.DictReader(handle))
+        curves.setdefault(run_name, {})[seed] = {
+            "step": np.array([int(r["step"]) for r in rows]),
+            "evasion_rate": np.array([float(r["evasion_rate"]) for r in rows]),
+        }
+    return curves
