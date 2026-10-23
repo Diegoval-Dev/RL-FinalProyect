@@ -101,3 +101,32 @@ def test_value_and_policy_iteration_agree_on_a_larger_random_mdp():
     p_star, p_policy, _ = policy_iteration(P, R, gamma=0.95, theta=1e-8)
     assert np.allclose(v_star, p_star, atol=1e-4)
     assert np.array_equal(v_policy, p_policy)
+
+
+def test_dp_policy_agent_acts_by_abstract_state():
+    from wafarena.agents.dp import DPPolicyAgent
+
+    policy = np.zeros(120, dtype=int)
+    policy[5] = 3
+    agent = DPPolicyAgent("ATK-DP", policy)
+    assert agent.act(None, {"abstract_state": 5}, explore=False) == 3
+    assert agent.act(None, {"abstract_state": 0}, explore=True) == 0
+
+
+def test_dp_policy_agent_does_not_learn():
+    from wafarena.agents.dp import DPPolicyAgent
+
+    agent = DPPolicyAgent("ATK-DP", np.zeros(120, dtype=int))
+    assert agent.observe(None) == {}
+
+
+def test_dp_policy_agent_checkpoint_round_trip(tmp_path):
+    from wafarena.agents.base import load_checkpoint, save_checkpoint
+    from wafarena.agents.dp import DPPolicyAgent
+
+    policy = np.arange(120) % 17
+    agent = DPPolicyAgent("ATK-DP", policy)
+    save_checkpoint(agent, tmp_path / "ck", algo="dp", obs_dim=288, n_actions=17)
+    loaded = load_checkpoint(tmp_path / "ck")
+    assert np.array_equal(loaded.policy, policy)
+    assert loaded.agent_id == "ATK-DP" and loaded.role == "attacker"
