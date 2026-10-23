@@ -2,6 +2,7 @@
 
 import json
 
+import numpy as np
 import pytest
 
 from wafarena.envs.backends.fake import FakeBackend
@@ -74,3 +75,58 @@ def test_pinned_reset_is_deterministic():
         return rewards
 
     assert rollout() == rollout()
+
+
+def test_checkpoint_attacker_drives_attacks_via_attacker_driver(tmp_path):
+    from wafarena.agents.base import save_checkpoint
+    from wafarena.agents.dp import DPPolicyAgent
+    from wafarena.envs.abstract_state import N_STATES
+    from wafarena.envs.attacker_env import N_ACTIONS, SEND_ACTION
+    from wafarena.envs.attacker_obs import OBS_SIZE
+
+    policy = np.full(N_STATES, SEND_ACTION, dtype=int)  # always send unmutated
+    save_checkpoint(
+        DPPolicyAgent("ATK-TEST", policy),
+        tmp_path / "ck",
+        algo="dp",
+        obs_dim=OBS_SIZE,
+        n_actions=N_ACTIONS,
+    )
+    env = DefenderEnv(
+        backend=FakeBackend(),
+        attacker={"type": "checkpoint", "path": str(tmp_path / "ck")},
+        split="test",
+        attack_ratio=1.0,
+    )
+    base_id = sorted(SPLITS["payloads"]["test"])[0]
+    obs, info = env.reset(seed=0, options={"base_id": base_id})
+    assert info["gt_label"] == "attack"
+    env.step(0)  # must not raise: the checkpoint-driven attacker answered a real request
+
+
+def test_checkpoint_attacker_is_reused_across_episodes(tmp_path):
+    """The same loaded checkpoint must drive a fresh episode each reset, not error out the
+    second time (AttackerDriver.reset() must fully clear the previous episode's state)."""
+    from wafarena.agents.base import save_checkpoint
+    from wafarena.agents.dp import DPPolicyAgent
+    from wafarena.envs.abstract_state import N_STATES
+    from wafarena.envs.attacker_env import N_ACTIONS, SEND_ACTION
+    from wafarena.envs.attacker_obs import OBS_SIZE
+
+    policy = np.full(N_STATES, SEND_ACTION, dtype=int)
+    save_checkpoint(
+        DPPolicyAgent("ATK-TEST", policy),
+        tmp_path / "ck",
+        algo="dp",
+        obs_dim=OBS_SIZE,
+        n_actions=N_ACTIONS,
+    )
+    env = DefenderEnv(
+        backend=FakeBackend(),
+        attacker={"type": "checkpoint", "path": str(tmp_path / "ck")},
+        split="test",
+        attack_ratio=1.0,
+    )
+    for base_id in sorted(SPLITS["payloads"]["test"])[:3]:
+        env.reset(seed=0, options={"base_id": base_id})
+        env.step(0)

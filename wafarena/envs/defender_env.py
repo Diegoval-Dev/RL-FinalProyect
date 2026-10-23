@@ -8,7 +8,9 @@ import numpy as np
 from gymnasium import spaces
 
 from vulnapp.queries import ENDPOINTS
+from wafarena.agents.base import load_checkpoint
 from wafarena.attackers.corpus_replay import CorpusReplayAttacker
+from wafarena.attackers.driver import AttackerDriver
 from wafarena.attackers.random_mutation import RandomMutationAttacker
 from wafarena.defenders.base import Action
 from wafarena.envs.attacker_env import PARAM_BY_ENDPOINT, _load_bases
@@ -27,6 +29,17 @@ ENDPOINT_BY_PATH = {spec.path: spec.name for spec in ENDPOINTS}
 ATTACKERS = {"corpus_replay": CorpusReplayAttacker, "random_mutation": RandomMutationAttacker}
 
 
+def _resolve_attacker_factory(attacker):
+    """A zero-arg callable returning an `AttackerPolicy`. A `{"type": "checkpoint", "path": ...}`
+    spec loads that checkpoint once and drives it with the same `AttackerDriver` every episode
+    (its own `reset()` clears all per-episode state, so reusing it is safe); every other form is
+    one of the built-in scripted attackers, by name."""
+    if isinstance(attacker, dict) and attacker.get("type") == "checkpoint":
+        driver = AttackerDriver(load_checkpoint(attacker["path"]))
+        return lambda: driver
+    return ATTACKERS[resolve_attacker_type(attacker)]
+
+
 class DefenderEnv(gym.Env):
     metadata = {"render_modes": []}
 
@@ -43,7 +56,7 @@ class DefenderEnv(gym.Env):
         self.observation_space = spaces.Box(0.0, 1.0, shape=(OBS_SIZE,), dtype=np.float32)
         self.action_space = spaces.Discrete(N_ACTIONS)
         self._backend = resolve_backend(backend)
-        self._attacker_factory = ATTACKERS[resolve_attacker_type(attacker)]
+        self._attacker_factory = _resolve_attacker_factory(attacker)
         self._attack_ratio = attack_ratio
         self._reward = reward or {"alpha": 4.0, "beta": 1.0, "gamma": 0.5}
         self._abandon_prob = benign_abandon_prob
