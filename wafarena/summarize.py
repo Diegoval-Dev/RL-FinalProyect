@@ -101,3 +101,28 @@ def load_val_curves(exp_id: str, results_root: Path) -> dict[str, dict[int, dict
             "evasion_rate": np.array([float(r["evasion_rate"]) for r in rows]),
         }
     return curves
+
+
+def load_train_brk_curve(
+    exp_id: str, results_root: Path, step_grid: list[int]
+) -> dict[str, dict[int, dict]]:
+    """{run_name: {seed: {"step": array, "brk": array}}}: break rate per bin of `step_grid`,
+    from each run's train.csv (one row per training episode). A bin with no attempted mutations
+    is nan. `step_grid` is normally the suite's eval steps, so BRK lines up with the ER curve."""
+    curves: dict[str, dict[int, dict]] = {}
+    bounds = [0, *step_grid]
+    for train_csv in sorted((Path(results_root) / exp_id).glob("*/s*/train.csv")):
+        run_name, seed = train_csv.parent.parent.name, int(train_csv.parent.name[1:])
+        with train_csv.open() as handle:
+            rows = list(csv.DictReader(handle))
+        brk = []
+        for low, high in zip(bounds, bounds[1:], strict=False):
+            in_bin = [r for r in rows if low < int(r["step"]) <= high]
+            attempts = sum(int(r["mutation_attempts"]) for r in in_bin)
+            broken = sum(int(r["broken"]) for r in in_bin)
+            brk.append(broken / attempts if attempts else math.nan)
+        curves.setdefault(run_name, {})[seed] = {
+            "step": np.array(step_grid),
+            "brk": np.array(brk),
+        }
+    return curves

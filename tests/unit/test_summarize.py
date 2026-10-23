@@ -5,6 +5,7 @@ import json
 import math
 from pathlib import Path
 
+import numpy as np
 import pytest
 import yaml
 
@@ -106,3 +107,38 @@ def test_load_val_curves_reads_step_and_evasion_rate_per_seed(tmp_path):
     assert set(curves["mc"]) == {0, 1}
     assert curves["mc"][0]["step"].tolist() == [10000, 20000]
     assert curves["mc"][1]["evasion_rate"].tolist() == [0.05, 0.2]
+
+
+def fake_train_csv(
+    root: Path, run_name: str, seed: int, episodes: list[tuple[int, int, int]]
+) -> None:
+    """episodes: list of (step, broken, mutation_attempts) marking each episode's END step."""
+    directory = root / "EXP-D1" / run_name / f"s{seed}"
+    directory.mkdir(parents=True, exist_ok=True)
+    with (directory / "train.csv").open("w", newline="") as handle:
+        writer = csv.writer(handle)
+        writer.writerow(["step", "broken", "mutation_attempts"])
+        for step, broken, attempts in episodes:
+            writer.writerow([step, broken, attempts])
+
+
+def test_load_train_brk_curve_bins_episodes_into_the_given_step_grid(tmp_path):
+    fake_train_csv(
+        tmp_path,
+        "sarsa-pl1",
+        0,
+        [(4000, 1, 10), (9000, 1, 10), (15000, 2, 10), (19500, 0, 10)],
+    )
+    curves = summarize.load_train_brk_curve("EXP-D1", tmp_path, step_grid=[10000, 20000])
+    curve = curves["sarsa-pl1"][0]
+    assert curve["step"].tolist() == [10000, 20000]
+    # bin 1 (steps <= 10000): broken 1+1=2 of attempts 10+10=20 -> 0.1
+    assert curve["brk"][0] == pytest.approx(0.1)
+    # bin 2 (10000 < steps <= 20000): broken 2+0=2 of attempts 10+10=20 -> 0.1
+    assert curve["brk"][1] == pytest.approx(0.1)
+
+
+def test_load_train_brk_curve_is_nan_for_an_empty_bin(tmp_path):
+    fake_train_csv(tmp_path, "sarsa-pl1", 0, [(4000, 1, 10)])
+    curves = summarize.load_train_brk_curve("EXP-D1", tmp_path, step_grid=[10000, 20000])
+    assert np.isnan(curves["sarsa-pl1"][0]["brk"][1])
