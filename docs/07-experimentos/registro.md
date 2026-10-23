@@ -14,4 +14,6 @@ Los números de la columna *Resultado* se copian de `results/summary/<exp_id>.cs
 
 | 2026-10-23 | EXP-B1 | value-policy-iteration-pl1 | 8a90594 | 10 | ER = 0.000 [0.000, 0.000] en attacker-eval-v1; value iteration converge en 1147 iteraciones, policy iteration en 3, idéntico en las 10 semillas (`results/summary/EXP-B1.csv`) | válido | Daniel | VI y PI difieren en 6/120 estados, pero con el mismo valor Q exacto en esos estados (empates genuinos entre acciones igual de inútiles, verificado a mano); no es un desacuerdo real. Cota bajo un modelo aproximado: estados con bloqueo parcial mezclan transiciones terminales y no terminales porque el estado abstracto no distingue el conteo de bloqueos acumulados |
 
+| 2026-10-23 | EXP-C1 | first-visit-eps-005 / first-visit-eps-01 / every-visit-eps-005 / every-visit-eps-01 | a84121e | 10 | ER = 0.000 [0.000, 0.000] en los 4 métodos, plana durante las 200 000 pasos en val (`results/summary/EXP-C1.csv`, `report/figuras/EXP-C1_er_vs_steps.png`) | válido | Daniel | Consistente con F2-T05/F2-T06: los 16 operadores no producen evasión, así que ningún control Monte Carlo puede aprender a evadir tampoco |
+
 Estados posibles: **válido**, **inválido** (con razón), **exploratorio** (no se usa en el informe).

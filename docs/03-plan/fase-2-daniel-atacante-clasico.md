@@ -85,7 +85,7 @@ Construir la maquinaria con la que el resto del proyecto corre y mide experiment
 - [x] F2-T04 Métricas y suites
 - [x] F2-T05 Bandits
 - [x] F2-T06 MDP abstracto y DP
-- [ ] F2-T07 Monte Carlo
+- [x] F2-T07 Monte Carlo
 - [ ] F2-T08 TD
 - [ ] F2-T09 Tabla RQ1
 - [ ] F2-T10 `ATK-REF-0`
@@ -104,3 +104,4 @@ Construir la maquinaria con la que el resto del proyecto corre y mide experiment
 - **F2-T05 (bug, resuelto):** `hex_string` reaplicado sobre su propia salida es siempre funcional para el oráculo (hex de hex es hex válido), así que sin límite el payload crece sin cota. Causó un OOM del contenedor `runner` corriendo EXP-A1 (`ucb-05-pl1`) contra el laboratorio real. Se limitó a una sola capa (`wafarena/mutations/operators.py`); el ejemplo documentado en el contrato no cambia, versión 1.1.
 - **F2-T05 (resultado final):** las 10 semillas de los 7 métodos de EXP-A1 y las 4 configuraciones de EXP-A2 corrieron completas contra el laboratorio real (110 corridas, 0 fallos). ER = 0,000 [0,000; 0,000] para todos: ningún método bandit evade ModSecurity PL1 ni se distingue de otro, porque los 16 operadores no producen una sola evasión (ya visto en \`bandit_arm_means.csv\` y \`evasion_reachability_pl1.csv\`). Regret acumulado = 0 en las 20 000 tiradas para los 7 métodos de A1, y en A2 no hay nada que recuperar tras el cambio de defensor porque ya era 0 antes. Registrado en \`registro.md\`; figuras en \`report/figuras/EXP-A1_regret.png\`, \`EXP-A1_mean_reward.png\`, \`EXP-A2_regret.png\`.
 - **F2-T06 (resultado final):** 200 000 transiciones con política aleatoria contra modsec-pl1, 10 semillas, laboratorio real. Value iteration (1147 iteraciones) y policy iteration (3 iteraciones) convergen a la misma política en 114/120 estados; en los 6 restantes difieren solo por empates exactos entre acciones de igual valor Q (verificado a mano, no es un desacuerdo real). ER = 0,000 [0,000; 0,000] en \`attacker-eval-v1\`, idéntico a los bandits de F2-T05: la cota óptima bajo el modelo aproximado tampoco evade. Se corrigió de paso un ciclo de policy iteration entre políticas empatadas (detección de ciclos en \`wafarena/agents/dp.py\`). Registrado en \`registro.md\`.
+- **F2-T07 (resultado final):** first-visit y every-visit MC control, eps in {0.05, 0.1}, 200 000 pasos, 10 semillas, laboratorio real (40 corridas, 0 fallos reales; una semilla se reintentó por un choque transitorio con un commit en curso). ER = 0,000 [0,000; 0,000] en los 4 métodos, curva plana en val durante todo el entrenamiento. Mismo resultado que bandits (F2-T05) y DP (F2-T06): el techo está en los 16 operadores, no en el método de aprendizaje. Registrado en `registro.md`.
