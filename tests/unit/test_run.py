@@ -252,3 +252,24 @@ def test_cli_reports_config_errors_without_a_traceback(tmp_path, capsys):
         runner.main(["--config", str(path), "--results", str(tmp_path / "out")])
     assert exit_info.value.code == 2
     assert "EXP-ZZ" in capsys.readouterr().err
+
+
+def test_backend_is_constructed_once_and_shared_across_all_seeds(tmp_path, monkeypatch):
+    """F2-T05: a fresh backend per seed reloads the (large, disk-persisted) ModSec cache every
+    time; on a memory-constrained host that repeated reload was enough to tip it into OOM."""
+    built, closed = [], []
+
+    class CountingBackend(FakeBackend):
+        def __init__(self):
+            super().__init__()
+            built.append(self)
+
+        def close(self):
+            closed.append(self)
+            super().close()
+
+    monkeypatch.setattr(runner, "resolve_backend", lambda kind: CountingBackend())
+    raw = config(seeds=[0, 1, 2])
+    runner.run_experiment(raw, results_root=tmp_path, repo=REPO, allow_dirty=True)
+    assert len(built) == 1
+    assert closed == built

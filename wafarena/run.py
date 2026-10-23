@@ -39,24 +39,32 @@ def run_experiment(
     """Run every seed of `config`; returns the run directories.
 
     Validates the config and the git state before anything is written. `backend` overrides the
-    one named in the config (used by tests).
+    one named in the config (used by tests). One backend is built and reused across every seed
+    (and closed once at the end): a fresh one per seed reloads the disk-persisted ModSec cache
+    from scratch each time, enough extra memory pressure to OOM on a constrained host (F2-T05).
     """
     config = resolve_config(config)
     if config["env"]["id"] != "WafArena/Attacker-v0":
         raise NotImplementedError("Defender-v0 runs arrive with Phase 3")
     runmeta.ensure_clean(repo, allow_dirty=allow_dirty)
-    return [
-        run_seed(
-            config,
-            seed,
-            results_root=results_root,
-            repo=repo,
-            allow_dirty=allow_dirty,
-            overwrite=overwrite,
-            backend=backend,
-        )
-        for seed in config["seeds"]
-    ]
+    owns_backend = backend is None
+    backend = backend or resolve_backend(config["env"]["backend"])
+    try:
+        return [
+            run_seed(
+                config,
+                seed,
+                results_root=results_root,
+                repo=repo,
+                allow_dirty=allow_dirty,
+                overwrite=overwrite,
+                backend=backend,
+            )
+            for seed in config["seeds"]
+        ]
+    finally:
+        if owns_backend:
+            backend.close()
 
 
 def run_seed(
@@ -76,6 +84,7 @@ def run_seed(
     runmeta.write_meta(directory, meta)
     (directory / "config.resolved.yaml").write_text(yaml.safe_dump(config, sort_keys=False))
 
+    owns_backend = backend is None
     backend = backend or resolve_backend(config["env"]["backend"])
     started = time.monotonic()
     try:
@@ -91,7 +100,8 @@ def run_seed(
         if config["eval"]["final"]:
             _final_eval(config, directory, backend, selection)
     finally:
-        backend.close()
+        if owns_backend:  # called directly (not via run_experiment): this call owns the backend
+            backend.close()
     runmeta.finalize_meta(directory, duration_s=round(time.monotonic() - started, 3))
     return directory
 
