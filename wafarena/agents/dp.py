@@ -89,15 +89,30 @@ def policy_value(
 def policy_iteration(
     P: np.ndarray, R: np.ndarray, *, gamma: float, theta: float, max_iterations: int = 10_000
 ) -> tuple[np.ndarray, np.ndarray, int]:
-    """`(V of the final policy, final policy, iterations)`, by policy iteration."""
+    """`(V of the final policy, final policy, iterations)`, by policy iteration.
+
+    Each policy is evaluated to a tolerance well below `theta`: evaluating it only as loosely as
+    `theta` leaves enough noise in near-tied action values to flip the greedy tie-break back and
+    forth between two policies forever. Even at a tight tolerance, a state with several equally
+    optimal actions can still cycle between those ties with no policy ever repeating exactly
+    twice in a row; `seen` catches it re-entering any *earlier* policy and reports the one with
+    the highest value seen in the cycle (they differ only in how ties were broken, so their
+    values are equal up to floating-point noise; this picks deterministically among them).
+    """
     _check_gamma(gamma)
     n_states = R.shape[0]
     policy = np.zeros(n_states, dtype=int)
+    eval_theta = min(theta, 1e-10)
+    seen: dict[bytes, tuple[np.ndarray, np.ndarray, int]] = {}
     for iteration in range(1, max_iterations + 1):
-        V = policy_value(P, R, policy, gamma=gamma, theta=theta)
+        V = policy_value(P, R, policy, gamma=gamma, theta=eval_theta)
         new_policy = action_values(P, R, V, gamma).argmax(axis=1)
         if np.array_equal(new_policy, policy):
             return V, policy, iteration
+        key = new_policy.tobytes()
+        if key in seen:
+            return max([*seen.values(), (V, new_policy, iteration)], key=lambda e: e[0].sum())
+        seen[key] = (V, new_policy, iteration)
         policy = new_policy
     raise RuntimeError(f"policy iteration did not converge in {max_iterations} iterations")
 
