@@ -93,7 +93,7 @@ Construir la maquinaria con la que el resto del proyecto corre y mide experiment
 
 `results/summary/RQ1_table.csv`: ER = 0,000 [0,000; 0,000] contra `modsec-pl1`…`pl4`, en los 8 métodos (bandit-greedy, DP, Monte Carlo, SARSA, Q-learning, SARSA(λ), y las referencias `corpus-replay`/`random-mutation`), 10 semillas cada uno. QFE y DIV quedan sin definir en las 32 celdas por falta de evasiones. **Respuesta a RQ1:** bajo el laboratorio actual, con los 16 operadores de mutación del registro congelado, ModSecurity no es vulnerable a ningún atacante clásico de las semanas 2–6 del curso, en ningún nivel de paranoia. El techo está en el espacio de ataque (los operadores), no en el método de aprendizaje — ver F2-T05 para la evidencia de por qué (μ = 0 en los 16 brazos; búsqueda voraz de 25 pasos tampoco baja la puntuación de ModSecurity del umbral de bloqueo).
 - [x] F2-T10 `ATK-REF-0`
-- [ ] F2-T11 Informe y handoff
+- [x] F2-T11 Informe y handoff
 
 ## Hallazgos
 
