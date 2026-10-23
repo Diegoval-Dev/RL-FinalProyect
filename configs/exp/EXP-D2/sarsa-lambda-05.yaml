@@ -1,0 +1,31 @@
+exp_id: EXP-D2
+run_name: sarsa-lambda-05
+owner: daniel
+rq: [RQ1]
+seeds: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+
+env:
+  id: WafArena/Attacker-v0
+  backend: fast
+  defender: {type: modsec, paranoia_level: 1}
+  query_budget: 50
+
+agent:
+  algo: td
+  params:
+    method: sarsa_lambda
+    alpha: 0.1
+    gamma: 0.99
+    epsilon: 0.1
+    lambda_: 0.5
+
+train:
+  total_steps: 200000
+
+eval:
+  suites: [attacker-eval-v1]
+  every_steps: 10000
+  final: true
+
+logging:
+  tensorboard: false
