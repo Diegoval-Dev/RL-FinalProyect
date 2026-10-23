@@ -5,6 +5,7 @@ from the four PL instances over HTTP and cached on disk, so a warm cache makes e
 """
 
 from collections.abc import Callable
+from concurrent.futures import ThreadPoolExecutor
 from urllib.parse import urlencode
 
 from vulnapp.queries import get_endpoint
@@ -27,6 +28,7 @@ class FastBackend:
         self._cache = cache or ModSecCache()
         self._score_fn = score_fn
         self._functional: dict[tuple[str, str, str], OracleResult] = {}
+        self._pool = ThreadPoolExecutor(max_workers=len(PARANOIA_LEVELS))
 
     def check_functional(self, payload: Payload, endpoint: str, param: str) -> OracleResult:
         key = (endpoint, param, payload.text)
@@ -46,15 +48,26 @@ class FastBackend:
 
     def _modsec(self, payload: Payload, endpoint: str, param: str):
         path = self._request_path(payload, endpoint, param)
-        scores, blocks = {}, {}
-        for pl in PARANOIA_LEVELS:
-            cached = self._cache.get(pl, "GET", path)
-            if cached is None:
-                entry = self._score_fn("GET", path, pl)
-                self._cache.put(pl, "GET", path, entry.score, entry.would_block)
-                cached = (entry.score, entry.would_block)
-            scores[pl], blocks[pl] = cached[0], cached[1]
+        found = {pl: self._cache.get(pl, "GET", path) for pl in PARANOIA_LEVELS}
+        missing = [pl for pl, value in found.items() if value is None]
+        # the paranoia-level instances are independent: query the uncached ones concurrently
+        entries = self._pool.map(lambda pl: self._score_fn("GET", path, pl), missing)
+        for pl, entry in zip(missing, entries, strict=True):
+            self._cache.put(pl, "GET", path, entry.score, entry.would_block)
+            found[pl] = (entry.score, entry.would_block)
+        scores = {pl: found[pl][0] for pl in PARANOIA_LEVELS}
+        blocks = {pl: found[pl][1] for pl in PARANOIA_LEVELS}
         return scores, blocks
 
+    def cache_stats(self) -> dict[str, float]:
+        total = self._cache.hits + self._cache.misses
+        return {
+            "hits": self._cache.hits,
+            "misses": self._cache.misses,
+            "hit_rate": self._cache.hits / total if total else 0.0,
+        }
+
     def close(self) -> None:
+        self._pool.shutdown(wait=True)
         self._cache.flush()
+        getattr(self._oracle, "close", lambda: None)()

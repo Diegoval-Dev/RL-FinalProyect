@@ -7,14 +7,14 @@ Un contrato es la interfaz documentada entre dos componentes. En un relevo, los 
 | Contrato | Versión | Implementa | Consume |
 |---|---|---|---|
 | [env-atacante.md](env-atacante.md) | 1.0 | F1 | F2, F3, F4 |
-| [env-defensor.md](env-defensor.md) | 1.0 | F1 | F3, F4 |
+| [env-defensor.md](env-defensor.md) | 1.1 | F1 | F3, F4 |
 | [oraculo.md](oraculo.md) | 1.1 | F1 | entornos (interno) |
-| [operadores-mutacion.md](operadores-mutacion.md) | 1.0 | F1 | F2, F3, F4 |
+| [operadores-mutacion.md](operadores-mutacion.md) | 1.1 | F1 | F2, F3, F4 |
 | [features.md](features.md) | 1.0 | F1 | F3, F4 |
 | [datos-y-splits.md](datos-y-splits.md) | 1.0 | F1 | todas |
 | [agentes-y-checkpoints.md](agentes-y-checkpoints.md) | 1.0 | F1 (protocolos de políticas), F2 (Agent y checkpoints) | F2, F3, F4 |
-| [metricas.md](metricas.md) | 1.0 | F2 | F2, F3, F4 |
-| [experimentos.md](experimentos.md) | 1.0 | F2 | F2, F3, F4 |
+| [metricas.md](metricas.md) | 1.2 | F2 | F2, F3, F4 |
+| [experimentos.md](experimentos.md) | 1.1 | F2 | F2, F3, F4 |
 
 ## Versionado
 

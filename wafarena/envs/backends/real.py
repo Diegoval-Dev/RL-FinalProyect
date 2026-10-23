@@ -34,4 +34,4 @@ class RealBackend:
         return BackendResult(oracle_result, scores, blocks)
 
     def close(self) -> None:
-        return None
+        getattr(self._oracle, "close", lambda: None)()

@@ -1,6 +1,6 @@
 """Attacker observation encoder: 288-dim vector (env-atacante.md)."""
 
-import hashlib
+import zlib
 
 import numpy as np
 
@@ -21,7 +21,12 @@ FAMILY_BLOCK = slice(283, 288)
 
 
 def _stable_hash(gram: str) -> int:
-    return int.from_bytes(hashlib.sha1(gram.encode()).digest()[:4], "big")
+    """A fixed bucket for `gram`, stable across processes (unlike str's own randomized hash).
+
+    Only bucket assignment is needed here, not collision resistance, so a non-cryptographic hash
+    is enough: SHA1 per n-gram made long, mutation-heavy payloads the hot path of every episode.
+    """
+    return zlib.crc32(gram.encode())
 
 
 def ngram_hashing(text: str) -> np.ndarray:

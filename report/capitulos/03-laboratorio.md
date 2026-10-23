@@ -81,7 +81,37 @@ El anomaly score por request se obtiene del audit log JSON de ModSecurity, corre
 
 ## Protocolo experimental y estadística
 
-Lo completa Daniel en la Fase 2 (runner, métricas y agregación por semillas). Esta fase deja la
-prueba de humo como línea base de cordura: un atacante aleatorio contra ModSecurity PL1–PL4 obtiene
-una tasa de evasión de **0.0** en los cuatro niveles, en modo rápido y real
-(`results/summary/smoke.csv`), lo que confirma que la evasión no es trivial y motiva el aprendizaje.
+La Fase 1 deja la prueba de humo como línea base de cordura: un atacante aleatorio contra
+ModSecurity PL1–PL4 obtiene una tasa de evasión de **0.0** en los cuatro niveles, en modo rápido y
+real (`results/summary/smoke.csv`), lo que confirma que la evasión no es trivial y motiva el
+aprendizaje. El resto de esta sección (runner, semillas y estadística) lo completa la Fase 2.
+
+**Runner.** Todo experimento corre con `make run CONFIG=configs/exp/<exp_id>/<run_name>.yaml`
+(`wafarena/run.py`, [contrato de experimentos](../../docs/02-contratos/experimentos.md)), dentro del
+contenedor `runner` del laboratorio. El YAML se valida contra un esquema (claves desconocidas son
+error), se rechaza cualquier `env.split` distinto de `train` para entrenar, y el `exp_id` debe
+existir en el [catálogo](../../docs/07-experimentos/catalogo.md). El runner se niega a correr con
+cambios sin commit en `wafarena/` o `configs/` salvo `--allow-dirty`, que queda marcado en
+`meta.yaml` y no vale para el informe. Cada corrida produce
+`results/<exp_id>/<run_name>/s<seed>/` con `config.resolved.yaml`, `meta.yaml` (sha de git, rama,
+duración, versiones de contratos), `train.csv` (una fila por episodio), `eval.csv` (una fila por
+punto de evaluación en `val`), `final_eval.json` y el mejor `checkpoint/` en `val`. Dos corridas con
+la misma semilla producen un `eval.csv` idéntico. Los métodos de programación dinámica y los
+bandits usan runners especializados (`wafarena/dp_run.py`, `wafarena/bandit_run.py`) con el mismo
+formato de salida: el primero porque no tiene bucle de entrenamiento por pasos (estima el modelo y
+resuelve una sola vez), el segundo porque opera por tiradas, no por episodios con mutaciones.
+
+**Semillas.** Mínimo 5 semillas por configuración principal; 10 para bandits y métodos tabulares,
+por ser baratos de correr. Todas las configuraciones de EXP-A1 a EXP-D2 y de la tabla RQ1 usan 10
+semillas (`seeds: [0..9]` en el YAML), con un backend y una caché compartidos entre semillas dentro
+de una misma corrida para evitar reconstruir el estado del laboratorio en cada una.
+
+**Estadística.** Las cifras del informe son la media y el intervalo de confianza del 95 % por
+*bootstrap* sobre semillas (10 000 remuestreos, `wafarena/eval/stats.py:bootstrap_ci`), nunca un
+valor puntual. Para afirmar que un método supera a otro se reporta el IC de la diferencia; si
+contiene el 0, el informe dice que no hay diferencia detectable — es el caso de todos los métodos de
+este capítulo, empatados en ER = 0,000 (capítulo 4). Las métricas con denominador vacío (por
+ejemplo QFE sin ninguna evasión) se reportan como `nan` y quedan fuera del *bootstrap*. Los
+resúmenes versionados (`make summarize EXP=<exp_id>` → `results/summary/<exp_id>.csv`) y las figuras
+(`report/figuras/make_<exp_id>.py`) se regeneran siempre desde los CSV crudos de cada corrida, nunca
+a mano.

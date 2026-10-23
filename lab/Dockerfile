@@ -16,6 +16,11 @@ WORKDIR /app
 CMD ["uvicorn", "vulnapp.main:app", "--host", "0.0.0.0", "--port", "8000"]
 
 FROM base AS runner
+# git is needed by the experiment runner for run ids and the uncommitted-changes guard
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends git \
+    && rm -rf /var/lib/apt/lists/* \
+    && git config --system --add safe.directory /workspace
 RUN uv sync --frozen --no-install-project
 ENV PYTHONPATH=/workspace:/workspace/lab/vulnapp
 CMD ["sleep", "infinity"]

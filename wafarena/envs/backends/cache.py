@@ -22,6 +22,8 @@ class ModSecCache:
         self._path = Path(path)
         self._data: dict[str, list[int]] = {}
         self._dirty = False
+        self.hits = 0
+        self.misses = 0
         self._load()
 
     def _load(self) -> None:
@@ -33,6 +35,10 @@ class ModSecCache:
 
     def get(self, pl: int, method: str, path_with_query: str) -> tuple[int, bool] | None:
         value = self._data.get(self.key(pl, method, path_with_query))
+        if value is None:
+            self.misses += 1
+        else:
+            self.hits += 1
         return (value[0], bool(value[1])) if value is not None else None
 
     def put(self, pl: int, method: str, path_with_query: str, score: int, block: bool) -> None:

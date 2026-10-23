@@ -1,0 +1,21 @@
+agent_id: ATK-REF-0
+role: attacker
+algo: bandit
+obs_dim: 288
+n_actions: 17
+contract_versions:
+  env_attacker: '1.0'
+  operators: '1.1'
+  features: '1.0'
+train:
+  exp_id: EXP-A1
+  run_id: EXP-A1__greedy-pl1__s0__6055362
+  seed: 0
+  git_sha: '6055362'
+  agent_params:
+    policy: greedy
+eval_summary:
+  suite: attacker-eval-v1
+  defender: modsec-pl1
+  evasion_rate: 0.0
+created_at: '2026-10-23T15:50:58Z'

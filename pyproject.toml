@@ -12,6 +12,8 @@ dependencies = [
     "python-multipart>=0.0.32",
     "pglast>=8.7",
     "httpx>=0.28.1",
+    "pyyaml>=6.0.3",
+    "tensorboardx>=2.6.5",
 ]
 
 [dependency-groups]
@@ -19,7 +21,9 @@ dev = [
     "pytest",
     "hypothesis",
     "ruff",
-    "pyyaml>=6.0.3",
+]
+report = [
+    "matplotlib>=3.9",
 ]
 
 [build-system]

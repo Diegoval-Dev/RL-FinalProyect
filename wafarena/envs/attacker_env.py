@@ -10,10 +10,10 @@ from gymnasium import spaces
 
 from wafarena.attackers.base import Response
 from wafarena.defenders.base import Action
-from wafarena.defenders.modsec_defender import ModSecDefender
 from wafarena.envs.abstract_state import AbstractState
 from wafarena.envs.attacker_obs import OBS_SIZE, encode_observation, family_index
 from wafarena.envs.backends.base import Backend
+from wafarena.envs.resolve import resolve_backend, resolve_defender
 from wafarena.features.modsec import modsec_features
 from wafarena.features.request import RequestInput, request_features
 from wafarena.mutations.payload import Payload
@@ -72,7 +72,7 @@ class AttackerEnv(gym.Env):
 
     def __init__(
         self,
-        backend: Backend,
+        backend: Backend | str,
         defender=None,
         split="train",
         query_budget=50,
@@ -82,12 +82,16 @@ class AttackerEnv(gym.Env):
     ):
         self.observation_space = spaces.Box(0.0, 1.0, shape=(OBS_SIZE,), dtype=np.float32)
         self.action_space = spaces.Discrete(N_ACTIONS)
-        self._backend = backend
-        self._defender = defender or ModSecDefender(1)
+        self._backend = resolve_backend(backend)
+        self._defender = resolve_defender(defender)
         self._bases = [b for b in _load_bases(split) if families is None or b.family in families]
         self._query_budget = query_budget
         self._ban_threshold = ban_threshold
         self._max_steps = max_steps
+
+    def set_defender(self, defender) -> None:
+        """Replace the defender mid-run (non-stationary runs); applies from the next SEND."""
+        self._defender = resolve_defender(defender)
 
     def reset(self, *, seed=None, options=None):
         super().reset(seed=seed)

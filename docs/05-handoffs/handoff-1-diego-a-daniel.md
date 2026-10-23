@@ -44,14 +44,16 @@ make lab-down
 
 ## 4. Checklist de aceptación
 
-- [ ] `make setup && make lint && make test` pasa.
-- [ ] `make lab-up` levanta todos los servicios y `make test-lab` pasa, incluido `test_isolation.py`.
-- [ ] `tests/lab/test_oracle.py`: las 5 garantías del contrato del oráculo en verde.
-- [ ] `make verify-splits` pasa y los hashes coinciden con la sección 9.
-- [ ] `check_env` pasa en `WafArena/Attacker-v0` y `WafArena/Defender-v0`.
-- [ ] Dos corridas de `make smoke` con la misma semilla dan el mismo `smoke.csv`.
-- [ ] Un script de 20 líneas escrito por quien recibe, que solo use la API pública del contrato, corre 10 episodios de `Attacker-v0` contra `modsec-pl2` sin leer código interno.
-- [ ] `results/summary/operator_preservation.csv` y `modsec_baseline_corpus.csv` existen.
+- [x] `make setup && make lint && make test` pasa.
+- [x] `make lab-up` levanta todos los servicios y `make test-lab` pasa, incluido `test_isolation.py`.
+- [x] `tests/lab/test_oracle.py`: las 5 garantías del contrato del oráculo en verde.
+- [x] `make verify-splits` pasa y los hashes coinciden con la sección 9.
+- [x] `check_env` pasa en `WafArena/Attacker-v0` y `WafArena/Defender-v0`.
+- [x] Dos corridas de `make smoke` con la misma semilla dan el mismo `smoke.csv`.
+- [x] Un script de 20 líneas escrito por quien recibe, que solo use la API pública del contrato, corre 10 episodios de `Attacker-v0` contra `modsec-pl2` sin leer código interno.
+- [x] `results/summary/operator_preservation.csv` y `modsec_baseline_corpus.csv` existen.
+
+_Nota sobre el ítem del script de 20 líneas:_ la primera versión falló porque `gym.make(..., backend="fast", defender={...})`, tal como lo documenta el contrato, no estaba soportado (el entorno solo aceptaba objetos). Se corrigió en F2-T01 (`wafarena/envs/resolve.py`, `tests/unit/test_env_construction.py`) y el script corre sin cambios: 10 episodios contra `modsec-pl2`, 0 evasiones. El modo `fast` con caché fría necesita el oráculo (base de datos), por lo que el script se ejecuta dentro del contenedor `runner`.
 
 ## 5. Resultados entregados
 
@@ -97,7 +99,7 @@ Ninguno en esta fase. Referencias no entrenadas disponibles: `modsec-pl1` … `p
 
 ## 11. Firma de aceptación
 
-- [ ] Daniel corrió el checklist completo en su máquina.
-- [ ] Problemas encontrados en la ventana: _(lista o "ninguno")_
-- [ ] Aceptado por: ______ · Fecha: ______
-- [ ] `CLAUDE.md` actualizado: **Fase activa: 2**.
+- [x] Daniel corrió el checklist completo en su máquina.
+- [x] Problemas encontrados en la ventana: `gym.make` con `backend="fast"` y `defender` como dict no funcionaba (contrato vs. implementación); corregido por quien recibe en F2-T01
+- [x] Aceptado por: Daniel Dubón · Fecha: 2026-10-22
+- [x] `CLAUDE.md` actualizado: **Fase activa: 2**.

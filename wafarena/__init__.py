@@ -1,11 +1,11 @@
 CONTRACT_VERSIONS: dict[str, str] = {
     "env-atacante": "1.0",
-    "env-defensor": "1.0",
+    "env-defensor": "1.1",
     "oraculo": "1.1",
-    "operadores-mutacion": "1.0",
+    "operadores-mutacion": "1.1",
     "features": "1.0",
     "datos-y-splits": "1.0",
     "agentes-y-checkpoints": "1.0",
-    "metricas": "1.0",
-    "experimentos": "1.0",
+    "metricas": "1.2",
+    "experimentos": "1.1",
 }
