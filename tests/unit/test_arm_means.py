@@ -65,3 +65,34 @@ def test_every_pull_starts_from_a_fresh_base_payload():
 def test_rejects_non_positive_number_of_pulls():
     with pytest.raises(ValueError):
         estimate_arm_means(FakeBackend(), DEFENDER, pulls_per_arm=0, seed=0)
+
+
+def write_csv(path, rows):
+    import csv
+
+    with path.open("w", newline="") as handle:
+        writer = csv.writer(handle)
+        writer.writerow(["defender", "arm", "operator", "mu", "pulls", "seed", "git_sha"])
+        writer.writerows(rows)
+
+
+def test_load_arm_means_returns_the_mu_vector_for_one_defender(tmp_path):
+    from wafarena.eval.arm_means import load_arm_means
+
+    path = tmp_path / "m.csv"
+    rows = [["modsec-pl1", a, f"op{a}", 0.1 * a, 2000, 0, "abc"] for a in range(16)]
+    rows += [["modsec-pl3", a, f"op{a}", 0.5, 2000, 0, "abc"] for a in range(16)]
+    write_csv(path, rows)
+    means = load_arm_means(path, "modsec-pl1")
+    assert means.shape == (16,)
+    assert means[5] == pytest.approx(0.5)
+    assert np.all(load_arm_means(path, "modsec-pl3") == 0.5)
+
+
+def test_load_arm_means_rejects_unknown_defender(tmp_path):
+    from wafarena.eval.arm_means import load_arm_means
+
+    path = tmp_path / "m.csv"
+    write_csv(path, [["modsec-pl1", a, f"op{a}", 0.0, 2000, 0, "abc"] for a in range(16)])
+    with pytest.raises(KeyError, match="modsec-pl9"):
+        load_arm_means(path, "modsec-pl9")

@@ -1,5 +1,8 @@
 """Offline estimate of each bandit arm's mean reward, for the regret R(t) (metricas.md)."""
 
+import csv
+from pathlib import Path
+
 import numpy as np
 
 from wafarena.envs.backends.base import Backend
@@ -36,3 +39,22 @@ def estimate_arm_means(
             env.reset()  # next pull starts from a new base payload
         means[arm] = wins / pulls_per_arm
     return means
+
+
+def defender_label(defender: dict) -> str:
+    """Matches bandit_arm_means.py's `defender` column: {"type": "modsec", ...} -> "modsec-pl1"."""
+    if defender["type"] != "modsec":
+        raise ValueError(f"no offline arm means for defender type {defender['type']!r}")
+    return f"modsec-pl{defender['paranoia_level']}"
+
+
+def load_arm_means(path: Path, defender: str) -> np.ndarray:
+    """μ_a for every arm against `defender` (a label like "modsec-pl1"), from a means CSV."""
+    means = {}
+    with Path(path).open() as handle:
+        for row in csv.DictReader(handle):
+            if row["defender"] == defender:
+                means[int(row["arm"])] = float(row["mu"])
+    if not means:
+        raise KeyError(f"no arm means recorded for defender {defender!r} in {path}")
+    return np.array([means[arm] for arm in sorted(means)])
