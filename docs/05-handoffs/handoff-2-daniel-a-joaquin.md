@@ -8,7 +8,7 @@
 | **Commit** | el de `main` con el tag `v0.2-fase2` |
 | **Fecha de entrega** | 2026-10-23 |
 | **Ventana de aceptación** | hasta 2026-10-24 (1 día hábil) |
-| **Estado** | Entregado |
+| **Estado** | Aceptado |
 
 ## 1. Qué se entrega
 
@@ -46,13 +46,15 @@ El runner corre dentro del contenedor `runner` del laboratorio (único con acces
 
 ## 4. Checklist de aceptación
 
-- [ ] Todo el checklist de HANDOFF-1 sigue pasando.
-- [ ] `make run CONFIG=configs/exp/EXP-D1/<un yaml>.yaml` con una sola semilla corre de punta a punta y genera el árbol de resultados del contrato.
-- [ ] Repetir el mismo run produce un `eval.csv` idéntico.
-- [ ] El runner rechaza un YAML con `split: test` en entrenamiento.
-- [ ] `make summarize EXP=EXP-A1` regenera `results/summary/EXP-A1.csv` idéntico al versionado.
-- [ ] `load_checkpoint("checkpoints/refs/ATK-REF-0")` funciona y el agente corre 100 sesiones dentro de `Defender-v0` vía `AttackerDriver`.
-- [ ] La prueba estática de acceso a claves `gt_` pasa.
+- [x] Todo el checklist de HANDOFF-1 sigue pasando.
+- [x] `make run CONFIG=configs/exp/EXP-D1/<un yaml>.yaml` con una sola semilla corre de punta a punta y genera el árbol de resultados del contrato.
+- [x] Repetir el mismo run produce un `eval.csv` idéntico.
+- [x] El runner rechaza un YAML con `split: test` en entrenamiento.
+- [x] `make summarize EXP=EXP-A1` regenera `results/summary/EXP-A1.csv` idéntico al versionado.
+- [x] `load_checkpoint("checkpoints/refs/ATK-REF-0")` funciona y el agente corre 100 sesiones dentro de `Defender-v0` vía `AttackerDriver`.
+- [x] La prueba estática de acceso a claves `gt_` pasa.
+
+_Nota sobre el ítem de `make summarize EXP=EXP-A1` (F3-T01):_ tal como está escrito no se puede cumplir fuera de la máquina original. `results/EXP-A1/` no se versiona, así que en una máquina nueva `summarize` falla con `FileNotFoundError: no finished runs for EXP-A1`; y aunque se re-corran los runs, la columna `git_shas` del resumen registra el commit con que se corrieron (`6055362`), distinto del de quien verifica. Se verificó de la forma más fuerte posible: se re-corrieron los 70 runs (7 configuraciones × 10 semillas) con `make run-bandit ... RUN_ARGS="--results results/_f3t01_A1"` sobre `ae99905` (árbol limpio), y `python -m wafarena.summarize --exp EXP-A1 --results results/_f3t01_A1` produce un CSV con las mismas 7 filas y 29 columnas que el versionado, idénticas celda por celda salvo `git_shas` (`6055362` / `6055362+c93e655` → `ae99905`). El CSV versionado no se modificó.
 
 ## 5. Resultados entregados
 
@@ -97,7 +99,10 @@ El runner corre dentro del contenedor `runner` del laboratorio (único con acces
 
 ## 11. Firma de aceptación
 
-- [ ] Joaquín corrió el checklist completo en su máquina.
-- [ ] Problemas encontrados en la ventana: _(lista o "ninguno")_
-- [ ] Aceptado por: ______ · Fecha: ______
-- [ ] `CLAUDE.md` actualizado: **Fase activa: 3**.
+- [x] Joaquín corrió el checklist completo en su máquina.
+- [x] Problemas encontrados en la ventana:
+  1. `make summarize EXP=EXP-A1` no es reproducible tal como lo pide el ítem (runs crudos no versionados y columna `git_shas` dependiente del commit). Verificado re-corriendo EXP-A1 completo: idéntico salvo `git_shas` (ver la nota en §4).
+  2. `Defender-v0` no acepta un objeto `AttackerPolicy` como `attacker` (`AttributeError: 'AttackerDriver' object has no attribute 'get'`), a diferencia de `Attacker-v0`, que sí acepta un objeto como `defender`. La forma del contrato, `{"type": "checkpoint", "path": ...}`, funciona. No bloquea; anotado en *Hallazgos* de la Fase 3.
+  3. El checklist se corrió el 2026-10-24; la re-corrida de EXP-A1 terminó a las 00:00 del 2026-10-25 por una caída del *daemon* de Docker en la máquina de verificación (ajena al proyecto).
+- [x] Aceptado por: Joaquín Puente · Fecha: 2026-10-25
+- [x] `CLAUDE.md` actualizado: **Fase activa: 3**.

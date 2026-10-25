@@ -90,7 +90,7 @@ Entre todos los defensores entrenados en F3-T05, el de mayor TPR en `val` sujeto
 
 ## Estado
 
-- [ ] F3-T01 Aceptación del relevo
+- [x] F3-T01 Aceptación del relevo
 - [ ] F3-T02 Defensor lineal
 - [ ] F3-T03 DQN base
 - [ ] F3-T04 Ablación DQN
@@ -105,4 +105,6 @@ Entre todos los defensores entrenados en F3-T05, el de mayor TPR en `val` sujeto
 
 ## Hallazgos
 
-_(vacío)_
+- **F3-T01 (verificación):** checklist de HANDOFF-2 §4 y el heredado de HANDOFF-1 corridos en una máquina distinta a la de Daniel sobre `ae99905` (= `v0.2-fase2`): todos pasan. `make test` 583 pruebas, `make test-lab` 12 + 134; hashes de `verify-splits` iguales a HANDOFF-1 §9; dos `make smoke` idénticos al versionado; `EXP-D1/qlearning-pl1` semilla 0 corrido dos veces con `eval.csv`, `train.csv` y `final_eval.json` idénticos byte a byte; `ATK-REF-0` cargado y 100 sesiones de ataque en `Defender-v0` sin errores.
+- **F3-T01 (hallazgo):** el ítem «`make summarize EXP=EXP-A1` regenera `EXP-A1.csv` idéntico» no se puede cumplir en otra máquina: `results/EXP-A1/` no se versiona y la columna `git_shas` del resumen depende del commit con que se corrió. Se verificó re-corriendo los 70 runs de EXP-A1: idéntico celda por celda salvo `git_shas`. Sugerencia para la plantilla de handoff (no se toca en esta tarea): redactar este tipo de ítem como «re-correr y resumir da las mismas métricas, ignorando `git_shas`».
+- **F3-T01 (hallazgo, para F3-T02 en adelante):** `DefenderEnv` resuelve `attacker` solo como nombre o dict (`wafarena/envs/defender_env.py`, `_resolve_attacker_factory`); un objeto `AttackerPolicy` falla con `AttributeError`. `AttackerEnv` sí acepta objetos como `defender`. El contrato env-defensor 1.1 tampoco documenta objetos, así que no es una violación del contrato, pero conviene tenerlo presente al implementar `DefenderDriver` y al armar oponentes en memoria.
