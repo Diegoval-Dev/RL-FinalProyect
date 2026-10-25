@@ -1,0 +1,46 @@
+exp_id: EXP-F3
+run_name: dqn-double-dueling
+owner: joaquin
+rq: [RQ2]
+seeds: [0, 1, 2, 3, 4]
+
+env:
+  id: WafArena/Defender-v0
+  backend: fast
+  # default Phase 3 opponent (fase-3 plan): uniform pool of the three fixed attackers
+  attacker: {type: pool, paths: [corpus-replay, random-mutation, ATK-REF-0], weights: [1, 1, 1]}
+  attack_ratio: 0.1
+  reward: {alpha: 4.0, beta: 1.0, gamma: 0.5}   # alpha = 4 for the whole F1..F4 ablation
+
+# Shared hyperparameters of the EXP-F1..F4 ablation: F2, F3 and F4 copy this block and only
+# switch on double, dueling and per, one at a time.
+agent:
+  algo: dqn
+  params:
+    hidden: [128, 128]
+    lr: 0.0005
+    gamma: 0.9
+    buffer_size: 100000
+    batch_size: 128
+    learning_starts: 5000
+    train_freq: 4
+    target_update: 2000
+    epsilon: {start: 1.0, end: 0.05, decay_steps: 50000}
+    loss: huber
+    reward_scale: 0.1          # env rewards span -10..+6; learn on -1..+0.6
+    max_grad_norm: 10.0
+    threads: 1
+    double: true
+    dueling: true
+    per: false
+
+train:
+  total_steps: 150000
+
+eval:
+  suites: [defender-eval-v1]
+  every_steps: 10000
+  final: true
+
+logging:
+  tensorboard: false
