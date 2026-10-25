@@ -1,4 +1,4 @@
-.PHONY: setup lint test test-lab lab-up lab-down smoke run run-bandit run-dp rq1-table summarize verify-splits build-splits endpoints-doc modsec-baseline operator-preservation bandit-arm-means evasion-reachability dqn-sanity modsec-defender-suites evaluate latency
+.PHONY: setup lint test test-lab lab-up lab-down smoke run run-bandit run-dp rq1-table summarize verify-splits build-splits endpoints-doc modsec-baseline operator-preservation bandit-arm-means evasion-reachability dqn-sanity modsec-defender-suites evaluate latency check-refs
 
 COMPOSE = docker compose -f lab/docker-compose.yml
 
@@ -79,6 +79,9 @@ evaluate: lab-up
 latency: lab-up
 	$(COMPOSE) --profile tools up -d --wait proxy-learned
 	$(COMPOSE) run --rm runner python scripts/defender_latency.py $(RUN_ARGS)
+
+check-refs: lab-up
+	$(COMPOSE) run --rm runner python scripts/check_refs.py
 
 summarize:
 	@test -n "$(EXP)" || { echo "usage: make summarize EXP=<exp_id>" >&2; exit 1; }
