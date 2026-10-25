@@ -7,6 +7,7 @@ changes (ADR-0005).
 import hashlib
 import json
 import os
+import tempfile
 from pathlib import Path
 
 CRS_CONFIG_VERSION = "owasp-crs-4.30.0-pl-anomaly"
@@ -53,7 +54,12 @@ class ModSecCache:
         if not self._dirty:
             return
         self._path.parent.mkdir(parents=True, exist_ok=True)
-        tmp = self._path.with_name(f"{self._path.name}.{os.getpid()}.tmp")
-        tmp.write_text(json.dumps(self._data))
+        # A unique name per writer: os.getpid() is not one, every lab container runs as PID 1
+        # (found in F3-T08, when parallel runs interleaved their writes into one temp file).
+        fd, tmp = tempfile.mkstemp(
+            dir=self._path.parent, prefix=f"{self._path.name}.", suffix=".tmp"
+        )
+        with os.fdopen(fd, "w") as handle:
+            handle.write(json.dumps(self._data))
         os.replace(tmp, self._path)
         self._dirty = False
