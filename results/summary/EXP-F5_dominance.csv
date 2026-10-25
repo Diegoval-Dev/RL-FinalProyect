@@ -1,0 +1,5 @@
+modsec,modsec_tpr,modsec_fpr,dominated,dominated_by
+modsec-pl1,0.715038,0.000000,1,alpha-8 alpha-16
+modsec-pl2,0.972522,0.000000,1,alpha-8 alpha-16
+modsec-pl3,1.000000,0.332748,0,
+modsec-pl4,1.000000,0.384435,0,
