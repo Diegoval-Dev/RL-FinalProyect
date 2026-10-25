@@ -1,6 +1,6 @@
 # Contrato: experimentos y resultados
 
-**Versión:** 1.2 · **Implementa:** Fase 2 (F2-T03), Fase 3 (F3-T02) · **Archivo:** `wafarena/run.py`
+**Versión:** 1.3 · **Implementa:** Fase 2 (F2-T03), Fase 3 (F3-T02, F3-T07) · **Archivo:** `wafarena/run.py`
 
 ## Ejecución
 
@@ -80,6 +80,19 @@ results/<exp_id>/<run_name>/s<seed>/
 
 El runner se niega a correr con cambios sin commit en `wafarena/` o `configs/` (salvo `--allow-dirty`, que queda marcado en `meta.yaml` y no vale para el informe).
 
+## Experimentos solo de evaluación
+
+Algunos experimentos no entrenan: vuelven a evaluar checkpoints ya entrenados en otras suites (EXP-F6, EXP-F7; la evaluación de los atacantes de la Fase 3 contra `DEF-REF-1`). Su YAML lleva `exp_id`, `run_name`, `owner`, `rq`, `seeds` y una sección `evaluate` en lugar de `env`/`agent`/`train`:
+
+```yaml
+evaluate:
+  checkpoints: {exp_id: EXP-F5, run_name: alpha-4}   # results/EXP-F5/alpha-4/s<seed>/checkpoint
+  suites: [defender-eval-family-v1]                  # suites reportables de un solo rol
+  defender: {type: checkpoint, path: DEF-REF-1}      # opcional, solo para checkpoints de atacante
+```
+
+`make evaluate CONFIG=...` (o `python -m wafarena.evaluate`) escribe por semilla `results/<exp_id>/<run_name>/s<seed>/` con `meta.yaml` (estado de git de la evaluación más `source_run_id`, el run que entrenó el checkpoint), `config.resolved.yaml` y `final_eval.json` (`{source_run_id, suites}`), así que `make summarize` funciona igual. Se niega a correr con el árbol sucio, salvo `--allow-dirty`. Las suites de validación no se aceptan: no son reportables.
+
 ## Resúmenes versionados
 
 `results/` no se versiona salvo `results/summary/`:
@@ -99,3 +112,4 @@ Cada experimento terminado agrega una fila a [registro.md](../07-experimentos/re
 - 1.0 — versión inicial.
 - 1.1 — Detalle de la selección de modelo en `val`, formatos de `eval.csv`, `train.csv` y `final_eval.json`, y opciones de la línea de comandos. Compatible hacia atrás.
 - 1.2 — Runs de `Defender-v0`: selección en `defender-val-v1` con la regla de `DEF-REF-1`, columnas de `train.csv` del defensor y `train.agent_params` en el checkpoint (F3-T02). Compatible hacia atrás.
+- 1.3 — Experimentos solo de evaluación (`wafarena.evaluate`, sección `evaluate` del YAML) (F3-T07). Compatible hacia atrás.
