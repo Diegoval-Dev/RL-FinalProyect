@@ -227,11 +227,11 @@ def test_dirty_runs_are_marked_in_meta(tmp_path):
     assert meta["allow_dirty"] is True
 
 
-def test_defender_environment_is_not_runnable_yet(tmp_path):
+def test_bandit_environment_has_its_own_runner(tmp_path):
+    """Defender-v0 runs here since F3-T02 (test_defender_runs.py); bandits keep bandit_run."""
     raw = config()
-    raw["env"] = {"id": "WafArena/Defender-v0"}
-    raw["eval"] = {"suites": ["defender-eval-v1"]}
-    with pytest.raises(NotImplementedError, match="Phase 3"):
+    raw["env"] = {"id": "WafArena/AttackerBandit-v0"}
+    with pytest.raises(NotImplementedError, match="own runner"):
         go(tmp_path, raw)
 
 

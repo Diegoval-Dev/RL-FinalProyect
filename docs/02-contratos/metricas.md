@@ -1,6 +1,6 @@
 # Contrato: métricas
 
-**Versión:** 1.2 · **Implementa:** Fase 2 (F2-T04, F2-T10) · **Archivos:** `wafarena/eval/metrics.py`, `wafarena/eval/stats.py`
+**Versión:** 1.3 · **Implementa:** Fase 2 (F2-T04, F2-T10), Fase 3 (F3-T02) · **Archivos:** `wafarena/eval/metrics.py`, `wafarena/eval/stats.py`
 
 Una métrica que no está definida aquí no aparece en el informe. Si una fase necesita una nueva, la agrega aquí (cambio MENOR) antes de usarla.
 
@@ -31,6 +31,8 @@ Todas se calculan por request; las marcadas con (s) también por sesión.
 
 Las versiones por sesión (s) cuentan sesiones benignas con al menos un request con acción ≠ `ALLOW` (FPR) o con `BLOCK`/`HONEYPOT` (FPR-h), sobre el total de sesiones benignas. Las métricas con denominador vacío (por ejemplo, TPR sin requests de ataque) valen `nan`; QFE, DIV y UNQ también son `nan` sin episodios exitosos.
 
+Una suite del defensor se juega una vez por atacante. Las métricas se calculan sobre los requests de todos los atacantes juntos (cada atacante ve las mismas sesiones benignas, así que el FPR no cambia por juntarlos) y, además, `tpr`, `er_d` y `f1` de cada atacante por separado como `<métrica>@<atacante>` (`wafarena.eval.harness.evaluate_defender`).
+
 Para comparar contra ModSecurity, que solo bloquea o permite, se usan TPR y FPR. FPR-h se reporta aparte para no esconder fricción detrás de captchas.
 
 ## Brecha entre modos
@@ -46,6 +48,7 @@ Definidas en `wafarena/eval/harness.py`. Son fijas: mismas semillas, mismos payl
 | `attacker-val-v1` | Solo selección de modelo: 200 episodios sobre payloads `val`, semillas 2000–2199, `query_budget = 50`. Nunca se reporta |
 | `attacker-eval-v1` | 200 episodios sobre payloads `test`, semillas 1000–1199, `query_budget = 50` |
 | `attacker-eval-family-v1` | 200 episodios sobre `test-family` |
+| `defender-val-v1` | Solo selección de modelo del defensor: 2 000 sesiones de `val` (benignas y payloads de ataque), `attack_ratio = 0.1`; atacantes: `corpus-replay`, `random-mutation`, `ATK-REF-0`. Nunca se reporta |
 | `defender-eval-v1` | 2 000 sesiones de `test`, `attack_ratio = 0.1`; atacantes: `corpus-replay`, `random-mutation`, `ATK-REF-0` |
 | `defender-eval-hard-v1` | Todas las sesiones de `test-hard` mezcladas con ataques de `defender-eval-v1` |
 | `defender-eval-family-v1` | Sesiones benignas `test` con ataques sobre `test-family` |
@@ -62,3 +65,4 @@ Definidas en `wafarena/eval/harness.py`. Son fijas: mismas semillas, mismos payl
 - 1.0 — versión inicial. Aclaraciones sin cambio de versión (F2-T04): definición de las métricas por sesión y valores `nan` con denominador vacío.
 - 1.1 — Suite de validación `attacker-val-v1` para selección de modelo en el runner. Compatible hacia atrás.
 - 1.2 — `ATK-REF-0` entra a `defender-eval-v1` (F2-T10, no "desde la Fase 3" como decía la versión anterior). Compatible hacia atrás.
+- 1.3 — Suite `defender-val-v1` para la selección de modelo del defensor y regla de agregación de una suite del defensor sobre sus atacantes (F3-T02). Compatible hacia atrás.

@@ -27,17 +27,56 @@ N_ACTIONS = 5
 MAX_SESSION_STEPS = 200
 ENDPOINT_BY_PATH = {spec.path: spec.name for spec in ENDPOINTS}
 ATTACKERS = {"corpus_replay": CorpusReplayAttacker, "random_mutation": RandomMutationAttacker}
+REFS_DIR = Path("checkpoints/refs")
+
+
+def _checkpoint_factory(path):
+    """Load the checkpoint once and drive it with the same `AttackerDriver` every session (its own
+    `reset()` clears all per-session state, so reusing it is safe)."""
+    driver = AttackerDriver(load_checkpoint(path))
+    return lambda rng: driver
+
+
+def _pool_entry_factory(entry: str):
+    """A pool entry: a scripted attacker name (`corpus-replay` or `corpus_replay`), a reference id
+    published under `checkpoints/refs/` (`ATK-REF-0`) or a path to a checkpoint directory."""
+    name = entry.replace("-", "_")
+    if name in ATTACKERS:
+        return lambda rng: ATTACKERS[name]()
+    ref = REFS_DIR / entry
+    return _checkpoint_factory(ref if ref.is_dir() else Path(entry))
+
+
+def _pool_factory(spec: dict):
+    paths = list(spec["paths"])
+    weights = np.asarray(spec.get("weights") or [1.0] * len(paths), dtype=float)
+    if len(weights) != len(paths) or not paths or (weights < 0).any() or weights.sum() <= 0:
+        raise ValueError("pool needs one non-negative weight per path, with a positive sum")
+    factories = [_pool_entry_factory(entry) for entry in paths]
+    probabilities = weights / weights.sum()
+
+    def pick(rng: np.random.Generator):
+        return factories[int(rng.choice(len(factories), p=probabilities))](rng)
+
+    return pick
 
 
 def _resolve_attacker_factory(attacker):
-    """A zero-arg callable returning an `AttackerPolicy`. A `{"type": "checkpoint", "path": ...}`
-    spec loads that checkpoint once and drives it with the same `AttackerDriver` every episode
-    (its own `reset()` clears all per-episode state, so reusing it is safe); every other form is
-    one of the built-in scripted attackers, by name."""
+    """A callable `rng -> AttackerPolicy`, called once per attack session with the env's RNG.
+
+    Accepts a ready `AttackerPolicy` object (reused every session), `{"type": "checkpoint",
+    "path": ...}`, `{"type": "pool", "paths": [...], "weights": [...]}` (one entry sampled per
+    session with the env's RNG, so the mix is reproducible from the seed) or a built-in scripted
+    attacker by name.
+    """
+    if hasattr(attacker, "next_request"):
+        return lambda rng: attacker
     if isinstance(attacker, dict) and attacker.get("type") == "checkpoint":
-        driver = AttackerDriver(load_checkpoint(attacker["path"]))
-        return lambda: driver
-    return ATTACKERS[resolve_attacker_type(attacker)]
+        return _checkpoint_factory(attacker["path"])
+    if isinstance(attacker, dict) and attacker.get("type") == "pool":
+        return _pool_factory(attacker)
+    scripted = ATTACKERS[resolve_attacker_type(attacker)]
+    return lambda rng: scripted()
 
 
 class DefenderEnv(gym.Env):
@@ -90,7 +129,7 @@ class DefenderEnv(gym.Env):
             base = _find(self._bases, lambda b: b.base_id == base_id, base_id)
         self._session_id = f"atk-{base.base_id}"
         self._endpoint, self._param = base.endpoint, PARAM_BY_ENDPOINT[base.endpoint]
-        self._attacker = self._attacker_factory()
+        self._attacker = self._attacker_factory(self.np_random)
         self._attacker.reset(Payload(base.text, base.location, 0), base.endpoint, self.np_random)
         self._last_response = 0
 

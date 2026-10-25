@@ -1,0 +1,34 @@
+exp_id: EXP-E2
+run_name: sarsa-onpolicy
+owner: joaquin
+rq: []
+seeds: [0, 1, 2]
+
+# On-policy counterpart of qlearning-offpolicy.yaml: same features, step size and discount, but
+# SARSA learns from the epsilon-greedy policy it follows (no off-policy corner of the triad).
+env:
+  id: WafArena/Defender-v0
+  backend: fast
+  attacker: {type: pool, paths: [corpus-replay, random-mutation, ATK-REF-0], weights: [1, 1, 1]}
+  attack_ratio: 0.1
+  reward: {alpha: 4.0, beta: 1.0, gamma: 0.5}
+
+agent:
+  algo: linear
+  params:
+    method: sarsa
+    behavior: egreedy
+    alpha: 0.05
+    gamma: 0.99
+    epsilon: 0.1
+
+train:
+  total_steps: 100000
+
+eval:
+  suites: [defender-eval-v1]
+  every_steps: 10000
+  final: true
+
+logging:
+  tensorboard: false

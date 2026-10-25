@@ -144,6 +144,13 @@ DEFENDER_SUITES = {
         "defender-eval-family-v1", "test", "test-family", SCRIPTED_ATTACKERS
     ),
 }
+# Model selection for defenders; like attacker-val-v1, never part of the reported evaluation.
+DEFENDER_VALIDATION_SUITES = {
+    "defender-val-v1": DefenderSuite(
+        "defender-val-v1", "val", "val", (*SCRIPTED_ATTACKERS, "ATK-REF-0")
+    ),
+}
+PER_ATTACKER_METRICS = ("tpr", "er_d", "f1")
 
 
 def _split_ids(kind: str, split: str) -> list[str]:
@@ -155,8 +162,12 @@ def _sample(ids: list[str], n: int, seed: int) -> list[str]:
     return [ids[i] for i in rng.integers(len(ids), size=n)]
 
 
+def _defender_suite(name: str) -> DefenderSuite:
+    return {**DEFENDER_SUITES, **DEFENDER_VALIDATION_SUITES}[name]
+
+
 def _attack_refs(spec: DefenderSuite) -> list[str]:
-    source = DEFENDER_SUITES[spec.attacks_like] if spec.attacks_like else spec
+    source = _defender_suite(spec.attacks_like) if spec.attacks_like else spec
     n_attacks = round(source.n_sessions * source.attack_ratio)
     return _sample(_split_ids("payloads", source.attack_split), n_attacks, PLAN_SEEDS["attack"])
 
@@ -194,7 +205,7 @@ def run_defender_suite(
     """
     if hasattr(defender, "role") and defender.role != "defender":
         raise ValueError(f"defender suites need a defender, got role {defender.role!r}")
-    spec = DEFENDER_SUITES[suite]
+    spec = _defender_suite(suite)
     if attacker not in spec.attackers:
         raise ValueError(f"suite {suite} does not include attacker {attacker!r}")
     attacker_arg = (
@@ -237,3 +248,35 @@ def _play_session(defender, env: DefenderEnv, item: SessionPlan) -> list[Request
         )
         done = terminated or truncated
     return records
+
+
+def summarize_defender(records: list[RequestRecord]) -> dict[str, float]:
+    """All per-request and per-session defender metrics of metricas.md for one set of records."""
+    return {
+        "requests": len(records),
+        "attack_requests": sum(r.is_attack for r in records),
+        "tpr": metrics.tpr(records),
+        "er_d": metrics.evasion_suffered(records),
+        "fpr": metrics.fpr(records),
+        "fpr_h": metrics.fpr_hard(records),
+        "fpr_s": metrics.fpr_by_session(records),
+        "fpr_h_s": metrics.fpr_hard_by_session(records),
+        "f1": metrics.f1(records),
+    }
+
+
+def evaluate_defender(defender, suite: str, *, backend: Backend | str = "fast") -> dict:
+    """Play the suite against each of its attackers; metrics over the pooled requests, plus
+    `<metric>@<attacker>` for the attack-side metrics of each attacker alone.
+
+    Every attacker meets the same benign sessions, so pooling repeats them once per attacker:
+    FPR is unchanged by that, and TPR stays a per-request rate over every attack request."""
+    backend = resolve_backend(backend)
+    pooled: list[RequestRecord] = []
+    per_attacker: dict[str, float] = {}
+    for attacker in _defender_suite(suite).attackers:
+        records = run_defender_suite(defender, suite, attacker=attacker, backend=backend)
+        pooled.extend(records)
+        alone = summarize_defender(records)
+        per_attacker.update({f"{m}@{attacker}": alone[m] for m in PER_ATTACKER_METRICS})
+    return {**summarize_defender(pooled), **per_attacker}
