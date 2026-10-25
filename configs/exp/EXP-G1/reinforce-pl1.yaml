@@ -1,0 +1,37 @@
+exp_id: EXP-G1
+run_name: reinforce-pl1
+owner: joaquin
+rq: [RQ1, RQ2]
+seeds: [0, 1, 2, 3, 4]
+
+env:
+  id: WafArena/Attacker-v0
+  backend: fast
+  defender: {type: modsec, paranoia_level: 1}
+  query_budget: 50
+
+# Shared by EXP-G1..G3: same network, discount, entropy bonus and step budget (200 000, as the
+# Phase 2 tabular attackers); each method keeps its usual CleanRL update schedule.
+agent:
+  algo: pg
+  params:
+    method: reinforce
+    hidden: [64, 64]
+    gamma: 0.99
+    ent_coef: 0.01
+    vf_coef: 0.5
+    max_grad_norm: 0.5
+    eval_policy: sample
+    threads: 1
+    lr: 0.001
+    normalize_advantages: true
+train:
+  total_steps: 200000
+
+eval:
+  suites: [attacker-eval-v1]
+  every_steps: 20000
+  final: true
+
+logging:
+  tensorboard: false

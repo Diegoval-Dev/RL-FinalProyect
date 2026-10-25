@@ -4,9 +4,13 @@
 construction passes ready objects. Both forms are accepted.
 """
 
+from pathlib import Path
+
 from wafarena.defenders.modsec_defender import ModSecDefender
 from wafarena.envs.backends import make_backend
 from wafarena.envs.backends.base import Backend
+
+REFS_DIR = Path("checkpoints/refs")
 
 
 def resolve_backend(backend: Backend | str) -> Backend:
@@ -23,8 +27,18 @@ def resolve_defender(defender):
     if kind == "modsec":
         return ModSecDefender(int(defender["paranoia_level"]))
     if kind == "checkpoint":
-        raise NotImplementedError("defender type 'checkpoint' needs load_checkpoint (F2-T02)")
+        return _checkpoint_defender(defender["path"])
     raise ValueError(f"unknown defender type {kind!r}")
+
+
+def _checkpoint_defender(path):
+    """A defender checkpoint, by reference id published under `checkpoints/refs/` (`DEF-REF-1`)
+    or by path, driven greedily through `DefenderDriver`."""
+    from wafarena.agents import load_checkpoint  # imported here: agents import the envs
+    from wafarena.defenders.driver import DefenderDriver
+
+    ref = REFS_DIR / str(path)
+    return DefenderDriver(load_checkpoint(ref if ref.is_dir() else Path(path)))
 
 
 def resolve_attacker_type(attacker) -> str:

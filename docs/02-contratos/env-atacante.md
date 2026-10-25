@@ -1,6 +1,6 @@
 # Contrato: entorno del atacante `WafArena/Attacker-v0`
 
-**Versión:** 1.0 · **Implementa:** Fase 1 (F1-T12) · **Archivo:** `wafarena/envs/attacker_env.py`
+**Versión:** 1.1 · **Implementa:** Fase 1 (F1-T12), Fase 3 (F3-T08) · **Archivo:** `wafarena/envs/attacker_env.py`
 
 ## Episodio
 
@@ -20,6 +20,8 @@ gymnasium.make(
     families=None,                  # None = todas las del split
 )
 ```
+
+`defender={"type": "checkpoint", "path": ...}` acepta la ruta de un checkpoint de defensor o el id de una referencia publicada en `checkpoints/refs/` (`DEF-REF-1`); se usa a través de `DefenderDriver` ([agentes](agentes-y-checkpoints.md)), de forma voraz. En cada `SEND` el defensor recibe las 37 features de `Defender-v0` ([features](features.md)): las del request, los scores de ModSecurity y las de sesión y ventana de los envíos anteriores del mismo episodio (el episodio es una sesión). `ModSecDefender` solo lee los scores, así que su comportamiento no cambia.
 
 `reset(seed=..., options={"base_id": ..., "endpoint": ...})` acepta fijar el payload base y el endpoint; si no se fijan, se muestrean con el RNG del entorno.
 
@@ -106,3 +108,4 @@ Con el mismo `seed`, el mismo defensor determinista y el backend `fast` con cach
 ## Historial
 
 - 1.0 — versión inicial.
+- 1.1 — Defensor `{"type": "checkpoint"}` implementado (ruta o id de referencia, vía `DefenderDriver`) y features de sesión y ventana en la observación que recibe el defensor (antes iban en cero). Compatible hacia atrás: `ModSecDefender` no las usa (F3-T08).

@@ -1,6 +1,6 @@
 # Contrato: agentes, políticas y checkpoints
 
-**Versión:** 1.0 · **Implementa:** Fase 1 (`DefenderPolicy`, `AttackerPolicy`, `AttackerDriver`) y Fase 2 (`Agent`, checkpoints) · **Archivos:** `wafarena/defenders/base.py`, `wafarena/attackers/base.py`, `wafarena/attackers/driver.py`, `wafarena/agents/base.py`
+**Versión:** 1.1 · **Implementa:** Fase 1 (`DefenderPolicy`, `AttackerPolicy`), Fase 2 (`Agent`, checkpoints, `AttackerDriver`) y Fase 3 (`DefenderDriver`) · **Archivos:** `wafarena/defenders/base.py`, `wafarena/attackers/base.py`, `wafarena/attackers/driver.py`, `wafarena/defenders/driver.py`, `wafarena/agents/base.py`
 
 Este contrato es lo que permite enchufar un agente entrenado por una fase como oponente en la fase siguiente sin tocar su código.
 
@@ -18,7 +18,7 @@ class AttackerPolicy(Protocol):
 
 Implementaciones de la Fase 1: `ModSecDefender(paranoia_level)`, `CorpusReplayAttacker`, `RandomMutationAttacker`.
 
-`AttackerDriver(agent)` convierte un `Agent` entrenado en `Attacker-v0` en un `AttackerPolicy`: mantiene internamente el payload, la ventana de respuestas y los contadores, construye la observación de 288 dimensiones y llama al agente hasta que este elige `SEND`. `DefenderDriver(agent)` hace lo mismo del lado defensor.
+`AttackerDriver(agent)` convierte un `Agent` entrenado en `Attacker-v0` en un `AttackerPolicy`: mantiene internamente el payload, la ventana de respuestas y los contadores, construye la observación de 288 dimensiones y llama al agente hasta que este elige `SEND`. `DefenderDriver(agent)` hace lo mismo del lado defensor: convierte un `Agent` de `Defender-v0` en un `DefenderPolicy` que actúa de forma voraz (`explore=False`) y sin `info`; es lo que usan `Attacker-v0` con `defender={"type": "checkpoint", "path": ...}` y, en modo real, el proxy.
 
 ## Agente (Fase 2)
 
@@ -91,3 +91,4 @@ Se guardan en `checkpoints/refs/<ID>/` y sí se versionan en git (con Git LFS si
 ## Historial
 
 - 1.0 — versión inicial. `AttackerDriver` estaba documentado desde Fase 1 pero no existía en el código (ver Hallazgos de la Fase 2); se implementó en F2-T10 (`wafarena/attackers/driver.py`), sin cambiar esta interfaz.
+- 1.1 — `DefenderDriver` implementado en `wafarena/defenders/driver.py` (F3-T08); se elimina `wafarena/envs/drivers.py`, un borrador de la Fase 1 que nadie importaba y cuyo `AttackerDriver` no coincidía con el real. Compatible hacia atrás.
