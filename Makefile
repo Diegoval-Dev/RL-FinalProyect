@@ -1,4 +1,4 @@
-.PHONY: setup lint test test-lab lab-up lab-down smoke run run-bandit run-dp rq1-table summarize verify-splits build-splits endpoints-doc modsec-baseline operator-preservation bandit-arm-means evasion-reachability dqn-sanity evaluate
+.PHONY: setup lint test test-lab lab-up lab-down smoke run run-bandit run-dp rq1-table summarize verify-splits build-splits endpoints-doc modsec-baseline operator-preservation bandit-arm-means evasion-reachability dqn-sanity modsec-defender-suites evaluate
 
 COMPOSE = docker compose -f lab/docker-compose.yml
 
@@ -35,6 +35,9 @@ operator-preservation:
 
 bandit-arm-means:
 	$(COMPOSE) run --rm runner python scripts/bandit_arm_means.py
+
+modsec-defender-suites:
+	$(COMPOSE) run --rm runner python scripts/modsec_defender_suites.py
 
 evasion-reachability:
 	$(COMPOSE) run --rm runner python scripts/evasion_reachability.py

@@ -1,0 +1,46 @@
+agent_id: DEF-REF-1
+role: defender
+algo: dqn
+obs_dim: 37
+n_actions: 5
+contract_versions:
+  env_defender: '1.2'
+  features: '1.0'
+train:
+  exp_id: EXP-F5
+  run_id: EXP-F5__alpha-4__s0__d9d7d49
+  seed: 0
+  git_sha: d9d7d49
+  step: 110000
+  agent_params:
+    hidden:
+    - 128
+    - 128
+    lr: 0.0005
+    gamma: 0.9
+    buffer_size: 100000
+    batch_size: 128
+    learning_starts: 5000
+    train_freq: 4
+    target_update: 2000
+    epsilon:
+      start: 1.0
+      end: 0.05
+      decay_steps: 50000
+    loss: huber
+    reward_scale: 0.1
+    max_grad_norm: 10.0
+    threads: 1
+    double: true
+    dueling: true
+    per: false
+eval_summary:
+  suite: defender-val-v1
+  tpr: 1.0
+  fpr: 0.0
+  f1: 1.0
+  fpr_cap: 0.0
+  selected_from: EXP-F5/alpha-4/s0
+  selection: scripts/select_def_ref.py (fase-3 plan rule + ADR-0010 tie-break, val
+    only)
+created_at: '2026-10-25T21:25:54Z'
