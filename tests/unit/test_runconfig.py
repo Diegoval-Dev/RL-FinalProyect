@@ -177,9 +177,17 @@ def test_load_config_rejects_non_mapping(tmp_path: Path):
 
 
 def test_every_committed_experiment_config_is_valid():
+    """Training configs against the runner's schema, evaluation-only ones (an `evaluate`
+    section, experimentos.md 1.3) against wafarena.evaluate's."""
+    import yaml
+
+    from wafarena.evaluate import resolve_eval_config
+
     root = Path(__file__).parents[2] / "configs" / "exp"
     for path in sorted(root.rglob("*.yaml")):
-        assert load_config(path)["exp_id"] in catalog_ids(), path
+        raw = yaml.safe_load(path.read_text())
+        config = resolve_eval_config(raw) if "evaluate" in raw else load_config(path)
+        assert config["exp_id"] in catalog_ids(), path
 
 
 BANDIT_CONFIG = {
