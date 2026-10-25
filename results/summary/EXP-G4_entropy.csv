@@ -1,0 +1,4 @@
+run_name,ent_coef,n_seeds,er_mean,er_low,er_high,div_mean,unq_mean,policy_entropy_late_mean,policy_entropy_late_low,policy_entropy_late_high
+ppo-ent-0,0.0,5,0.001000,0.000000,0.003000,nan,1.000000,0.333246,0.181466,0.485026
+ppo-ent-001,0.01,5,0.001000,0.000000,0.003000,nan,1.000000,0.684347,0.484415,0.885422
+ppo-ent-005,0.05,5,0.000000,0.000000,0.000000,nan,nan,2.190990,2.126559,2.255421

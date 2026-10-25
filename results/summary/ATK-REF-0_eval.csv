@@ -1,0 +1,3 @@
+attacker,defender,suite,episodes,evasions,evasion_rate,qfe,qfe_c,diversity,uniqueness,break_rate
+ATK-REF-0,modsec-pl1,attacker-eval-v1,200,0,0.0,nan,50.0,nan,nan,0.185
+ATK-REF-0,DEF-REF-1,attacker-eval-v1,200,0,0.0,nan,50.0,nan,nan,0.18663522012578615

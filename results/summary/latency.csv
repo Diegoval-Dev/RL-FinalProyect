@@ -1,0 +1,5 @@
+defender,measure,requests,p50_ms,p95_ms
+checkpoints/refs/DEF-REF-1,lat_added,2000,65.636,74.306
+checkpoints/refs/DEF-REF-1,modsec_pl2_alone,2000,15.890,17.940
+checkpoints/refs/DEF-REF-1,proxy_with_defender,2000,81.704,90.321
+checkpoints/refs/DEF-REF-1,policy_decision,2000,0.034,0.042
