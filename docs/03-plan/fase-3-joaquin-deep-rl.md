@@ -93,7 +93,7 @@ Entre todos los defensores entrenados en F3-T05, el de mayor TPR en `val` sujeto
 - [x] F3-T01 Aceptación del relevo
 - [x] F3-T02 Defensor lineal
 - [ ] F3-T03 DQN base
-- [ ] F3-T04 Ablación DQN
+- [x] F3-T04 Ablación DQN
 - [ ] F3-T05 Pareto contra ModSecurity
 - [ ] F3-T06 Ablaciones del defensor
 - [ ] F3-T07 Generalización del defensor estático
@@ -113,3 +113,6 @@ Entre todos los defensores entrenados en F3-T05, el de mayor TPR en `val` sujeto
 - **F3-T02 (bug corregido, heredado):** `ModSecCache.flush` reescribía el JSON de la caché en su lugar; un proceso que arrancara mientras otro escribía podía leer un archivo truncado. Ahora escribe a un temporal y hace `os.replace` atómico. Varios runs en paralelo siguen pudiendo perder entradas nuevas (gana el último en escribir), lo que solo cuesta recalcular, nunca un score equivocado.
 - **F3-T02 (decisión de método):** `runmeta.build_meta` revisa el árbol de git en cada semilla, así que editar `wafarena/` o `configs/` mientras corre un experimento marcaría las semillas siguientes como `dirty`. El desarrollo de las tareas siguientes se hizo en un *worktree* aparte mientras corrían los experimentos.
 - **F3-T02 (resultado):** EXP-E1, 5 semillas, `defender-eval-v1`: Q-learning lineal TPR = 0,955 [0,895; 0,991], FPR = 0,016 [0,011; 0,019]; SARSA lineal TPR = 0,950 [0,879; 0,991], FPR = 0,022 [0,016; 0,028]. EXP-E2, 3 semillas: con datos off-policy de una política uniforme, la norma de los pesos de Q-learning lineal crece sin estabilizarse (232–309 a los 100 000 pasos) y el error TD medio sube a 8,5–11,8, mientras que SARSA on-policy con el mismo α y γ se estabiliza (‖w‖ ≈ 50, |δ| ≈ 1,1). Es crecimiento sostenido dentro del presupuesto, no un desborde a infinito. Registrado en `registro.md`; figura `report/figuras/EXP-E2_weight_norm.png`.
+- **F3-T04 (resultado):** EXP-F1..F4, 5 semillas cada uno, mismos hiperparámetros compartidos (α = 4, 150 000 pasos), commit `1517d8f`. En `defender-eval-v1`: base TPR = 0.9970 [0.9943; 0.9998]; + Double 0.9955 [0.9925; 0.9986]; + Dueling 0.9984 [0.9967; 0.9994]; + PER 0.9828 [0.9740; 0.9917]; FPR = 0 en las cuatro salvo F3 (0.0002 [0.0000; 0.0005]). Tabla completa y diferencias con IC en `results/summary/EXP-F_ablation.csv` y `EXP-F_ablation_diffs.csv`; figura `report/figuras/EXP-F_ablation.png`.
+- **F3-T04 (hipótesis del catálogo):** ninguna se confirma. Double no reduce de forma detectable la Q de `ALLOW` en ataques (diferencia −0,041 [−0,288; 0,195]); Dueling no cambia TPR de forma detectable (+0,003 [−0,0004; 0,006]); PER sí cumple su mecanismo, porque la fracción del batch con ataques que pasaron sube de 0.0055 [0.0053; 0.0058] a 0.0281 [0.0257; 0.0303], pero **baja** el TPR (−0,016 [−0,025; −0,007]) y el F1 (−0,007 [−0,012; −0,003]). Con TPR ≈ 0,99 sin PER, casi no quedan ataques que se escapen; repetir de más esos pocos casos no ayuda.
+- **F3-T04 (decisión):** EXP-F5 usa Double + Dueling (EXP-F3): es la variante con mayor TPR en `val` bajo la regla de `DEF-REF-1` (TPR medio en `val` = 0,99929; las 5 semillas con FPR = 0). Se eligió en `val`; `test` no participó.
