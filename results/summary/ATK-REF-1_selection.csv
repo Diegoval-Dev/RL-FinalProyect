@@ -1,0 +1,6 @@
+rank,run_name,seed,val_evasion_rate,val_qfe_c,val_diversity,best_step
+1,ppo-defref1,1,0.005,49.8,nan,20000
+2,ppo-defref1,2,0.005,49.8,nan,20000
+3,ppo-defref1,3,0.005,49.8,nan,20000
+4,ppo-defref1,0,0.0,50.0,nan,20000
+5,ppo-defref1,4,0.0,50.0,nan,20000
