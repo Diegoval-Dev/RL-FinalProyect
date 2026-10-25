@@ -14,8 +14,9 @@ Un ADR aceptado no se edita: si la decisión cambia, se crea uno nuevo que lo re
 | [0006](adr-0006-cleanrl-y-tabulares-propios.md) | Tabulares propios y deep RL estilo CleanRL | Aceptado |
 | [0007](adr-0007-app-propia-python.md) | App objetivo propia y stack único en Python | Aceptado |
 | [0008](adr-0008-modsec-score-por-audit-log.md) | ModSecurity: anomaly score por audit log JSON | Aceptado |
+| [0009](adr-0009-pytorch-cpu.md) | PyTorch solo CPU para DQN y policy gradient | Aceptado |
 
-Próximo número libre: **0008**. La tarea F1-T05 debe producir el ADR sobre cómo se obtiene el anomaly score de ModSecurity.
+Próximo número libre: **0010**.
 
 ## Plantilla
 

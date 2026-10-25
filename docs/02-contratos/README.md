@@ -13,7 +13,7 @@ Un contrato es la interfaz documentada entre dos componentes. En un relevo, los 
 | [features.md](features.md) | 1.0 | F1 | F3, F4 |
 | [datos-y-splits.md](datos-y-splits.md) | 1.0 | F1 | todas |
 | [agentes-y-checkpoints.md](agentes-y-checkpoints.md) | 1.0 | F1 (protocolos de políticas), F2 (Agent y checkpoints) | F2, F3, F4 |
-| [metricas.md](metricas.md) | 1.3 | F2 | F2, F3, F4 |
+| [metricas.md](metricas.md) | 1.4 | F2 | F2, F3, F4 |
 | [experimentos.md](experimentos.md) | 1.2 | F2 | F2, F3, F4 |
 
 ## Versionado

@@ -240,3 +240,14 @@ def test_defender_suites_are_rejected_for_attacker_runs():
     raw["eval"]["suites"] = ["attacker-eval-v1"]
     with pytest.raises(ConfigError, match="does not apply"):
         resolve_config(raw)
+
+
+def test_suites_record_q_allow_for_defenders_with_q_values():
+    from wafarena.agents.linear import LinearAgent
+
+    agent = LinearAgent("lin", 0, obs_dim=37, n_actions=5)
+    agent.weights[0, -1] = 7.0  # Q(s, ALLOW) = 7 for every s
+    summary = harness.evaluate_defender(agent, "defender-val-v1", backend=FakeBackend())
+    assert summary["q_allow_attack"] == 7.0
+    plain = harness.evaluate_defender(ModSecDefender(1), "defender-val-v1", backend=FakeBackend())
+    assert plain["q_allow_attack"] != plain["q_allow_attack"]  # nan without Q values

@@ -71,3 +71,16 @@ def test_latency_percentiles_are_p50_and_p95_in_ms():
 def test_gap_is_absolute_difference_between_modes():
     assert metrics.gap(0.31, 0.25) == pytest.approx(0.06)
     assert metrics.gap(0.25, 0.31) == pytest.approx(0.06)
+
+
+def test_q_allow_on_attacks_averages_attack_requests_with_q_values():
+    from wafarena.eval.metrics import q_allow_on_attacks
+
+    records = [
+        RequestRecord(True, 0, True, "a", q_allow=2.0),
+        RequestRecord(True, 1, False, "a", q_allow=4.0),
+        RequestRecord(False, 0, False, "b", q_allow=100.0),  # benign: not counted
+        RequestRecord(True, 0, True, "c"),  # no Q value: not counted
+    ]
+    assert q_allow_on_attacks(records) == 3.0
+    assert math.isnan(q_allow_on_attacks([RequestRecord(True, 0, True, "a")]))
