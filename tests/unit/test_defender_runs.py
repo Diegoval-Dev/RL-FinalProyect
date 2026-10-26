@@ -251,3 +251,35 @@ def test_suites_record_q_allow_for_defenders_with_q_values():
     assert summary["q_allow_attack"] == 7.0
     plain = harness.evaluate_defender(ModSecDefender(1), "defender-val-v1", backend=FakeBackend())
     assert plain["q_allow_attack"] != plain["q_allow_attack"]  # nan without Q values
+
+
+def test_concurrent_cache_flushes_never_leave_a_corrupt_file(tmp_path, monkeypatch):
+    """Every lab container is PID 1, so a temp name built from the PID collided across parallel
+    runs and interleaved their writes (F3-T08). Writers must not share a temporary file."""
+    import os
+    import threading
+
+    monkeypatch.setattr(os, "getpid", lambda: 1)  # what every container reports
+    path = tmp_path / "cache.json"
+    caches = []
+    for i in range(8):
+        cache = ModSecCache(path)
+        for j in range(2000):
+            cache.put(1, "GET", f"/search?q={i}-{j}", j % 50, False)
+        caches.append(cache)
+    errors = []
+
+    def flush(cache):
+        try:
+            cache.flush()
+        except OSError as error:  # the shared temp file vanishes under the other writers
+            errors.append(error)
+
+    threads = [threading.Thread(target=flush, args=(c,)) for c in caches]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+    assert errors == []
+    assert len(json.loads(path.read_text())) == 2000  # one writer's complete view, never a mix
+    assert [p.name for p in tmp_path.iterdir()] == ["cache.json"]

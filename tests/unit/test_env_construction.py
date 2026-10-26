@@ -42,9 +42,10 @@ def test_resolve_defender_rejects_unknown_type():
         resolve.resolve_defender({"type": "nope"})
 
 
-def test_resolve_defender_checkpoint_not_available_yet():
-    with pytest.raises(NotImplementedError, match="checkpoint"):
-        resolve.resolve_defender({"type": "checkpoint", "path": "x"})
+def test_resolve_defender_checkpoint_needs_an_existing_checkpoint():
+    """Implemented in F3-T08 (test_policy_gradient.py covers a real one); a bad path fails."""
+    with pytest.raises(FileNotFoundError):
+        resolve.resolve_defender({"type": "checkpoint", "path": "no/such/checkpoint"})
 
 
 def test_resolve_attacker_spec_accepts_string_and_dict():

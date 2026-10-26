@@ -6,6 +6,7 @@ from wafarena.agents import (  # noqa: F401  (register algos)
     dqn,
     linear,
     mc,
+    pg,
     random_agent,
     td,
 )

@@ -14,8 +14,9 @@ from wafarena.envs.abstract_state import AbstractState
 from wafarena.envs.attacker_obs import OBS_SIZE, encode_observation, family_index
 from wafarena.envs.backends.base import Backend
 from wafarena.envs.resolve import resolve_backend, resolve_defender
-from wafarena.features.modsec import modsec_features
+from wafarena.features.modsec import MODSEC_SCORE_DIVISOR, modsec_features
 from wafarena.features.request import RequestInput, request_features
+from wafarena.features.session import SessionTracker
 from wafarena.mutations.payload import Payload
 from wafarena.mutations.registry import REGISTRY
 from wafarena.splits.builder import SPLITS_PATH
@@ -102,6 +103,7 @@ class AttackerEnv(gym.Env):
         self._payload = Payload(base.text, base.location, 0)
         self._responses = [int(Response.NONE)]
         self._mutations = self._queries = self._blocks = self._steps = 0
+        self._tracker = SessionTracker()  # the episode is one session as the defender sees it
         return self._obs(), self._info()
 
     def _select_base(self, options):
@@ -140,6 +142,11 @@ class AttackerEnv(gym.Env):
         defender_obs = self._defender_obs(result)
         self._defender.reset_session(self._base.base_id)
         action = Action(self._defender.act(defender_obs))
+        self._tracker.record(
+            RequestInput(params={self._param: self._payload.text}),
+            modsec_pl2=result.modsec_scores[2] / MODSEC_SCORE_DIVISOR,
+            allowed=action == Action.ALLOW,
+        )
         response = self._response_class(action, result)
         self._responses.insert(0, int(response))
         self._last_defender_action = int(action)
@@ -162,10 +169,14 @@ class AttackerEnv(gym.Env):
         return Response.PASS_EFFECT if result.oracle.effect else Response.PASS_NO_EFFECT
 
     def _defender_obs(self, result) -> np.ndarray:
+        """The 37 features of Defender-v0 for this request: request, ModSecurity scores and the
+        session/window features of the episode's earlier requests (features.md)."""
         obs = np.zeros(37, dtype=np.float32)
         obs[:12] = request_features(RequestInput(params={self._param: self._payload.text}))
         obs[12:16] = modsec_features(result.modsec_scores)
-        return obs
+        obs[16:21] = self._tracker.session_features()
+        obs[21:37] = self._tracker.window_features()
+        return np.clip(obs, 0.0, 1.0)
 
     def _obs(self) -> np.ndarray:
         return encode_observation(

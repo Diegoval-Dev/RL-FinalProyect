@@ -154,6 +154,13 @@ def _train_and_select(config, agent: Agent, seed, directory: Path, backend, meta
     return selection
 
 
+def defender_label(defender: dict) -> str:
+    """`modsec-pl1` for ModSecurity; the reference id or the checkpoint path otherwise."""
+    if defender["type"] == "modsec":
+        return f"modsec-pl{defender['paranoia_level']}"
+    return str(defender.get("path", defender["type"]))
+
+
 def _spaces(config) -> tuple[int, int]:
     if config["env"]["id"] == DEFENDER_ENV:
         return defender_env.OBS_SIZE, defender_env.N_ACTIONS
@@ -182,7 +189,7 @@ def _save_best(config, agent: Agent, path: Path, meta, step: int, summary: dict)
         train=_train_meta(config, meta, step),
         eval_summary={
             "suite": VALIDATION_SUITE,
-            "defender": f"{defender['type']}-pl{defender.get('paranoia_level', '')}",
+            "defender": defender_label(defender),
             "evasion_rate": summary["evasion_rate"],
         },
     )
