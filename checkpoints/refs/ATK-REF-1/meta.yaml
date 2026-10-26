@@ -1,0 +1,42 @@
+agent_id: ATK-REF-1
+role: attacker
+algo: pg
+obs_dim: 288
+n_actions: 17
+contract_versions:
+  env_attacker: '1.1'
+  operators: '1.1'
+  features: '1.0'
+train:
+  exp_id: EXP-G3
+  run_id: EXP-G3__ppo-defref1__s1__98aa1a3
+  seed: 1
+  git_sha: 98aa1a3
+  step: 20000
+  agent_params:
+    method: ppo
+    hidden:
+    - 64
+    - 64
+    gamma: 0.99
+    ent_coef: 0.01
+    vf_coef: 0.5
+    max_grad_norm: 0.5
+    eval_policy: sample
+    threads: 1
+    lr: 0.0003
+    n_steps: 1024
+    update_epochs: 4
+    minibatch_size: 256
+    clip_coef: 0.2
+    gae_lambda: 0.95
+    normalize_advantages: true
+eval_summary:
+  suite: attacker-val-v1
+  defender: DEF-REF-1
+  evasion_rate: 0.005
+  qfe_c: 49.8
+  selected_from: EXP-G3/ppo-defref1/s1
+  selection: scripts/select_atk_ref.py (max ER on val, then min QFE-c, then lower
+    seed)
+created_at: '2026-10-25T22:10:09Z'

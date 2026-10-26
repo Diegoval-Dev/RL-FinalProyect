@@ -100,7 +100,7 @@ Entre todos los defensores entrenados en F3-T05, el de mayor TPR en `val` sujeto
 - [x] F3-T08 Atacante policy gradient
 - [x] F3-T09 Bono de entropía
 - [x] F3-T10 Latencia
-- [ ] F3-T11 `DEF-REF-1` y `ATK-REF-1`
+- [x] F3-T11 `DEF-REF-1` y `ATK-REF-1`
 - [ ] F3-T12 Informe y handoff
 
 ## Hallazgos
@@ -141,3 +141,5 @@ Entre todos los defensores entrenados en F3-T05, el de mayor TPR en `val` sujeto
 - **F3-T10 (resultado):** 2 000 requests del tráfico de `defender-eval-v1`, cada uno enviado a `modsec-pl2` solo y a `proxy-learned` en orden alternado, con la máquina sin otra carga, commit `8e5e595`. **LAT de `DEF-REF-1`: p50 = 65.6 ms, p95 = 74.3 ms** sobre ModSecurity solo, que tarda p50 = 15.9 ms, p95 = 17.9 ms; el proxy con `DEF-REF-1` tarda p50 = 81.7 ms, p95 = 90.3 ms. La decisión del DQN por sí sola cuesta p50 = 0.034 ms (`results/summary/latency.csv`).
 - **F3-T10 (lectura):** casi toda la latencia agregada es del proxy y no del DQN. El proxy consulta ModSecurity PL1–PL4 **en secuencia** para armar las features 12–15 (≈ 4 veces lo que tarda una consulta sola) antes de decidir. ABL-1 (F3-T06) muestra que el DQN no necesita esos scores, así que un defensor sin ellos, o un proxy que consulte los cuatro niveles en paralelo, bajaría la latencia casi a la de ModSecurity solo. No se cambió el proxy en esta fase.
 - **F3-T10 (nota):** algunos benignos con apóstrofo (`O'Brien`, `l'Hôpital`) reciben 500 a través del proxy. Es la respuesta de vulnapp, que es vulnerable a propósito y rompe su consulta con la comilla: el mismo 500 sale directo a vulnapp y a través de `modsec-pl2`, y el proxy no registró ningún *traceback*.
+- **F3-T11 (resultado):** `DEF-REF-1` = EXP-F5 `alpha-4` s0, publicado en F3-T05 (ADR-0010). `ATK-REF-1` = EXP-G3 `ppo-defref1` s1: el mejor PPO por ER en `val` contra `DEF-REF-1` (0,005), empatado con s2 y s3 y desempatado por menor QFE-c y luego menor semilla (`scripts/select_atk_ref.py`, `results/summary/ATK-REF-1_selection.csv`). Las dos referencias cargan con `load_checkpoint` y funcionan como oponentes en 100 episodios (`make check-refs`, `results/summary/refs_check.csv`). `DEF-REF-1` vía `DefenderDriver` en `Attacker-v0` juzgó 839 requests de un atacante aleatorio y bloqueó todos. `ATK-REF-1` vía `AttackerDriver` en `Defender-v0` generó 289 requests de ataque en 100 sesiones.
+- **F3-T11 (advertencia para la Fase 4):** `ATK-REF-1` es un atacante débil en términos absolutos (ER 0,005 en `val`, 0,0 en `test` para esa semilla). Es «el mejor PPO contra `DEF-REF-1`», como pide el plan, pero el *self-play* arranca de un atacante que casi no evade.
