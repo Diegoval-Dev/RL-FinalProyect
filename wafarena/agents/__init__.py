@@ -3,6 +3,7 @@
 from wafarena.agents import (  # noqa: F401  (register algos)
     bandits,
     dp,
+    dqn,
     linear,
     mc,
     random_agent,

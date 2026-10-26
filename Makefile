@@ -1,4 +1,4 @@
-.PHONY: setup lint test test-lab lab-up lab-down smoke run run-bandit run-dp rq1-table summarize verify-splits build-splits endpoints-doc modsec-baseline operator-preservation bandit-arm-means evasion-reachability
+.PHONY: setup lint test test-lab lab-up lab-down smoke run run-bandit run-dp rq1-table summarize verify-splits build-splits endpoints-doc modsec-baseline operator-preservation bandit-arm-means evasion-reachability dqn-sanity
 
 COMPOSE = docker compose -f lab/docker-compose.yml
 
@@ -44,6 +44,9 @@ endpoints-doc:
 
 smoke: lab-up
 	$(COMPOSE) run --rm runner python scripts/smoke.py
+
+dqn-sanity:
+	uv run python scripts/dqn_cartpole_sanity.py
 
 verify-splits:
 	uv run python scripts/verify_splits.py

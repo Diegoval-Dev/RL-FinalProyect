@@ -108,6 +108,7 @@ class RequestRecord:
     action: int
     effect: bool
     session_id: str
+    q_allow: float = math.nan  # Q(s, ALLOW) when the defender exposes `q_values`, else nan
 
 
 ALLOW = 0
@@ -163,6 +164,14 @@ def fpr_hard_by_session(records: Sequence[RequestRecord]) -> float:
     sessions = _benign_sessions(records)
     hard = sum(any(a in HARD_ACTIONS for a in acts) for acts in sessions.values())
     return _fraction(hard, len(sessions))
+
+
+def q_allow_on_attacks(records: Sequence[RequestRecord]) -> float:
+    """Q-ALLOW: mean Q(s, ALLOW) over attack requests (nan without Q values or attacks). A high
+    value means the defender expects allowing attacks to pay off: the overestimation that Double
+    DQN is meant to remove (EXP-F2)."""
+    values = [r.q_allow for r in records if r.is_attack and not math.isnan(r.q_allow)]
+    return float(np.mean(values)) if values else math.nan
 
 
 def f1(records: Sequence[RequestRecord]) -> float:

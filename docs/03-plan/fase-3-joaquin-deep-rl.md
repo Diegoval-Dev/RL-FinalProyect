@@ -92,7 +92,7 @@ Entre todos los defensores entrenados en F3-T05, el de mayor TPR en `val` sujeto
 
 - [x] F3-T01 Aceptación del relevo
 - [x] F3-T02 Defensor lineal
-- [ ] F3-T03 DQN base
+- [x] F3-T03 DQN base
 - [ ] F3-T04 Ablación DQN
 - [ ] F3-T05 Pareto contra ModSecurity
 - [ ] F3-T06 Ablaciones del defensor
@@ -113,3 +113,7 @@ Entre todos los defensores entrenados en F3-T05, el de mayor TPR en `val` sujeto
 - **F3-T02 (bug corregido, heredado):** `ModSecCache.flush` reescribía el JSON de la caché en su lugar; un proceso que arrancara mientras otro escribía podía leer un archivo truncado. Ahora escribe a un temporal y hace `os.replace` atómico. Varios runs en paralelo siguen pudiendo perder entradas nuevas (gana el último en escribir), lo que solo cuesta recalcular, nunca un score equivocado.
 - **F3-T02 (decisión de método):** `runmeta.build_meta` revisa el árbol de git en cada semilla, así que editar `wafarena/` o `configs/` mientras corre un experimento marcaría las semillas siguientes como `dirty`. El desarrollo de las tareas siguientes se hizo en un *worktree* aparte mientras corrían los experimentos.
 - **F3-T02 (resultado):** EXP-E1, 5 semillas, `defender-eval-v1`: Q-learning lineal TPR = 0,955 [0,895; 0,991], FPR = 0,016 [0,011; 0,019]; SARSA lineal TPR = 0,950 [0,879; 0,991], FPR = 0,022 [0,016; 0,028]. EXP-E2, 3 semillas: con datos off-policy de una política uniforme, la norma de los pesos de Q-learning lineal crece sin estabilizarse (232–309 a los 100 000 pasos) y el error TD medio sube a 8,5–11,8, mientras que SARSA on-policy con el mismo α y γ se estabiliza (‖w‖ ≈ 50, |δ| ≈ 1,1). Es crecimiento sostenido dentro del presupuesto, no un desborde a infinito. Registrado en `registro.md`; figura `report/figuras/EXP-E2_weight_norm.png`.
+- **F3-T03 (umbral de la prueba de cordura):** CartPole-v1, 60 000 pasos, 3 semillas por variante (base, + Double, + Dueling, + PER), mismos hiperparámetros para todas (`scripts/dqn_cartpole_sanity.py`, `make dqn-sanity`). Cada 5 000 pasos la política voraz juega 10 episodios de selección y se guarda el mejor *snapshot*; ese *snapshot* se confirma en 20 episodios con otras semillas, que no participan en la selección. Aprueba si la confirmación da un retorno medio ≥ 195 (el umbral clásico de «resuelto»). Es el mismo protocolo del runner: seleccionar en `val` y reportar en otro conjunto. Resultado: 12/12 aprueban.
+- **F3-T03 (criterio descartado, con su resultado):** el primer criterio, la política final tras 60 000 pasos con umbral 195, aprobó 6 de 12 con el mismo código e hiperparámetros (base 302,7 / 92,7 / 100,0; Double 41,1 / 491,5 / 500,0; Dueling 18,95 / 54,7 / 61,2; PER 197,95 / 222,3 / 262,1). La curva de Dueling semilla 0 muestra la causa: llega a 314 a los 15 000 pasos y colapsa a 19,5 al final. DQN en CartPole aprende y luego oscila, así que ese criterio mide la estabilidad del final del entrenamiento, no si la implementación aprende. No se cambió ningún hiperparámetro para pasar la prueba.
+- **F3-T03 (EXP-F1):** EXP-F1 se corrió junto con EXP-F2..F4 (mismos hiperparámetros compartidos, commit `1517d8f`) y está registrado con ellos en el PR de F3-T04.
+- **F3-T03 (decisión):** PyTorch se resuelve desde el índice oficial solo CPU (ADR-0009). La imagen `runner` pasa a ~2,9 GB.

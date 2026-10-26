@@ -1,6 +1,6 @@
 # Contrato: métricas
 
-**Versión:** 1.3 · **Implementa:** Fase 2 (F2-T04, F2-T10), Fase 3 (F3-T02) · **Archivos:** `wafarena/eval/metrics.py`, `wafarena/eval/stats.py`
+**Versión:** 1.4 · **Implementa:** Fase 2 (F2-T04, F2-T10), Fase 3 (F3-T02, F3-T03) · **Archivos:** `wafarena/eval/metrics.py`, `wafarena/eval/stats.py`
 
 Una métrica que no está definida aquí no aparece en el informe. Si una fase necesita una nueva, la agrega aquí (cambio MENOR) antes de usarla.
 
@@ -27,6 +27,7 @@ Todas se calculan por request; las marcadas con (s) también por sesión.
 | Falsos positivos | FPR | Requests benignos con acción ≠ `ALLOW` / requests benignos (s) |
 | Falsos positivos duros | FPR-h | Requests benignos con `BLOCK` o `HONEYPOT` / requests benignos (s) |
 | F1 | F1 | Sobre la binarización acción ≠ `ALLOW` |
+| Q de `ALLOW` en ataques | Q-ALLOW | Media de `Q(s, ALLOW)` sobre los requests de ataque, para defensores que exponen `q_values` (lineal, DQN); `nan` para los demás. Mide la sobreestimación que Double DQN debería reducir (EXP-F2) |
 | Latencia agregada | LAT | p50 y p95 en ms del tiempo agregado por el proxy respecto a ModSecurity solo, en modo real |
 
 Las versiones por sesión (s) cuentan sesiones benignas con al menos un request con acción ≠ `ALLOW` (FPR) o con `BLOCK`/`HONEYPOT` (FPR-h), sobre el total de sesiones benignas. Las métricas con denominador vacío (por ejemplo, TPR sin requests de ataque) valen `nan`; QFE, DIV y UNQ también son `nan` sin episodios exitosos.
@@ -66,3 +67,4 @@ Definidas en `wafarena/eval/harness.py`. Son fijas: mismas semillas, mismos payl
 - 1.1 — Suite de validación `attacker-val-v1` para selección de modelo en el runner. Compatible hacia atrás.
 - 1.2 — `ATK-REF-0` entra a `defender-eval-v1` (F2-T10, no "desde la Fase 3" como decía la versión anterior). Compatible hacia atrás.
 - 1.3 — Suite `defender-val-v1` para la selección de modelo del defensor y regla de agregación de una suite del defensor sobre sus atacantes (F3-T02). Compatible hacia atrás.
+- 1.4 — Métrica Q-ALLOW del defensor (`q_allow_attack`), para la ablación de DQN (F3-T03). Compatible hacia atrás.

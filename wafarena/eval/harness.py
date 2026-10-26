@@ -4,6 +4,7 @@ The same seeds produce the same base payloads, so every agent is judged on the s
 """
 
 import json
+import math
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -231,8 +232,10 @@ def _play_session(defender, env: DefenderEnv, item: SessionPlan) -> list[Request
     is_policy = hasattr(defender, "reset_session")
     if is_policy:
         defender.reset_session(info["session_id"])
+    q_values = getattr(defender, "q_values", None)
     records, done = [], False
     while not done:
+        q_allow = float(q_values(obs)[0]) if callable(q_values) else math.nan
         if is_policy:
             action = int(defender.act(obs))
         else:
@@ -244,6 +247,7 @@ def _play_session(defender, env: DefenderEnv, item: SessionPlan) -> list[Request
                 action=action,
                 effect=bool(info["gt_effect"]),
                 session_id=info["session_id"],
+                q_allow=q_allow,
             )
         )
         done = terminated or truncated
@@ -262,6 +266,7 @@ def summarize_defender(records: list[RequestRecord]) -> dict[str, float]:
         "fpr_s": metrics.fpr_by_session(records),
         "fpr_h_s": metrics.fpr_hard_by_session(records),
         "f1": metrics.f1(records),
+        "q_allow_attack": metrics.q_allow_on_attacks(records),
     }
 
 
