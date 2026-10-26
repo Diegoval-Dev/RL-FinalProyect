@@ -7,5 +7,5 @@ CONTRACT_VERSIONS: dict[str, str] = {
     "datos-y-splits": "1.0",
     "agentes-y-checkpoints": "1.0",
     "metricas": "1.4",
-    "experimentos": "1.2",
+    "experimentos": "1.3",
 }
