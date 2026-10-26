@@ -1,6 +1,6 @@
 # Contrato: entorno del defensor `WafArena/Defender-v0`
 
-**Versión:** 1.1 · **Implementa:** Fase 1 (F1-T12) · **Archivo:** `wafarena/envs/defender_env.py`
+**Versión:** 1.2 · **Implementa:** Fase 1 (F1-T12) · **Archivo:** `wafarena/envs/defender_env.py`
 
 ## Episodio
 
@@ -20,6 +20,8 @@ gymnasium.make(
     benign_abandon_prob=0.0,                # prob. de que un usuario benigno bloqueado abandone la sesión
 )
 ```
+
+`attacker` también acepta un objeto `AttackerPolicy` ya construido (se reutiliza en cada sesión). En `{"type": "pool", ...}` cada entrada de `paths` es el nombre de un atacante con guion (`corpus-replay`, `random-mutation`), el id de una referencia publicada en `checkpoints/refs/` (`ATK-REF-0`) o la ruta a un checkpoint; `weights` (opcional, uniforme por defecto) son no negativos con suma positiva. Cada sesión de ataque sortea una entrada con el RNG del entorno, así que la mezcla es reproducible desde la semilla; los demás tipos de atacante no consumen ese RNG.
 
 `reset(seed=..., options={"base_id": ...})` fija la sesión de ataque sobre ese payload base; `options={"session_id": ...}` fija una sesión benigna. Son excluyentes; sin opciones, el tipo y la sesión se muestrean con el RNG del entorno. Un id fuera del split lanza `ValueError`.
 
@@ -91,3 +93,4 @@ Igual que en el entorno del atacante: misma semilla, mismo atacante determinista
 
 - 1.0 — versión inicial.
 - 1.1 — `attack_split` opcional en la construcción y `options` (`base_id`, `session_id`) en `reset`, para las suites de evaluación del defensor (F2-T04). Compatible hacia atrás.
+- 1.2 — `{"type": "pool"}` implementado (entradas por nombre, id de referencia o ruta; sorteo por sesión con el RNG del entorno) y `attacker` acepta un objeto `AttackerPolicy` (F3-T02). Compatible hacia atrás.

@@ -1,6 +1,6 @@
 # Contrato: experimentos y resultados
 
-**Versión:** 1.1 · **Implementa:** Fase 2 (F2-T03) · **Archivo:** `wafarena/run.py`
+**Versión:** 1.2 · **Implementa:** Fase 2 (F2-T03), Fase 3 (F3-T02) · **Archivo:** `wafarena/run.py`
 
 ## Ejecución
 
@@ -57,6 +57,8 @@ Reglas: el runner valida el YAML contra un esquema (claves desconocidas son erro
 
 - Cada `eval.every_steps` pasos (y al final) el agente se evalúa de forma voraz (`explore=False`) en la suite de validación `attacker-val-v1` (split `val`, [métricas](metricas.md)). Cada punto es una fila de `eval.csv` (`step`, `suite`, y todas las métricas del atacante).
 - Se guarda como `checkpoint/` el punto con mayor `evasion_rate` en `val`; el empate se rompe con menor `qfe_c`. Los splits de prueba nunca participan en la selección.
+- **Defensor (`Defender-v0`).** Se evalúa en `defender-val-v1`. La selección sigue la regla de `DEF-REF-1` del plan de la Fase 3: el tope de FPR (`fpr_cap`) es el FPR de `modsec-pl2` en `defender-val-v1`, medido por el runner al empezar (no se escribe a mano). Todo punto con `fpr <= fpr_cap` le gana a cualquiera que lo supere; entre ellos gana el de mayor `tpr` y luego el de menor `fpr`; si ninguno cumple, gana el de menor `fpr` y luego el de mayor `tpr`. En empate exacto se queda el punto más temprano. `eval.csv` lleva las métricas del defensor ([métricas](metricas.md)) y `final_eval.json` agrega `fpr_cap`. `train.csv` tiene una fila por sesión: `step`, `episode`, `return`, `length`, `attack`, `blocked` (requests con acción ≠ `ALLOW`), `allowed_effect` (ataques con efecto que dejó pasar), `complete`, más las `m_<nombre>`; `attack` y `allowed_effect` salen de claves `gt_*` y son solo registro: el agente nunca las ve.
+- El `meta.yaml` del checkpoint guarda en `train.agent_params` los parámetros del agente del YAML, para que `load_checkpoint` reconstruya el agente con los mismos hiperparámetros.
 - Terminado el entrenamiento, el runner recarga el checkpoint desde disco y lo evalúa en cada suite de `eval.suites` (si `eval.final`). El resultado es `final_eval.json`: `{best_step, val, suites: {<suite>: {episodes, evasions, evasion_rate, qfe, qfe_c, diversity, uniqueness, break_rate}}}`.
 - `train.csv` tiene una fila por episodio (`step`, `episode`, `return`, `length`, `evaded`, `banned`, `queries_used`, `mutation_attempts`, `broken`, `complete`) más `m_<nombre>` con el promedio por episodio de las métricas que devuelve `Agent.observe`. El último episodio, si el presupuesto de pasos lo corta, lleva `complete = 0`.
 - `Transition.info` corresponde a `next_obs` (el `info` posterior al paso).
@@ -96,3 +98,4 @@ Cada experimento terminado agrega una fila a [registro.md](../07-experimentos/re
 
 - 1.0 — versión inicial.
 - 1.1 — Detalle de la selección de modelo en `val`, formatos de `eval.csv`, `train.csv` y `final_eval.json`, y opciones de la línea de comandos. Compatible hacia atrás.
+- 1.2 — Runs de `Defender-v0`: selección en `defender-val-v1` con la regla de `DEF-REF-1`, columnas de `train.csv` del defensor y `train.agent_params` en el checkpoint (F3-T02). Compatible hacia atrás.

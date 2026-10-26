@@ -1,0 +1,34 @@
+exp_id: EXP-E2
+run_name: qlearning-offpolicy
+owner: joaquin
+rq: []
+seeds: [0, 1, 2]
+
+# Deadly triad (Sutton & Barto 11.3): linear function approximation + bootstrapping (Q-learning)
+# + off-policy data from a fixed uniform behavior policy. Same step size and discount as the
+# on-policy counterpart (sarsa-onpolicy.yaml); only the source of the data differs.
+env:
+  id: WafArena/Defender-v0
+  backend: fast
+  attacker: {type: pool, paths: [corpus-replay, random-mutation, ATK-REF-0], weights: [1, 1, 1]}
+  attack_ratio: 0.1
+  reward: {alpha: 4.0, beta: 1.0, gamma: 0.5}
+
+agent:
+  algo: linear
+  params:
+    method: qlearning
+    behavior: uniform
+    alpha: 0.05
+    gamma: 0.99
+
+train:
+  total_steps: 100000
+
+eval:
+  suites: [defender-eval-v1]
+  every_steps: 10000
+  final: true
+
+logging:
+  tensorboard: false

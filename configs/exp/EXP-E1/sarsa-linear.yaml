@@ -1,0 +1,32 @@
+exp_id: EXP-E1
+run_name: sarsa-linear
+owner: joaquin
+rq: [RQ2]
+seeds: [0, 1, 2, 3, 4]
+
+env:
+  id: WafArena/Defender-v0
+  backend: fast
+  # default Phase 3 opponent (fase-3 plan): uniform pool of the three fixed attackers
+  attacker: {type: pool, paths: [corpus-replay, random-mutation, ATK-REF-0], weights: [1, 1, 1]}
+  attack_ratio: 0.1
+  reward: {alpha: 4.0, beta: 1.0, gamma: 0.5}
+
+agent:
+  algo: linear
+  params:
+    method: sarsa
+    alpha: 0.01
+    gamma: 0.9
+    epsilon: {start: 1.0, end: 0.05, decay_steps: 50000}
+
+train:
+  total_steps: 100000
+
+eval:
+  suites: [defender-eval-v1]
+  every_steps: 10000
+  final: true
+
+logging:
+  tensorboard: false

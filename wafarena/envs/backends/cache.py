@@ -6,6 +6,7 @@ changes (ADR-0005).
 
 import hashlib
 import json
+import os
 from pathlib import Path
 
 CRS_CONFIG_VERSION = "owasp-crs-4.30.0-pl-anomaly"
@@ -46,8 +47,13 @@ class ModSecCache:
         self._dirty = True
 
     def flush(self) -> None:
+        """Write through a temporary file and an atomic rename, so a run starting while another
+        flushes never reads a half-written cache. Concurrent runs may still drop each other's new
+        entries (last writer wins); that only costs a recomputation, never a wrong score."""
         if not self._dirty:
             return
         self._path.parent.mkdir(parents=True, exist_ok=True)
-        self._path.write_text(json.dumps(self._data))
+        tmp = self._path.with_name(f"{self._path.name}.{os.getpid()}.tmp")
+        tmp.write_text(json.dumps(self._data))
+        os.replace(tmp, self._path)
         self._dirty = False
