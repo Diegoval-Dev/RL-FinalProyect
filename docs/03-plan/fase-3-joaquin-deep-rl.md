@@ -101,7 +101,7 @@ Entre todos los defensores entrenados en F3-T05, el de mayor TPR en `val` sujeto
 - [x] F3-T09 Bono de entropía
 - [x] F3-T10 Latencia
 - [x] F3-T11 `DEF-REF-1` y `ATK-REF-1`
-- [ ] F3-T12 Informe y handoff
+- [x] F3-T12 Informe y handoff
 
 ## Hallazgos
 
@@ -143,3 +143,4 @@ Entre todos los defensores entrenados en F3-T05, el de mayor TPR en `val` sujeto
 - **F3-T10 (nota):** algunos benignos con apóstrofo (`O'Brien`, `l'Hôpital`) reciben 500 a través del proxy. Es la respuesta de vulnapp, que es vulnerable a propósito y rompe su consulta con la comilla: el mismo 500 sale directo a vulnapp y a través de `modsec-pl2`, y el proxy no registró ningún *traceback*.
 - **F3-T11 (resultado):** `DEF-REF-1` = EXP-F5 `alpha-4` s0, publicado en F3-T05 (ADR-0010). `ATK-REF-1` = EXP-G3 `ppo-defref1` s1: el mejor PPO por ER en `val` contra `DEF-REF-1` (0,005), empatado con s2 y s3 y desempatado por menor QFE-c y luego menor semilla (`scripts/select_atk_ref.py`, `results/summary/ATK-REF-1_selection.csv`). Las dos referencias cargan con `load_checkpoint` y funcionan como oponentes en 100 episodios (`make check-refs`, `results/summary/refs_check.csv`). `DEF-REF-1` vía `DefenderDriver` en `Attacker-v0` juzgó 839 requests de un atacante aleatorio y bloqueó todos. `ATK-REF-1` vía `AttackerDriver` en `Defender-v0` generó 289 requests de ataque en 100 sesiones.
 - **F3-T11 (advertencia para la Fase 4):** `ATK-REF-1` es un atacante débil en términos absolutos (ER 0,005 en `val`, 0,0 en `test` para esa semilla). Es «el mejor PPO contra `DEF-REF-1`», como pide el plan, pero el *self-play* arranca de un atacante que casi no evade.
+- **F3-T12 (entrega):** `report/capitulos/05-deep-rl.md` (RQ2 y generalización del defensor estático) y HANDOFF-3 completos, sin `[COMPLETAR]`. El checklist de HANDOFF-3 se corrió de punta a punta en la punta de la rama; los tiempos de un run de DQN (202 s) y de PPO (303 s), con la máquina sin otra carga, reprodujeron exactamente los `final_eval.json` de la campaña con la misma semilla. El tag `v0.3-fase3` se crea en `main` después de mergear la pila de PR #18 a #29; la línea **Fase activa** de `CLAUDE.md` la cambia Nelson al aceptar (HANDOFF-3 §11).
