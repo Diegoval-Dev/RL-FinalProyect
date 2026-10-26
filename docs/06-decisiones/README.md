@@ -15,8 +15,9 @@ Un ADR aceptado no se edita: si la decisión cambia, se crea uno nuevo que lo re
 | [0007](adr-0007-app-propia-python.md) | App objetivo propia y stack único en Python | Aceptado |
 | [0008](adr-0008-modsec-score-por-audit-log.md) | ModSecurity: anomaly score por audit log JSON | Aceptado |
 | [0009](adr-0009-pytorch-cpu.md) | PyTorch solo CPU para DQN y policy gradient | Aceptado |
+| [0010](adr-0010-desempate-def-ref-1.md) | Desempate de la regla de selección de `DEF-REF-1` | Aceptado |
 
-Próximo número libre: **0010**.
+Próximo número libre: **0011**.
 
 ## Plantilla
 
