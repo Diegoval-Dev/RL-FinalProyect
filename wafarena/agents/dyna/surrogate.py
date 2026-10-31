@@ -73,6 +73,8 @@ def calibration_metrics(
     """Compute accuracy, confidence ECE, and multiclass Brier score on held-out SENDs."""
     probs = np.asarray(probabilities, dtype=np.float64)
     labels = np.asarray(responses, dtype=np.int64)
+    if labels.ndim != 1:
+        raise ValueError("responses must be a one-dimensional label vector")
     if probs.ndim != 2 or probs.shape[1] != SEND_CLASSES or probs.shape[0] != labels.size:
         raise ValueError("probabilities must have shape (n, 5) matching responses")
     if labels.size == 0:

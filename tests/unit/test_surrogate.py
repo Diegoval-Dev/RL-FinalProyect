@@ -77,3 +77,10 @@ def test_calibration_rejects_empty_validation_set():
     """F4-T02: no validation observations cannot produce calibration scores."""
     with pytest.raises(ValueError, match="empty"):
         calibration_metrics(np.empty((0, 5)), np.empty(0))
+
+
+def test_calibration_rejects_column_shaped_labels():
+    """A label column must not broadcast against one-dimensional predictions."""
+    probabilities = np.array([[0.8, 0.2, 0, 0, 0], [0.4, 0.6, 0, 0, 0]])
+    with pytest.raises(ValueError, match="one-dimensional"):
+        calibration_metrics(probabilities, np.array([[1], [2]]))
