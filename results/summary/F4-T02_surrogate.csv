@@ -1,0 +1,5 @@
+run_id,git_sha,seed,defender,variant,split,train_samples,val_samples,train_class_counts,val_class_counts,pred_class_counts,train_majority_response,majority_baseline_accuracy,accuracy,ece,brier
+F4-T02__surrogate-validation__s0__0b2a96c,0b2a96c,0,modsec-pl1,logistic,val,823,797,3:823,3:797,3:797,3,1.0,1.0,0.002391306639016766,8.275691848609928e-06
+F4-T02__surrogate-validation__s0__0b2a96c,0b2a96c,0,modsec-pl1,mlp-32,val,823,797,3:823,3:797,3:797,3,1.0,1.0,0.0007369829390847515,7.374215998087487e-07
+F4-T02__surrogate-validation__s0__0b2a96c,0b2a96c,0,DEF-REF-1,logistic,val,832,809,2:30 3:793 4:9,1:4 2:35 3:759 4:11,3:809,3,0.9381953028430161,0.9381953028430161,0.02608984067796628,0.11520363352226133
+F4-T02__surrogate-validation__s0__0b2a96c,0b2a96c,0,DEF-REF-1,mlp-32,val,832,809,2:30 3:793 4:9,1:4 2:35 3:759 4:11,3:809,3,0.9381953028430161,0.9381953028430161,0.034286634810038595,0.11695026414244757

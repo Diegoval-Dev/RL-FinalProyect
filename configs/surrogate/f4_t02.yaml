@@ -1,0 +1,14 @@
+# F4-T02: train only on train SENDs; report held-out val accuracy and calibration.
+exp_id: F4-T02
+run_name: surrogate-validation
+seed: 0
+backend: fast
+train_episodes: 100
+val_episodes: 100
+epochs: 3
+defenders:
+  modsec-pl1: {type: modsec, paranoia_level: 1}
+  DEF-REF-1: {type: checkpoint, path: DEF-REF-1}
+variants:
+  - {name: logistic, hidden_dim: null, learning_rate: 0.1}
+  - {name: mlp-32, hidden_dim: 32, learning_rate: 0.05}

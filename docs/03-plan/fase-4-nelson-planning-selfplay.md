@@ -97,7 +97,7 @@ El riesgo de *model error* (planificar sobre un sustituto malo) se mide reportan
 ## Estado
 
 - [x] F4-T01 Aceptación del relevo (con salvedades documentadas en HANDOFF-3 §4)
-- [ ] F4-T02 Modelo sustituto
+- [x] F4-T02 Modelo sustituto
 - [ ] F4-T03 Dyna-Q
 - [ ] F4-T04 Dyna-Q+ y Prioritized Sweeping
 - [ ] F4-T05 Orquestador de self-play
@@ -112,3 +112,4 @@ El riesgo de *model error* (planificar sobre un sustituto malo) se mide reportan
 
 - **F4-T01 (2026-10-30, `12f17d5`):** se verificó el relevo de HANDOFF-3 en la máquina de Nelson. Pasaron setup, lint, 672 pruebas unitarias, 146 pruebas de laboratorio, splits, dos corridas de smoke idénticas al CSV versionado, la API pública de `Attacker-v0` en 10 episodios, dos corridas de `EXP-D1/qlearning-pl1` s0 con `eval.csv` idénticos, las dos referencias en 100 episodios, PPO s0, y la máscara de ABL-1/2. DQN s0 terminó en 308,051 s con caché caliente y reprodujo exactamente `final_eval.json`; el primer intento tuvo un timeout de ModSecurity y el siguiente tardó 1 166,106 s con caché fría. La figura de Pareto de EXP-F5 se regeneró idéntica.
 - **F4-T01 (aceptado con salvedades el 2026-10-30):** `make summarize EXP=EXP-F5` y el heredado `make summarize EXP=EXP-A1` no pueden regenerar los CSV desde este checkout porque los runs crudos no están versionados. La ventana de 1 día hábil desde el tag ya pasó. Nelson autorizó aceptar estas excepciones; HANDOFF-3 §4 conserva los ítems sin marcar y la evidencia de los demás checks. Se firmó la aceptación y se cambió la fase activa en `CLAUDE.md`.
+- **F4-T02 (2026-10-31, `F4-T02__surrogate-validation__s0__0b2a96c`, seed 0):** la regresión logística multiclase y la MLP de 32 unidades superaron la prueba sintética separable. En `val`, contra `modsec-pl1` ambas alcanzaron exactitud 1,0000 (797/797 respuestas `BLOCKED`); ECE = 0,00239 y 0,00074, Brier = 0,00000828 y 0,00000074, respectivamente. Contra `DEF-REF-1`, ambas alcanzaron exactitud 0,9382 (759/809), igual a la línea base de predecir siempre la clase mayoritaria; ECE = 0,02609 y 0,03429, Brier = 0,11520 y 0,11695. En los cuatro casos todas las predicciones fueron `BLOCKED`: la exactitud alta no demuestra que el sustituto distinga las respuestas minoritarias. El clasificador solo observa los 256 n-gramas del payload y no el estado de sesión; en `DEF-REF-1`, `PASS_EFFECT` apareció 4 veces en `val` y ninguna en `train`. Antes de usarlo para planificar en F4-T03, medir el error por clase y considerar una recolección que cubra respuestas minoritarias. Datos y conteos: `results/summary/F4-T02_surrogate.csv` (run crudo en `results/_f4t02_final_0b2a96c/F4-T02/surrogate-validation/s0`); configuración: `configs/surrogate/f4_t02.yaml`. Una sola semilla diagnóstica, sin IC.
