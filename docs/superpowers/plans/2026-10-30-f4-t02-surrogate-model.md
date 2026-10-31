@@ -43,10 +43,10 @@
 - `update(obs: np.ndarray, response: int | Response) -> float`: one cross-entropy SGD step; returns loss.
 - `calibration_metrics(probabilities: np.ndarray, responses: np.ndarray, *, bins: int = 10) -> dict[str, float]`: `accuracy`, `ece`, `brier`.
 
-- [ ] Add failing tests for synthetic separable classes, optional MLP, probability normalization, deterministic initialization, input validation, and a hand-calculated calibration example.
-- [ ] Run `uv run pytest tests/unit/test_surrogate.py -q`; confirm failures come from the missing implementation.
-- [ ] Implement the minimal classifier and metric functions; accept both 256- and 288-dimensional observations but use only the first 256 features.
-- [ ] Run `uv run pytest tests/unit/test_surrogate.py -q`; require all tests to pass.
+- [x] Add failing tests for synthetic separable classes, optional MLP, probability normalization, deterministic initialization, input validation, and a hand-calculated calibration example.
+- [x] Run `uv run pytest tests/unit/test_surrogate.py -q`; confirm failures come from the missing implementation.
+- [x] Implement the minimal classifier and metric functions; accept both 256- and 288-dimensional observations but use only the first 256 features.
+- [x] Run `uv run pytest tests/unit/test_surrogate.py -q`; require all tests to pass.
 
 ### Task 2: Reproducible train/val collection and run report
 
@@ -62,11 +62,11 @@
 - `evaluate_surrogate(config_path: Path, *, results_root: Path) -> Path`: trains each configured variant and writes `meta.yaml` plus `validation.csv` under `results/F4-T02/`.
 - `make surrogate-eval`: starts the lab, then runs `scripts/eval_surrogate.py` in the runner.
 
-- [ ] Add failing unit tests for split separation, explicit episode seeds, no `gt_*` access, class counts, and stable CSV columns.
-- [ ] Run `uv run pytest tests/unit/test_surrogate_evaluation.py -q`; confirm expected failures.
-- [ ] Implement the collector and evaluator with YAML budgets, two named defenders, and the project's run metadata helpers.
-- [ ] Run focused tests, then `make lint && make test`.
-- [ ] Commit code, tests, config, Makefile, and this plan with an English `feat(F4-T02): ...` message before recording lab results.
+- [x] Add failing unit tests for split separation, explicit episode seeds, no `gt_*` access, class counts, and stable CSV columns.
+- [x] Run `uv run pytest tests/unit/test_surrogate_evaluation.py -q`; confirm expected failures.
+- [x] Implement the collector and evaluator with YAML budgets, two named defenders, and the project's run metadata helpers.
+- [x] Run focused tests, then `make lint && make test`.
+- [x] Commit code, tests, config, Makefile, and this plan with an English `feat(F4-T02): ...` message before recording lab results.
 
 ### Task 3: Validation run and task documentation
 
@@ -76,7 +76,7 @@
 - Modify: `docs/03-plan/fase-4-nelson-planning-selfplay.md`
 - Modify: `docs/07-experimentos/registro.md`
 
-- [ ] Run `make surrogate-eval` with the committed code and a clean guarded tree; collect `train` and `val` samples for `modsec-pl1` and `DEF-REF-1` using seed 0.
-- [ ] Verify both variants have finite accuracy, ECE, and Brier results; verify metadata names the commit and the result rows include the run ID and class counts.
-- [ ] Record measured `val` metrics and the 256-feature limitation in the Phase 4 findings and experiment register; mark F4-T02 complete only when the acceptance run is valid.
-- [ ] Run `make lint && make test` and `git diff --check`; commit generated summary and documentation with an English `exp(F4-T02): ...` message.
+- [x] Run the evaluator with committed code and a clean guarded tree; collect `train` and `val` samples for `modsec-pl1` and `DEF-REF-1` using seed 0.
+- [x] Verify both variants have finite accuracy, ECE, and Brier results; verify metadata names the commit and the result rows include the run ID and class counts.
+- [x] Record measured `val` metrics and the 256-feature limitation in the Phase 4 findings and experiment register; mark F4-T02 complete only when the acceptance run is valid.
+- [x] Run `make lint && make test` and `git diff --check`; commit generated summary and documentation with an English `exp(F4-T02): ...` message.
