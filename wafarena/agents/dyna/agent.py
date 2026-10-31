@@ -34,6 +34,8 @@ class DynaAgent(TDAgent):
 
     Mutation actions replay their latest observed transition. For SEND, the model samples a
     public response from the surrogate and constructs its abstract successor and reward.
+    Termination is approximate: query, step, and block counts are absent from the 120-state
+    abstraction, so replay reuses the most recently observed truncation and ban flags.
     """
 
     def __init__(

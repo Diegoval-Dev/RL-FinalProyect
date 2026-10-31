@@ -1,7 +1,8 @@
-"""Run or resume all EXP-H1 seeds; completed clean runs are left intact.
+"""Run EXP-H1 with seed-boundary resume; completed clean seeds are left intact.
 
 Start the lab first, then run this script inside the runner container. Use --run-name and --seed
-to profile one configuration before launching the full sweep.
+to profile one configuration before launching the full sweep. An interrupted seed remains in place
+for diagnosis; use a fresh --results root to rerun it without overwriting its provenance.
 """
 
 import argparse
