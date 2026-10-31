@@ -12,6 +12,8 @@ import yaml
 
 from wafarena import runmeta
 from wafarena.agents.base import Agent, build_agent, load_checkpoint, save_checkpoint
+from wafarena.agents.dyna.agent import DynaAgent
+from wafarena.agents.dyna.evaluation import collect_send_examples, score_surrogate_on_examples
 from wafarena.defenders.modsec_defender import ModSecDefender
 from wafarena.envs import defender_env
 from wafarena.envs.attacker_env import N_ACTIONS, AttackerEnv
@@ -126,13 +128,36 @@ def _train_and_select(config, agent: Agent, seed, directory: Path, backend, meta
     env = AttackerEnv(backend=backend, **{k: env_cfg[k] for k in ENV_KWARGS if k in env_cfg})
     selection: dict[str, Any] = {"best_step": None, "best_key": None}
     eval_rows: list[dict] = []
+    surrogate_val = None
+    if isinstance(agent, DynaAgent):
+        surrogate_val = collect_send_examples(
+            backend,
+            env_cfg["defender"],
+            split="val",
+            episodes=config["eval"]["surrogate_val_episodes"],
+            seed=seed + 10_000,
+        )
 
     def on_eval(step: int) -> None:
         results = harness.run_attacker_suite(
             agent, VALIDATION_SUITE, defender=env_cfg["defender"], backend=backend
         )
         summary = harness.summarize_attacker(results, query_budget=env_cfg["query_budget"])
-        eval_rows.append({"step": step, "suite": VALIDATION_SUITE, **summary})
+        row = {"step": step, "suite": VALIDATION_SUITE, **summary}
+        if surrogate_val is not None:
+            val_x, val_y = surrogate_val
+            diagnostics = score_surrogate_on_examples(agent.surrogate, val_x, val_y)
+            row.update(
+                real_queries=agent.real_queries,
+                simulated_updates=agent.simulated_updates,
+                surrogate_accuracy=diagnostics["accuracy"],
+                surrogate_ece=diagnostics["ece"],
+                surrogate_brier=diagnostics["brier"],
+                surrogate_minority_recall=diagnostics["minority_recall"],
+                surrogate_val_class_counts=diagnostics["val_class_counts"],
+                surrogate_pred_class_counts=diagnostics["pred_class_counts"],
+            )
+        eval_rows.append(row)
         key = (summary["evasion_rate"], -summary["qfe_c"])
         if selection["best_key"] is None or key > selection["best_key"]:
             selection.update(best_step=step, best_key=key, best_val=summary)

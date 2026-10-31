@@ -52,6 +52,27 @@ def _class_counts(labels: np.ndarray) -> str:
     )
 
 
+def score_surrogate_on_examples(
+    model: SurrogateModel, val_x: np.ndarray, val_y: np.ndarray
+) -> dict[str, float | str]:
+    """Score a live surrogate on fixed held-out SENDs without updating it."""
+    if len(val_y) == 0:
+        raise ValueError("empty validation set")
+    probabilities = np.stack([model.predict_proba(obs) for obs in val_x])
+    predicted = probabilities.argmax(axis=1) + 1
+    minority = val_y != 3
+    return {
+        **calibration_metrics(probabilities, val_y),
+        "val_class_counts": _class_counts(val_y),
+        "pred_class_counts": _class_counts(predicted),
+        "minority_recall": (
+            float(np.mean(predicted[minority] == val_y[minority]))
+            if np.any(minority)
+            else float("nan")
+        ),
+    }
+
+
 def evaluate_variants(
     train_x: np.ndarray,
     train_y: np.ndarray,

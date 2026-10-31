@@ -59,7 +59,7 @@ SECTION_KEYS = {
     },
     "agent": {"algo", "params"},
     "train": {"total_steps"},
-    "eval": {"suites", "every_steps", "final"},
+    "eval": {"suites", "every_steps", "final", "surrogate_val_episodes"},
     "logging": {"tensorboard", "wandb"},
     "checkpoint": {"save_best_on"},
 }
@@ -153,6 +153,13 @@ def resolve_config(raw: dict[str, Any]) -> dict[str, Any]:
             raise ConfigError(f"eval suite {suite!r} does not apply to {env['id']}")
     if type(eval_cfg["every_steps"]) is not int or eval_cfg["every_steps"] <= 0:
         raise ConfigError("eval.every_steps must be a positive integer")
+    if "surrogate_val_episodes" in eval_cfg and (
+        type(eval_cfg["surrogate_val_episodes"]) is not int
+        or eval_cfg["surrogate_val_episodes"] <= 0
+    ):
+        raise ConfigError("eval.surrogate_val_episodes must be a positive integer")
+    if config["agent"]["algo"] == "dyna" and "surrogate_val_episodes" not in eval_cfg:
+        raise ConfigError("dyna runs require eval.surrogate_val_episodes")
     if config["checkpoint"]["save_best_on"] != "val":
         raise ConfigError("checkpoint.save_best_on must be 'val': never select on test")
     if config["logging"]["wandb"]:
