@@ -96,7 +96,7 @@ El riesgo de *model error* (planificar sobre un sustituto malo) se mide reportan
 
 ## Estado
 
-- [ ] F4-T01 Aceptación del relevo
+- [x] F4-T01 Aceptación del relevo (con salvedades documentadas en HANDOFF-3 §4)
 - [ ] F4-T02 Modelo sustituto
 - [ ] F4-T03 Dyna-Q
 - [ ] F4-T04 Dyna-Q+ y Prioritized Sweeping
@@ -110,4 +110,5 @@ El riesgo de *model error* (planificar sobre un sustituto malo) se mide reportan
 
 ## Hallazgos
 
-_(vacío)_
+- **F4-T01 (2026-10-30, `12f17d5`):** se verificó el relevo de HANDOFF-3 en la máquina de Nelson. Pasaron setup, lint, 672 pruebas unitarias, 146 pruebas de laboratorio, splits, dos corridas de smoke idénticas al CSV versionado, la API pública de `Attacker-v0` en 10 episodios, dos corridas de `EXP-D1/qlearning-pl1` s0 con `eval.csv` idénticos, las dos referencias en 100 episodios, PPO s0, y la máscara de ABL-1/2. DQN s0 terminó en 308,051 s con caché caliente y reprodujo exactamente `final_eval.json`; el primer intento tuvo un timeout de ModSecurity y el siguiente tardó 1 166,106 s con caché fría. La figura de Pareto de EXP-F5 se regeneró idéntica.
+- **F4-T01 (aceptado con salvedades el 2026-10-30):** `make summarize EXP=EXP-F5` y el heredado `make summarize EXP=EXP-A1` no pueden regenerar los CSV desde este checkout porque los runs crudos no están versionados. La ventana de 1 día hábil desde el tag ya pasó. Nelson autorizó aceptar estas excepciones; HANDOFF-3 §4 conserva los ítems sin marcar y la evidencia de los demás checks. Se firmó la aceptación y se cambió la fase activa en `CLAUDE.md`.
