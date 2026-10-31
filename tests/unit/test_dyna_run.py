@@ -5,7 +5,9 @@ import dataclasses
 from pathlib import Path
 
 import pytest
+import yaml
 
+from scripts.run_h1 import _complete
 from wafarena import run
 from wafarena.defenders.modsec_defender import ModSecDefender
 from wafarena.envs.attacker_env import SEND_ACTION, AttackerEnv
@@ -84,3 +86,19 @@ def test_f4_t03_dyna_requires_validation_budget():
                 "train": {"total_steps": 30},
             }
         )
+
+
+def test_f4_t03_resume_skips_only_complete_matching_runs(tmp_path):
+    """F4-T03: a partial or old-commit seed cannot silently enter the summary."""
+    path = tmp_path / "s0"
+    path.mkdir()
+    assert not _complete(path, seed=0, steps=200, sha="abc1234")
+    meta = {"dirty": False, "seed": 0, "git_sha": "abc1234", "duration_s": 1.0}
+    (path / "meta.yaml").write_text(yaml.safe_dump(meta))
+    (path / "eval.csv").write_text("step,real_queries\n100,10\n200,20\n")
+    assert _complete(path, seed=0, steps=200, sha="abc1234")
+    with pytest.raises(ValueError, match="provenance"):
+        _complete(path, seed=0, steps=200, sha="newsha1")
+    (path / "eval.csv").write_text("step,real_queries\n100,10\n")
+    with pytest.raises(ValueError, match="incomplete"):
+        _complete(path, seed=0, steps=200, sha="abc1234")

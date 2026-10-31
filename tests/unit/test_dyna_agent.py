@@ -10,7 +10,9 @@ from wafarena.envs.attacker_env import N_ACTIONS, SEND_ACTION
 from wafarena.envs.attacker_obs import OBS_SIZE
 
 
-def _transition(action: int, *, response: int = 3, done: bool = False) -> Transition:
+def _transition(
+    action: int, *, response: int = 3, done: bool = False, banned: bool = False
+) -> Transition:
     next_state = AbstractState(0, response, 0).encode()
     return Transition(
         obs=np.zeros(OBS_SIZE, dtype=np.float32),
@@ -19,7 +21,7 @@ def _transition(action: int, *, response: int = 3, done: bool = False) -> Transi
         next_obs=np.zeros(OBS_SIZE, dtype=np.float32),
         terminated=done,
         truncated=False,
-        info={"abstract_state": next_state, "response": response, "mutations": 0},
+        info={"abstract_state": next_state, "response": response, "mutations": 0, "banned": banned},
     )
 
 
@@ -85,3 +87,21 @@ def test_f4_t03_checkpoint_reloads_greedy_policy(tmp_path):
     restored = load_checkpoint(tmp_path)
     np.testing.assert_array_equal(restored.q, agent.q)
     assert restored.act(np.zeros(OBS_SIZE), {"abstract_state": 0}, explore=False) == SEND_ACTION
+
+
+def test_f4_t03_simulated_nonblocking_response_does_not_inherit_ban(monkeypatch):
+    """F4-T03: a simulated PASS_NO_EFFECT may continue after a real BLOCKED ban."""
+    agent = DynaAgent("dyna", 3, planning_steps=0, epsilon=0.0)
+    agent.q[0, SEND_ACTION] = 1.0
+    agent.act(np.zeros(OBS_SIZE), {"abstract_state": 0}, explore=True)
+    agent.observe(_transition(SEND_ACTION, response=3, done=True, banned=True))
+    pass_state = AbstractState(0, 2, 0).encode()
+    agent.q[pass_state, 0] = 10.0
+    monkeypatch.setattr(
+        agent.surrogate,
+        "predict_proba",
+        lambda _obs: np.array([0.0, 1.0, 0.0, 0.0, 0.0]),
+    )
+    before = agent.q[0, SEND_ACTION]
+    agent._planning_backup()
+    assert agent.q[0, SEND_ACTION] > before

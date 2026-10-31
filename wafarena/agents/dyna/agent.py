@@ -22,8 +22,9 @@ class _ModelStep:
     next_state: int
     reward: float
     done: bool
+    truncated: bool
+    banned: bool
     obs: np.ndarray
-    response: int
     mutations: int
 
 
@@ -79,8 +80,9 @@ class DynaAgent(TDAgent):
             next_state=int(t.info["abstract_state"]),
             reward=float(t.reward),
             done=bool(t.terminated or t.truncated),
+            truncated=bool(t.truncated),
+            banned=bool(t.info.get("banned", False)),
             obs=t.obs.copy(),
-            response=response,
             mutations=int(t.info["mutations"]),
         )
         if action == SEND_ACTION:
@@ -99,9 +101,8 @@ class DynaAgent(TDAgent):
             family, _, _ = decode(state)
             next_state = AbstractState(family, response, step.mutations).encode()
             reward = REWARD_EVADED if response == Response.PASS_EFFECT else REWARD_BLOCKED
-            done = response == Response.PASS_EFFECT or (
-                step.done and step.response != Response.PASS_EFFECT
-            )
+            blocked = response in (Response.BLOCKED, Response.CAPTCHA, Response.RATE_LIMITED)
+            done = response == Response.PASS_EFFECT or step.truncated or (step.banned and blocked)
         else:
             next_state, reward, done = step.next_state, step.reward, step.done
         self._backup(state, action, reward, next_state=next_state, next_action=None, done=done)
