@@ -144,11 +144,12 @@ def _train_and_select(config, agent: Agent, seed, directory: Path, backend, meta
         )
         summary = harness.summarize_attacker(results, query_budget=env_cfg["query_budget"])
         row = {"step": step, "suite": VALIDATION_SUITE, **summary}
+        if config["exp_id"] == "EXP-H1":
+            row["real_queries"] = env.real_queries_total
         if surrogate_val is not None:
             val_x, val_y = surrogate_val
             diagnostics = score_surrogate_on_examples(agent.surrogate, val_x, val_y)
             row.update(
-                real_queries=agent.real_queries,
                 simulated_updates=agent.simulated_updates,
                 surrogate_accuracy=diagnostics["accuracy"],
                 surrogate_ece=diagnostics["ece"],

@@ -7,8 +7,21 @@ from pathlib import Path
 import pytest
 
 from wafarena import run
+from wafarena.defenders.modsec_defender import ModSecDefender
+from wafarena.envs.attacker_env import SEND_ACTION, AttackerEnv
 from wafarena.envs.backends.fake import FakeBackend
 from wafarena.eval import harness
+
+
+def test_f4_t03_environment_counts_real_sends_across_episodes():
+    """F4-T03: the query axis survives episode resets and excludes mutations."""
+    env = AttackerEnv(FakeBackend(), defender=ModSecDefender(1), split="train")
+    env.reset(seed=0)
+    env.step(SEND_ACTION)
+    env.reset(seed=1)
+    env.step(SEND_ACTION)
+    assert env.real_queries_total == 2
+    env.close()
 
 
 def test_f4_t03_run_records_real_query_axis_and_surrogate_metrics(tmp_path, monkeypatch):
@@ -51,6 +64,9 @@ def test_f4_t03_run_records_real_query_axis_and_surrogate_metrics(tmp_path, monk
     assert all(0 <= float(row["surrogate_accuracy"]) <= 1 for row in rows)
     assert all(row["surrogate_val_class_counts"] for row in rows)
     assert all(row["surrogate_pred_class_counts"] for row in rows)
+    with (directory / "train.csv").open(newline="") as handle:
+        train_rows = list(csv.DictReader(handle))
+    assert int(rows[-1]["real_queries"]) == sum(int(row["queries_used"]) for row in train_rows)
 
 
 def test_f4_t03_dyna_requires_validation_budget():

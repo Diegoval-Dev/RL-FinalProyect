@@ -1,0 +1,41 @@
+exp_id: EXP-H1
+run_name: ppo-defref1
+owner: nelson
+rq: [RQ4]
+seeds: [0, 1, 2, 3, 4]
+
+env:
+  id: WafArena/Attacker-v0
+  backend: fast
+  defender: {type: checkpoint, path: DEF-REF-1}
+  query_budget: 50
+
+agent:
+  algo: pg
+  params:
+    method: ppo
+    hidden: [64, 64]
+    gamma: 0.99
+    ent_coef: 0.01
+    vf_coef: 0.5
+    max_grad_norm: 0.5
+    eval_policy: sample
+    threads: 1
+    lr: 0.0003
+    n_steps: 1024
+    update_epochs: 4
+    minibatch_size: 256
+    clip_coef: 0.2
+    gae_lambda: 0.95
+    normalize_advantages: true
+
+train:
+  total_steps: 200000
+
+eval:
+  suites: [attacker-eval-v1]
+  every_steps: 10000
+  final: false
+
+logging:
+  tensorboard: false
