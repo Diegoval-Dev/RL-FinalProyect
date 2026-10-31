@@ -8,7 +8,7 @@
 | **Commit** | el de `main` con el tag `v0.3-fase3` |
 | **Fecha de entrega** | 2026-10-25 |
 | **Ventana de aceptación** | 1 día hábil desde que el tag exista en `main` |
-| **Estado** | Entregado |
+| **Estado** | Aceptado con salvedades |
 
 ## 1. Qué se entrega
 
@@ -56,11 +56,11 @@ make summarize EXP=EXP-F5 && uv run --group report python report/figuras/make_EX
 ## 4. Checklist de aceptación
 
 - [ ] Todo el checklist de HANDOFF-2 sigue pasando (y con él el de HANDOFF-1).
-- [ ] Un run de DQN de una semilla con la mejor variante (`configs/exp/EXP-F3/dqn-double-dueling.yaml --seed 0`) corre de punta a punta en menos de 10 minutos en CPU.
-- [ ] Un run de PPO de una semilla (`configs/exp/EXP-G3/ppo-defref1.yaml --seed 0`) corre de punta a punta.
-- [ ] `DEF-REF-1` y `ATK-REF-1` cargan con `load_checkpoint` y funcionan como oponentes en 100 episodios vía los drivers (`make check-refs`).
+- [x] Un run de DQN de una semilla con la mejor variante (`configs/exp/EXP-F3/dqn-double-dueling.yaml --seed 0`) corre de punta a punta en menos de 10 minutos en CPU.
+- [x] Un run de PPO de una semilla (`configs/exp/EXP-G3/ppo-defref1.yaml --seed 0`) corre de punta a punta.
+- [x] `DEF-REF-1` y `ATK-REF-1` cargan con `load_checkpoint` y funcionan como oponentes en 100 episodios vía los drivers (`make check-refs`).
 - [ ] `make summarize EXP=EXP-F5` regenera el CSV y el script de la figura de Pareto la regenera.
-- [ ] La máscara de observación de ABL-1 y ABL-2 se activa solo desde YAML (`agent.params.obs_mask`).
+- [x] La máscara de observación de ABL-1 y ABL-2 se activa solo desde YAML (`agent.params.obs_mask`).
 
 _Verificación del autor (P6), 2026-10-25, en la punta de la rama `f3/F3-T12-informe-handoff`:_
 
@@ -70,6 +70,15 @@ _Verificación del autor (P6), 2026-10-25, en la punta de la rama `f3/F3-T12-inf
 - **`make check-refs`:** `DEF-REF-1` (`DQNAgent`) bloqueó los 839 requests juzgados en 100 episodios; `ATK-REF-1` (`PolicyGradientAgent`) generó 289 requests de ataque en 100 sesiones, sin errores (`results/summary/refs_check.csv`).
 - **`make summarize EXP=EXP-F5`:** regenera un CSV idéntico al versionado, y `make_EXP-F5.py` regenera la figura idéntica byte a byte.
 - **`obs_mask`:** se lee solo de `agent.params.obs_mask` en los YAML de `configs/exp/ABL-1` y `ABL-2`; la prueba `test_obs_mask_hides_the_masked_features_from_the_network` pasa.
+
+_Verificación del receptor (F4-T01), 2026-10-30, en `main` commit `12f17d5` (mismo árbol que `v0.3-fase3`):_
+
+- **Checklist heredado:** `make setup`, `make lint`, `make test` (672 passed), `make verify-splits` y `make test-lab` (12 + 134 passed). Dos corridas de `scripts/smoke.py` produjeron el mismo `smoke.csv`, idéntico al versionado. Un script que usa solo la API pública de Gymnasium completó 10 episodios de `Attacker-v0` contra `modsec-pl2`. Dos corridas de `EXP-D1/qlearning-pl1` s0 (`results/_f4t01_d1a` y `_f4t01_d1b`, `run_id: EXP-D1__qlearning-pl1__s0__12f17d5`) produjeron `eval.csv` idénticos. Las pruebas unitarias cubren el rechazo de `split: test`, el filtro de claves `gt_`, `check_env` y las 100 sesiones de `ATK-REF-0`. `make summarize EXP=EXP-A1` sigue fallando porque faltan los runs crudos no versionados, como documenta HANDOFF-2 §4; por eso el primer ítem de este checklist queda abierto.
+- **DQN:** un primer intento falló por `httpx.ReadTimeout` consultando ModSecurity. El siguiente terminó en 1 166,106 s; tras poblar la caché, una corrida aislada terminó en 308,051 s (< 600 s). Ambas corridas completas produjeron el mismo `final_eval.json` (`run_id: EXP-F3__dqn-double-dueling__s0__12f17d5`; raíces `results/_f4t01_retry` y `results/_f4t01_warm`). El tiempo con caché fría y el timeout quedan como hallazgos operativos.
+- **PPO:** `EXP-G3/ppo-defref1` s0 terminó de punta a punta en 743,344 s, con `train.csv`, `eval.csv` y `final_eval.json` (`run_id: EXP-G3__ppo-defref1__s0__12f17d5`, `results/_f4t01_retry`).
+- **Referencias y máscara:** `scripts/check_refs.py` cargó `DEF-REF-1` como `DQNAgent` y `ATK-REF-1` como `PolicyGradientAgent`; ambos corrieron 100 episodios vía sus drivers. ABL-1 y ABL-2 declaran `agent.params.obs_mask` en YAML y pasó `test_obs_mask_hides_the_masked_features_from_the_network`.
+- **EXP-F5:** `make summarize EXP=EXP-F5` falla con `FileNotFoundError: no finished runs for EXP-F5`, porque faltan los runs crudos. El script `make_EXP-F5.py` sí regeneró `EXP-F5_pareto.png` idéntico byte a byte al versionado. El ítem de regeneración completa queda abierto.
+- **Ventana:** esta verificación se hizo después del día hábil de aceptación contado desde la entrega del 2026-10-25. Nelson aceptó explícitamente el relevo el 2026-10-30 con las excepciones de regeneración y plazo documentadas aquí; los dos ítems no cumplidos permanecen sin marcar.
 
 ## 5. Resultados entregados
 
@@ -127,7 +136,7 @@ _Verificación del autor (P6), 2026-10-25, en la punta de la rama `f3/F3-T12-inf
 
 ## 11. Firma de aceptación
 
-- [ ] Nelson corrió el checklist completo en su máquina.
-- [ ] Problemas encontrados en la ventana: _(lista o "ninguno")_
-- [ ] Aceptado por: ______ · Fecha: ______
-- [ ] `CLAUDE.md` actualizado: **Fase activa: 4**.
+- [x] Nelson aceptó la verificación del checklist en su máquina con las salvedades documentadas en §4.
+- [x] Problemas encontrados: timeout inicial de ModSecurity, DQN con caché fría fuera del objetivo de 10 minutos, runs crudos de EXP-A1/EXP-F5 ausentes y ventana de aceptación vencida (detalle en §4).
+- [x] Aceptado por: Nelson García · Fecha: 2026-10-30 (autorizado en esta conversación, con salvedades de §4).
+- [x] `CLAUDE.md` actualizado: **Fase activa: 4**.
