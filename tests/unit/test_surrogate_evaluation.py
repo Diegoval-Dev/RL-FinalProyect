@@ -64,6 +64,9 @@ def test_variant_report_has_counts_metrics_and_stable_columns(tmp_path):
         assert row["defender"] == "modsec-pl1" and row["split"] == "val"
         assert row["train_samples"] == row["val_samples"] == 4
         assert row["train_class_counts"] == row["val_class_counts"] == "2:2 3:2"
+        assert row["train_majority_response"] == 2
+        assert row["majority_baseline_accuracy"] == pytest.approx(0.5)
+        assert sum(int(part.split(":")[1]) for part in row["pred_class_counts"].split()) == 4
         assert 0 <= row["accuracy"] <= 1
         assert 0 <= row["ece"] <= 1
         assert 0 <= row["brier"] <= 2

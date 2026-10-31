@@ -70,6 +70,7 @@ def evaluate_variants(
         raise ValueError("empty train or validation set")
     if epochs <= 0:
         raise ValueError("epochs must be positive")
+    majority_response = int(np.bincount(train_y.astype(int), minlength=6)[1:].argmax() + 1)
     rows = []
     for variant in variants:
         model = SurrogateModel(
@@ -79,6 +80,7 @@ def evaluate_variants(
             for obs, response in zip(train_x, train_y, strict=True):
                 model.update(obs, response)
         probabilities = np.stack([model.predict_proba(obs) for obs in val_x])
+        predicted = probabilities.argmax(axis=1) + 1
         rows.append(
             {
                 "run_id": run_id,
@@ -91,6 +93,9 @@ def evaluate_variants(
                 "val_samples": len(val_y),
                 "train_class_counts": _class_counts(train_y),
                 "val_class_counts": _class_counts(val_y),
+                "pred_class_counts": _class_counts(predicted),
+                "train_majority_response": majority_response,
+                "majority_baseline_accuracy": float(np.mean(val_y == majority_response)),
                 **calibration_metrics(probabilities, val_y),
             }
         )
