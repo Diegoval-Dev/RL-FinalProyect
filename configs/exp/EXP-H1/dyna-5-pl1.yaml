@@ -1,0 +1,33 @@
+exp_id: EXP-H1
+run_name: dyna-5-pl1
+owner: nelson
+rq: [RQ4]
+seeds: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+
+env:
+  id: WafArena/Attacker-v0
+  backend: fast
+  defender: {type: modsec, paranoia_level: 1}
+  query_budget: 50
+
+agent:
+  algo: dyna
+  params:
+    planning_steps: 5
+    alpha: 0.1
+    gamma: 0.99
+    epsilon: 0.1
+    surrogate_hidden_dim: null
+    surrogate_learning_rate: 0.1
+
+train:
+  total_steps: 200000
+
+eval:
+  suites: [attacker-eval-v1]
+  every_steps: 10000
+  surrogate_val_episodes: 100
+  final: false
+
+logging:
+  tensorboard: false

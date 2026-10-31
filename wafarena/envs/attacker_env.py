@@ -89,6 +89,7 @@ class AttackerEnv(gym.Env):
         self._query_budget = query_budget
         self._ban_threshold = ban_threshold
         self._max_steps = max_steps
+        self.real_queries_total = 0
 
     def set_defender(self, defender) -> None:
         """Replace the defender mid-run (non-stationary runs); applies from the next SEND."""
@@ -138,6 +139,7 @@ class AttackerEnv(gym.Env):
 
     def _send(self):
         self._queries += 1
+        self.real_queries_total += 1
         result = self._backend.probe(self._payload, self._base.endpoint, self._param)
         defender_obs = self._defender_obs(result)
         self._defender.reset_session(self._base.base_id)

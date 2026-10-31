@@ -20,6 +20,7 @@ from wafarena.agents.base import (
     save_checkpoint,
     strip_ground_truth,
 )
+from wafarena.agents.dyna import agent as dyna_agent  # noqa: F401  (register algo)
 
 __all__ = [
     "Agent",

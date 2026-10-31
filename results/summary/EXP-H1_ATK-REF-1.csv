@@ -1,0 +1,3 @@
+defender,suite,checkpoint,source_run_id,source_git_sha,source_seed,episodes,evasion_rate
+pl1,attacker-val-v1,ATK-REF-1,EXP-G3__ppo-defref1__s1__98aa1a3,98aa1a3,1,200,0.0
+defref1,attacker-val-v1,ATK-REF-1,EXP-G3__ppo-defref1__s1__98aa1a3,98aa1a3,1,200,0.005
