@@ -73,3 +73,13 @@ def test_checkpoint_restores_dyna_plus_policy(tmp_path):
     assert isinstance(restored, DynaPlusAgent)
     np.testing.assert_array_equal(restored.q, agent.q)
     assert restored.act(np.zeros(OBS_SIZE), {"abstract_state": 0}, explore=False) == 2
+
+
+def test_planning_is_reproducible_for_the_same_seed():
+    first = DynaPlusAgent("first", 7, planning_steps=20, kappa=0.01, epsilon=0.0)
+    second = DynaPlusAgent("second", 7, planning_steps=20, kappa=0.01, epsilon=0.0)
+    for action in (0, 1, 0):
+        _observe_mutation(first, action)
+        _observe_mutation(second, action)
+    np.testing.assert_array_equal(first.q, second.q)
+    assert first.simulated_updates == second.simulated_updates == 60

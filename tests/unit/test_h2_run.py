@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 
 from wafarena import run, runconfig
-from wafarena.envs.attacker_env import AttackerEnv
+from wafarena.envs.attacker_env import SEND_ACTION, AttackerEnv
 from wafarena.envs.backends.fake import FakeBackend
 from wafarena.eval import harness
 from wafarena.runconfig import ConfigError, resolve_config
@@ -44,6 +44,7 @@ def test_h2_switches_training_defender_after_halfway_validation(tmp_path, monkey
         dataclasses.replace(suite, seeds=range(2000, 2002)),
     )
     active = []
+    actions = []
 
     def tracking_env(*args, **kwargs):
         env = AttackerEnv(*args, **kwargs)
@@ -51,6 +52,7 @@ def test_h2_switches_training_defender_after_halfway_validation(tmp_path, monkey
 
         def tracked_step(action):
             active.append(type(env._defender).__name__)
+            actions.append(action)
             return real_step(action)
 
         env.step = tracked_step
@@ -70,7 +72,10 @@ def test_h2_switches_training_defender_after_halfway_validation(tmp_path, monkey
     assert [row["defender"] for row in rows] == ["modsec-pl1", "DEF-REF-1"]
     assert [row["phase"] for row in rows] == ["pre", "post"]
     assert [int(row["step"]) for row in rows] == [10, 20]
-    assert 0 <= int(rows[0]["real_queries"]) <= int(rows[1]["real_queries"])
+    assert [int(row["real_queries"]) for row in rows] == [
+        sum(action == SEND_ACTION for action in actions[:10]),
+        sum(action == SEND_ACTION for action in actions),
+    ]
 
 
 @pytest.mark.parametrize("switch_at", [None, 9, 20])
