@@ -21,6 +21,7 @@ from wafarena.agents.base import (
     strip_ground_truth,
 )
 from wafarena.agents.dyna import agent as dyna_agent  # noqa: F401  (register algo)
+from wafarena.agents.dyna import plus as dyna_plus  # noqa: F401  (register algo)
 
 __all__ = [
     "Agent",

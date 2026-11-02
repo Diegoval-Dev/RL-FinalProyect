@@ -97,6 +97,14 @@ class DynaAgent(TDAgent):
     def _planning_backup(self) -> None:
         state, action = self._model_keys[int(self._planning_rng.integers(len(self._model_keys)))]
         step = self._model[state, action]
+        next_state, reward, done = self._sample_model_transition(state, action, step)
+        self._backup(state, action, reward, next_state=next_state, next_action=None, done=done)
+        self.simulated_updates += 1
+
+    def _sample_model_transition(
+        self, state: int, action: int, step: _ModelStep
+    ) -> tuple[int, float, bool]:
+        """Sample one model transition without updating Q or spending real queries."""
         if action == SEND_ACTION:
             probabilities = self.surrogate.predict_proba(step.obs)
             response = int(self._planning_rng.choice(np.arange(1, 6), p=probabilities))
@@ -107,8 +115,7 @@ class DynaAgent(TDAgent):
             done = response == Response.PASS_EFFECT or step.truncated or (step.banned and blocked)
         else:
             next_state, reward, done = step.next_state, step.reward, step.done
-        self._backup(state, action, reward, next_state=next_state, next_action=None, done=done)
-        self.simulated_updates += 1
+        return next_state, reward, done
 
     @classmethod
     def load(cls, path: Path) -> "DynaAgent":
