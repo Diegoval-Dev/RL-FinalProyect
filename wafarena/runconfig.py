@@ -13,6 +13,9 @@ CATALOG_PATH = Path(__file__).parents[1] / "docs" / "07-experimentos" / "catalog
 ENVIRONMENTS = ("WafArena/Attacker-v0", "WafArena/AttackerBandit-v0", "WafArena/Defender-v0")
 BACKENDS = ("fast", "real")
 TRAIN_SPLIT = "train"
+H2_TOTAL_STEPS = 200_000
+H2_SWITCH_STEP = 100_000
+H2_EVAL_STEP = 10_000
 RUN_NAME_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
 SUITES_BY_ENV = {
     "WafArena/Attacker-v0": ATTACKER_SUITES,
@@ -158,8 +161,23 @@ def resolve_config(raw: dict[str, Any]) -> dict[str, Any]:
         or eval_cfg["surrogate_val_episodes"] <= 0
     ):
         raise ConfigError("eval.surrogate_val_episodes must be a positive integer")
-    if config["agent"]["algo"] == "dyna" and "surrogate_val_episodes" not in eval_cfg:
+    if config["agent"]["algo"] in ("dyna", "dyna_plus") and (
+        "surrogate_val_episodes" not in eval_cfg
+    ):
         raise ConfigError("dyna runs require eval.surrogate_val_episodes")
+    if config["exp_id"] == "EXP-H2":
+        switch_at = env.get("switch_at")
+        if (
+            type(switch_at) is not int
+            or steps != H2_TOTAL_STEPS
+            or switch_at != H2_SWITCH_STEP
+            or eval_cfg["every_steps"] != H2_EVAL_STEP
+            or env["id"] != "WafArena/Attacker-v0"
+            or env["defender"] != {"type": "modsec", "paranoia_level": 1}
+            or env.get("switch_defender") != {"type": "checkpoint", "path": "DEF-REF-1"}
+            or config["agent"]["algo"] not in ("dyna", "dyna_plus")
+        ):
+            raise ConfigError("EXP-H2 requires a halfway switch from modsec-pl1 to DEF-REF-1")
     if config["checkpoint"]["save_best_on"] != "val":
         raise ConfigError("checkpoint.save_best_on must be 'val': never select on test")
     if config["logging"]["wandb"]:
