@@ -129,23 +129,37 @@ def _train_and_select(config, agent: Agent, seed, directory: Path, backend, meta
     selection: dict[str, Any] = {"best_step": None, "best_key": None}
     eval_rows: list[dict] = []
     surrogate_val = None
+    surrogate_val_after = None
+    active_defender = env_cfg["defender"]
     if isinstance(agent, DynaAgent):
         surrogate_val = collect_send_examples(
             backend,
-            env_cfg["defender"],
+            active_defender,
             split="val",
             episodes=config["eval"]["surrogate_val_episodes"],
             seed=seed + 10_000,
         )
+        if config["exp_id"] == "EXP-H2":
+            surrogate_val_after = collect_send_examples(
+                backend,
+                env_cfg["switch_defender"],
+                split="val",
+                episodes=config["eval"]["surrogate_val_episodes"],
+                seed=seed + 20_000,
+            )
 
     def on_eval(step: int) -> None:
+        nonlocal active_defender, surrogate_val
         results = harness.run_attacker_suite(
-            agent, VALIDATION_SUITE, defender=env_cfg["defender"], backend=backend
+            agent, VALIDATION_SUITE, defender=active_defender, backend=backend
         )
         summary = harness.summarize_attacker(results, query_budget=env_cfg["query_budget"])
         row = {"step": step, "suite": VALIDATION_SUITE, **summary}
-        if config["exp_id"] == "EXP-H1":
+        if config["exp_id"] in ("EXP-H1", "EXP-H2"):
             row["real_queries"] = env.real_queries_total
+        if config["exp_id"] == "EXP-H2":
+            row["defender"] = defender_label(active_defender)
+            row["phase"] = "pre" if step <= env_cfg["switch_at"] else "post"
         if surrogate_val is not None:
             val_x, val_y = surrogate_val
             diagnostics = score_surrogate_on_examples(agent.surrogate, val_x, val_y)
@@ -162,7 +176,19 @@ def _train_and_select(config, agent: Agent, seed, directory: Path, backend, meta
         key = (summary["evasion_rate"], -summary["qfe_c"])
         if selection["best_key"] is None or key > selection["best_key"]:
             selection.update(best_step=step, best_key=key, best_val=summary)
-            _save_best(config, agent, directory / "checkpoint", meta, step, summary)
+            _save_best(
+                config,
+                agent,
+                directory / "checkpoint",
+                meta,
+                step,
+                summary,
+                defender=active_defender,
+            )
+        if config["exp_id"] == "EXP-H2" and step == env_cfg["switch_at"]:
+            env.set_defender(env_cfg["switch_defender"])
+            active_defender = env_cfg["switch_defender"]
+            surrogate_val = surrogate_val_after
 
     try:
         train(
@@ -204,8 +230,10 @@ def _train_meta(config, meta, step: int) -> dict:
     }
 
 
-def _save_best(config, agent: Agent, path: Path, meta, step: int, summary: dict) -> None:
-    defender = config["env"]["defender"]
+def _save_best(
+    config, agent: Agent, path: Path, meta, step: int, summary: dict, *, defender=None
+) -> None:
+    defender = defender or config["env"]["defender"]
     save_checkpoint(
         agent,
         path,

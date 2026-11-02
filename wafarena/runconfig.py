@@ -158,8 +158,22 @@ def resolve_config(raw: dict[str, Any]) -> dict[str, Any]:
         or eval_cfg["surrogate_val_episodes"] <= 0
     ):
         raise ConfigError("eval.surrogate_val_episodes must be a positive integer")
-    if config["agent"]["algo"] == "dyna" and "surrogate_val_episodes" not in eval_cfg:
+    if config["agent"]["algo"] in ("dyna", "dyna_plus") and (
+        "surrogate_val_episodes" not in eval_cfg
+    ):
         raise ConfigError("dyna runs require eval.surrogate_val_episodes")
+    if config["exp_id"] == "EXP-H2":
+        switch_at = env.get("switch_at")
+        if (
+            type(switch_at) is not int
+            or switch_at * 2 != steps
+            or switch_at % eval_cfg["every_steps"] != 0
+            or env["id"] != "WafArena/Attacker-v0"
+            or env["defender"] != {"type": "modsec", "paranoia_level": 1}
+            or env.get("switch_defender") != {"type": "checkpoint", "path": "DEF-REF-1"}
+            or config["agent"]["algo"] not in ("dyna", "dyna_plus")
+        ):
+            raise ConfigError("EXP-H2 requires a halfway switch from modsec-pl1 to DEF-REF-1")
     if config["checkpoint"]["save_best_on"] != "val":
         raise ConfigError("checkpoint.save_best_on must be 'val': never select on test")
     if config["logging"]["wandb"]:
