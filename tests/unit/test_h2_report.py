@@ -1,11 +1,13 @@
 """F4-T04: EXP-H2 curves and recovery queries require complete provenance."""
 
 import csv
+from pathlib import Path
 
 import pytest
 import yaml
 
 from wafarena.agents.dyna.h2_report import METHODS, summarize_h2
+from wafarena.runconfig import load_config
 
 
 @pytest.fixture
@@ -30,11 +32,14 @@ def complete_runs(tmp_path):
             (path / "config.resolved.yaml").write_text(
                 yaml.safe_dump(
                     {
-                        "exp_id": "EXP-H2",
-                        "run_name": method,
+                        **load_config(
+                            Path(__file__).parents[2]
+                            / "configs"
+                            / "exp"
+                            / "EXP-H2"
+                            / f"{method}.yaml"
+                        ),
                         "seeds": [seed],
-                        "train": {"total_steps": 200000},
-                        "env": {"switch_at": 100000},
                     }
                 )
             )
@@ -102,4 +107,25 @@ def test_h2_report_rejects_mixed_revisions(complete_runs):
     meta["run_id"] = "EXP-H2__dyna-20-switch__s0__def5678"
     path.write_text(yaml.safe_dump(meta))
     with pytest.raises(ValueError, match="different code revisions"):
+        summarize_h2(complete_runs)
+
+
+@pytest.mark.parametrize(
+    ("section", "path", "value"),
+    [
+        ("agent", ("algo",), "dyna_plus"),
+        ("agent", ("params", "planning_steps"), 5),
+        ("env", ("backend",), "real"),
+        ("eval", ("every_steps",), 5_000),
+    ],
+)
+def test_h2_report_rejects_mislabeled_settings(complete_runs, section, path, value):
+    config_path = complete_runs / "EXP-H2" / "dyna-20-switch" / "s0" / "config.resolved.yaml"
+    config = yaml.safe_load(config_path.read_text())
+    target = config[section]
+    for key in path[:-1]:
+        target = target[key]
+    target[path[-1]] = value
+    config_path.write_text(yaml.safe_dump(config))
+    with pytest.raises(ValueError, match="invalid EXP-H2 provenance"):
         summarize_h2(complete_runs)

@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from wafarena import run
+from wafarena import run, runconfig
 from wafarena.envs.attacker_env import AttackerEnv
 from wafarena.envs.backends.fake import FakeBackend
 from wafarena.eval import harness
@@ -34,6 +34,9 @@ def _config() -> dict:
 
 
 def test_h2_switches_training_defender_after_halfway_validation(tmp_path, monkeypatch):
+    monkeypatch.setattr(runconfig, "H2_TOTAL_STEPS", 20)
+    monkeypatch.setattr(runconfig, "H2_SWITCH_STEP", 10)
+    monkeypatch.setattr(runconfig, "H2_EVAL_STEP", 10)
     suite = harness.VALIDATION_SUITES["attacker-val-v1"]
     monkeypatch.setitem(
         harness.VALIDATION_SUITES,
@@ -73,10 +76,26 @@ def test_h2_switches_training_defender_after_halfway_validation(tmp_path, monkey
 @pytest.mark.parametrize("switch_at", [None, 9, 20])
 def test_h2_rejects_missing_or_nonhalfway_switch(switch_at):
     config = _config()
+    config["train"]["total_steps"] = 200_000
+    config["env"]["switch_at"] = 100_000
+    config["eval"]["every_steps"] = 10_000
     if switch_at is None:
         config["env"].pop("switch_at")
         config["env"].pop("switch_defender")
     else:
         config["env"]["switch_at"] = switch_at
     with pytest.raises(ConfigError, match="EXP-H2.*switch"):
+        resolve_config(config)
+
+
+@pytest.mark.parametrize(
+    ("steps", "switch", "every"),
+    [(20, 10, 10), (200_000, 90_000, 10_000), (200_000, 100_000, 5_000)],
+)
+def test_h2_requires_exact_experiment_schedule(steps, switch, every):
+    config = _config()
+    config["train"]["total_steps"] = steps
+    config["env"]["switch_at"] = switch
+    config["eval"]["every_steps"] = every
+    with pytest.raises(ConfigError, match="EXP-H2"):
         resolve_config(config)

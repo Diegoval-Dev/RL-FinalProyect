@@ -6,6 +6,8 @@ from pathlib import Path
 import numpy as np
 import yaml
 
+from wafarena.runconfig import load_config
+
 METHODS = ("dyna-20-switch", "dyna-plus-1e-3-switch", "dyna-plus-1e-2-switch")
 SWITCH_STEP = 100_000
 TOTAL_STEPS = 200_000
@@ -15,8 +17,12 @@ EVAL_STEP = 10_000
 def _run_rows(path: Path, *, method: str, seed: int) -> tuple[list[dict], dict]:
     meta = yaml.safe_load((path / "meta.yaml").read_text())
     config = yaml.safe_load((path / "config.resolved.yaml").read_text())
+    expected_config = load_config(
+        Path(__file__).parents[3] / "configs" / "exp" / "EXP-H2" / f"{method}.yaml"
+    )
+    expected_config["seeds"] = [seed]
     if (
-        meta.get("dirty")
+        meta.get("dirty") is not False
         or "duration_s" not in meta
         or meta.get("exp_id") != "EXP-H2"
         or meta.get("run_name") != method
@@ -27,6 +33,7 @@ def _run_rows(path: Path, *, method: str, seed: int) -> tuple[list[dict], dict]:
         or config.get("seeds") != [seed]
         or config.get("train", {}).get("total_steps") != TOTAL_STEPS
         or config.get("env", {}).get("switch_at") != SWITCH_STEP
+        or config != expected_config
     ):
         raise ValueError(f"invalid EXP-H2 provenance: {path}")
     with (path / "eval.csv").open(newline="") as handle:
