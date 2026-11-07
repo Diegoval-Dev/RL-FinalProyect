@@ -62,14 +62,17 @@ def main() -> None:
             label="ATK-REF-1 (fixed PPO, one seed)",
         )
         axes[0, column].set_ylabel("ER on val")
+        axes[0, column].set_ylim(bottom=0)
         axes[1, column].set_ylabel("Surrogate accuracy / minority recall on val")
         axes[1, column].set_xlabel("Cumulative real SEND queries")
+        axes[1, column].set_xscale("symlog", linthresh=100)
+        axes[1, column].set_xlim(left=0)
         axes[0, column].legend(fontsize=8)
     fig.text(
         0.5,
         0.01,
-        "Dashed lines: minority recall. Class counts and calibration: EXP-H1 eval.csv. "
-        "Fixed reference training queries are outside the H1 axis.",
+        "Dashed lines: minority recall. Query axis: symmetric log, linear from 0 to 100. "
+        "Class counts: EXP-H1 eval.csv. Fixed reference training queries are outside H1.",
         ha="center",
         fontsize=8,
     )

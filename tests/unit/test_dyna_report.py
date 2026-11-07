@@ -1,6 +1,7 @@
 """F4-T03: EXP-H1 query-axis summary from complete clean runs."""
 
 import csv
+import subprocess
 
 import pytest
 import yaml
@@ -111,3 +112,58 @@ def test_f4_t03_report_rejects_mixed_revisions(complete_runs):
     path.write_text(yaml.safe_dump(meta))
     with pytest.raises(ValueError, match="different code revisions"):
         summarize_h1(complete_runs)
+
+
+@pytest.mark.parametrize(
+    ("changed_file", "accepted"),
+    [
+        ("results/summary/EXP-H1_ATK-REF-1.csv", True),
+        ("wafarena/agents/dyna/agent.py", False),
+    ],
+)
+def test_f4_t03_report_checks_git_diff_for_mixed_revisions(
+    complete_runs, tmp_path, changed_file, accepted
+):
+    repo = tmp_path / "source"
+    repo.mkdir()
+
+    def git(*args):
+        return subprocess.run(
+            ["git", *args], cwd=repo, check=True, capture_output=True, text=True
+        ).stdout.strip()
+
+    git("init", "-q")
+    source = repo / "wafarena/agents/dyna/agent.py"
+    source.parent.mkdir(parents=True)
+    source.write_text("original\n")
+    git("add", ".")
+    git("-c", "user.name=Test", "-c", "user.email=test@example.org", "commit", "-qm", "base")
+    first_sha = git("rev-parse", "--short=7", "HEAD")
+
+    changed = repo / changed_file
+    changed.parent.mkdir(parents=True, exist_ok=True)
+    changed.write_text("changed\n")
+    git("add", ".")
+    git("-c", "user.name=Test", "-c", "user.email=test@example.org", "commit", "-qm", "update")
+    second_sha = git("rev-parse", "--short=7", "HEAD")
+
+    for path in (complete_runs / "EXP-H1").glob("*/*/meta.yaml"):
+        meta = yaml.safe_load(path.read_text())
+        meta["git_sha"] = first_sha
+        meta["run_id"] = f"EXP-H1__{meta['run_name']}__s{meta['seed']}__{first_sha}"
+        path.write_text(yaml.safe_dump(meta))
+    changed_meta = complete_runs / "EXP-H1/dyna-20-defref1/s0/meta.yaml"
+    meta = yaml.safe_load(changed_meta.read_text())
+    meta["git_sha"] = second_sha
+    meta["run_id"] = f"EXP-H1__{meta['run_name']}__s{meta['seed']}__{second_sha}"
+    changed_meta.write_text(yaml.safe_dump(meta))
+
+    if accepted:
+        rows = summarize_h1(complete_runs, repo=repo)
+        assert {sha for row in rows for sha in row["git_shas"].split()} == {
+            first_sha,
+            second_sha,
+        }
+    else:
+        with pytest.raises(ValueError, match="different code revisions"):
+            summarize_h1(complete_runs, repo=repo)

@@ -1,6 +1,8 @@
 """Aggregate EXP-H1 validation curves on the cumulative real-query axis."""
 
 import csv
+import re
+import subprocess
 from pathlib import Path
 
 import numpy as np
@@ -8,6 +10,7 @@ import yaml
 
 DEFENDERS = ("pl1", "defref1")
 METHODS = ("qlearning", "dyna-5", "dyna-20", "dyna-50", "ppo")
+REFERENCE_CSV = "results/summary/EXP-H1_ATK-REF-1.csv"
 
 
 def _run_rows(path: Path, *, expected_seed: int, expected_run: str) -> tuple[list[dict], dict]:
@@ -54,7 +57,25 @@ def _interval(values: np.ndarray, *, seed: int) -> tuple[np.ndarray, np.ndarray,
     return mean, low, high
 
 
-def summarize_h1(results_root: Path) -> list[dict]:
+def _equivalent_revisions(shas: set[str], repo: Path) -> bool:
+    """Allow mixed run SHAs only when the fixed reference CSV is the sole change."""
+    if any(re.fullmatch(r"[0-9a-f]{7,40}", sha) is None for sha in shas):
+        return False
+    first, *others = sorted(shas)
+    for sha in others:
+        diff = subprocess.run(
+            ["git", "diff", "--no-ext-diff", "--name-only", first, sha, "--"],
+            cwd=repo,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        if diff.returncode != 0 or set(diff.stdout.splitlines()) - {REFERENCE_CSV}:
+            return False
+    return True
+
+
+def summarize_h1(results_root: Path, *, repo: Path = Path(".")) -> list[dict]:
     """Require all planned seeds and interpolate each method over shared real-query support."""
     output: list[dict] = []
     for defender in DEFENDERS:
@@ -110,7 +131,8 @@ def summarize_h1(results_root: Path) -> list[dict]:
                         "git_shas": git_shas,
                     }
                 )
-    if len({sha for row in output for sha in row["git_shas"].split()}) != 1:
+    revisions = {sha for row in output for sha in row["git_shas"].split()}
+    if len(revisions) > 1 and not _equivalent_revisions(revisions, repo):
         raise ValueError("EXP-H1 runs use different code revisions")
     return output
 
