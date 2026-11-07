@@ -50,6 +50,7 @@ def main() -> None:
     ax.axvline(0, color="black", linestyle="--", label="Defender switch")
     ax.set_xlabel("Real SEND queries relative to defender switch")
     ax.set_ylabel("Validation evasion rate")
+    ax.set_ylim(bottom=0)
     ax.set_title("EXP-H2: PL1 before switch, DEF-REF-1 after switch")
     ax.legend()
     fig.text(
