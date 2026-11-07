@@ -1,6 +1,7 @@
 """Generation-boundary self-play over the existing Gym environments and checkpoints."""
 
 import json
+import math
 import os
 import shutil
 import time
@@ -19,11 +20,22 @@ from wafarena.envs.resolve import resolve_backend
 from wafarena.selfplay.config import validate_config
 from wafarena.selfplay.evaluation import evaluate_generation
 from wafarena.selfplay.pool import PoolAttackerEnv
+from wafarena.selfplay.state import load_training_state, save_training_state
 from wafarena.trainer import DefenderEpisode, train
 
 PROJECT_ROOT = Path(__file__).parents[2]
 RESULTS_ROOT = PROJECT_ROOT / "results"
 CHECKPOINT_ROOT = PROJECT_ROOT / "checkpoints/selfplay"
+
+
+def _json_ready(value):
+    if isinstance(value, float) and not math.isfinite(value):
+        return None
+    if isinstance(value, dict):
+        return {key: _json_ready(item) for key, item in value.items()}
+    if isinstance(value, list):
+        return [_json_ready(item) for item in value]
+    return value
 
 
 def _checkpoint_info(path: str | Path) -> dict:
@@ -61,19 +73,39 @@ def _save_agent(agent, path: Path, source: str, config: dict, meta: dict, genera
             "agent_params": source_meta["train"]["agent_params"],
         },
     )
+    save_training_state(agent, path)
 
 
-def _completed_generation(run_dir: Path, checkpoint_dir: Path, count: int) -> int:
+def _completed_generation(
+    run_dir: Path, checkpoint_dir: Path, count: int, run_id: str, config: dict
+) -> int:
     completed = 0
     for generation in range(1, count + 1):
         marker = run_dir / f"generation-{generation:02d}.json"
         if not marker.exists():
             break
+        record = json.loads(marker.read_text())
+        validation = record.get("validation")
+        if (
+            record.get("run_id") != run_id
+            or record.get("generation") != generation
+            or not isinstance(validation, dict)
+            or set(validation) != {"split", "attacker", "defender"}
+            or validation["split"] != "val"
+            or not isinstance(validation["attacker"], dict)
+            or not isinstance(validation["defender"], dict)
+            or set(validation["attacker"]) != set(config["validation"]["attacker_defenders"])
+            or set(validation["defender"]) != set(config["validation"]["defender_attackers"])
+        ):
+            raise ValueError(f"completed generation {generation} has an invalid marker")
         for role in ("atk", "def"):
-            if not (checkpoint_dir / f"{role}-gen-{generation:02d}" / "meta.yaml").is_file():
+            path = checkpoint_dir / f"{role}-gen-{generation:02d}"
+            if not (path / "meta.yaml").is_file() or not (path / "training_state.pt").is_file():
                 raise ValueError(
                     f"completed generation {generation} is missing its {role} checkpoint"
                 )
+            agent = load_checkpoint(path)
+            load_training_state(agent, path)
         completed = generation
     markers = list(run_dir.glob("generation-*.json"))
     if len(markers) != completed:
@@ -111,6 +143,9 @@ def _run_generation(config, generation, seed, run_dir, checkpoint_dir, meta, bac
     )
     attacker = load_checkpoint(attacker_source)
     defender = load_checkpoint(defender_source)
+    if generation > 1:
+        load_training_state(attacker, attacker_source)
+        load_training_state(defender, defender_source)
     probability = config["pool"]["current_probability"]
     env = PoolAttackerEnv(
         backend,
@@ -170,7 +205,7 @@ def _run_generation(config, generation, seed, run_dir, checkpoint_dir, meta, bac
         episode_stats=DefenderEpisode,
     )
 
-    validation = evaluate_generation(attacker, defender, backend, **config["validation"])
+    validation = evaluate_generation(current_attacker, defender, backend, **config["validation"])
     _save_agent(defender, stage / "def", defender_source, config, meta, generation)
     checkpoint_dir.mkdir(parents=True, exist_ok=True)
     for name in ("atk", "def"):
@@ -189,7 +224,7 @@ def _run_generation(config, generation, seed, run_dir, checkpoint_dir, meta, bac
     }
     marker = run_dir / f"generation-{generation:02d}.json"
     temporary = marker.with_suffix(".json.tmp")
-    temporary.write_text(json.dumps(record, indent=2, sort_keys=True) + "\n")
+    temporary.write_text(json.dumps(_json_ready(record), indent=2, sort_keys=True) + "\n")
     os.replace(temporary, marker)
 
 
@@ -218,7 +253,9 @@ def run_selfplay(
                 config, seed, results_root, checkpoint_root, repo, allow_dirty, resume
             )
             start = time.monotonic()
-            completed = _completed_generation(run_dir, checkpoint_dir, config["generations"])
+            completed = _completed_generation(
+                run_dir, checkpoint_dir, config["generations"], meta["run_id"], config
+            )
             limit = max_generations or config["generations"]
             for generation in range(completed + 1, limit + 1):
                 stage = checkpoint_dir / f".gen-{generation:02d}.incomplete"

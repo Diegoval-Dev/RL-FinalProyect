@@ -27,8 +27,8 @@ GOOD = {
     "validation": {
         "attacker_episodes": 2,
         "defender_sessions": 4,
-        "attacker_defenders": ["modsec-pl1", "DEF-REF-1"],
-        "defender_attackers": ["corpus-replay", "ATK-REF-0"],
+        "attacker_defenders": ["modsec-pl1", "modsec-pl2", "modsec-pl3", "modsec-pl4", "DEF-REF-1"],
+        "defender_attackers": ["corpus-replay", "random-mutation", "ATK-REF-0", "ATK-REF-1"],
     },
     "logging": {"tensorboard": False},
 }
@@ -36,6 +36,12 @@ GOOD = {
 
 def test_valid_config_keeps_explicit_training_budget():
     assert validate_config(copy.deepcopy(GOOD))["attacker"]["steps_per_iteration"] == 4
+
+
+def test_runner_can_be_reused_for_exp_i1():
+    raw = copy.deepcopy(GOOD)
+    raw["exp_id"] = "EXP-I1"
+    assert validate_config(raw)["exp_id"] == "EXP-I1"
 
 
 def test_rejects_swapped_initial_checkpoint_roles():
@@ -55,6 +61,11 @@ def test_rejects_swapped_initial_checkpoint_roles():
         (("defender", "env", "split"), "test"),
         (("seeds",), [0, 0]),
         (("validation", "attacker_defenders"), []),
+        (("validation", "attacker_defenders"), ["modsec-pl1", "DEF-REF-1"]),
+        (
+            ("validation", "attacker_defenders"),
+            [*GOOD["validation"]["attacker_defenders"], "modsec-pl1"],
+        ),
     ],
 )
 def test_invalid_protocol_is_rejected(path, value):

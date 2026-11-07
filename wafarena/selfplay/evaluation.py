@@ -1,5 +1,8 @@
 """Small, fixed validation comparisons after each self-play generation."""
 
+from pathlib import Path
+
+from wafarena.agents import load_checkpoint
 from wafarena.envs.attacker_env import AttackerEnv
 from wafarena.envs.defender_env import DefenderEnv
 from wafarena.eval import harness
@@ -18,7 +21,7 @@ def _attacker_spec(name: str):
 
 
 def evaluate_generation(
-    attacker,
+    attacker_checkpoint: Path,
     defender,
     backend,
     *,
@@ -30,6 +33,7 @@ def evaluate_generation(
     """Use the same held-out `val` examples and seeds for every generation."""
     attack_results = {}
     for name in attacker_defenders:
+        attacker = load_checkpoint(attacker_checkpoint)
         env = AttackerEnv(backend, defender=_defender_spec(name), split="val")
         episodes = [
             harness._play_episode(attacker, env, seed)

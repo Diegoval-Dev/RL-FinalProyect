@@ -9,16 +9,26 @@ class SelfPlayConfigError(ValueError):
     """An incomplete or unsafe self-play protocol."""
 
 
+ATTACKER_DEFENDERS = {"modsec-pl1", "modsec-pl2", "modsec-pl3", "modsec-pl4", "DEF-REF-1"}
+DEFENDER_ATTACKERS = {"corpus-replay", "random-mutation", "ATK-REF-0", "ATK-REF-1"}
+
+
 def _positive(value, name: str) -> None:
     if type(value) is not int or value <= 0:
         raise SelfPlayConfigError(f"{name} must be a positive integer")
 
 
+def _safe_name(value) -> bool:
+    return (
+        isinstance(value, str) and bool(value) and value.replace("-", "").replace("_", "").isalnum()
+    )
+
+
 def validate_config(raw: dict, *, repo: Path = Path(".")) -> dict:
     """Check the full protocol before the runner creates any output."""
     try:
-        if raw["exp_id"] != "F4-T05" or not raw["run_name"].replace("-", "").isalnum():
-            raise SelfPlayConfigError("exp_id/run_name must identify an F4-T05 run")
+        if not _safe_name(raw["exp_id"]) or not _safe_name(raw["run_name"]):
+            raise SelfPlayConfigError("exp_id and run_name must be safe nonempty names")
         seeds = raw["seeds"]
         if (
             not isinstance(seeds, list)
@@ -57,6 +67,12 @@ def validate_config(raw: dict, *, repo: Path = Path(".")) -> dict:
                 isinstance(item, str) and item for item in raw["validation"][key]
             ):
                 raise SelfPlayConfigError(f"validation.{key} must be a nonempty list of names")
+            if len(set(raw["validation"][key])) != len(raw["validation"][key]):
+                raise SelfPlayConfigError(f"validation.{key} must not repeat references")
+        if set(raw["validation"]["attacker_defenders"]) != ATTACKER_DEFENDERS:
+            raise SelfPlayConfigError("validation must include all fixed attacker defenders")
+        if set(raw["validation"]["defender_attackers"]) != DEFENDER_ATTACKERS:
+            raise SelfPlayConfigError("validation must include all fixed defender attackers")
         if type(raw["logging"]["tensorboard"]) is not bool:
             raise SelfPlayConfigError("logging.tensorboard must be boolean")
     except (KeyError, TypeError, AttributeError) as exc:
