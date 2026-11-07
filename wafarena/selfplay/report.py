@@ -1,6 +1,7 @@
 """Auditable EXP-I1 fixed-reference and historical-opponent comparisons."""
 
 import csv
+import hashlib
 import json
 import math
 import os
@@ -28,6 +29,43 @@ def _count(value, label: str):
     if type(value) is not int or value < 0:
         raise ValueError(f"invalid {label}: {value!r}")
     return value
+
+
+def _file_sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for block in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(block)
+    return digest.hexdigest()
+
+
+def _check_history_record(record: dict, pair: dict, hashes: dict, cell: Path) -> None:
+    expected = {
+        "condition": pair["condition"],
+        "seed": pair["seed"],
+        "run_id": pair["run_id"],
+        "git_sha": pair["git_sha"],
+        "defender_generation": pair["defender_generation"],
+        "attacker_generation": pair["attacker_generation"],
+        "split": "val",
+        "sessions": pair["sessions"],
+        **hashes,
+    }
+    if any(record.get(key) != value for key, value in expected.items()):
+        raise ValueError(f"stale or malformed historical cell: {cell}")
+    requests = _count(record.get("requests"), f"historical cell requests {cell}")
+    attack_requests = _count(
+        record.get("attack_requests"), f"historical cell attack_requests {cell}"
+    )
+    if attack_requests > requests:
+        raise ValueError(f"historical cell attack_requests exceeds requests: {cell}")
+    _probability(record.get("tpr"), f"historical cell tpr {cell}", denominator=attack_requests)
+    _probability(record.get("fpr"), f"historical cell fpr {cell}")
+    for name in ("er_d", "f1", "fpr_h", "fpr_s", "fpr_h_s"):
+        if name not in record:
+            raise ValueError(f"missing historical cell {name}: {cell}")
+        if record[name] is not None:
+            _probability(record[name], f"historical cell {name} {cell}")
 
 
 def collect_fixed(
@@ -92,6 +130,19 @@ def collect_fixed(
                         raise ValueError(
                             f"missing checkpoint for generation {generation}: {checkpoint}"
                         )
+                    checkpoint_meta = yaml.safe_load((checkpoint / "meta.yaml").read_text())
+                    train = checkpoint_meta.get("train", {})
+                    expected_role = "attacker" if role == "atk" else "defender"
+                    if checkpoint_meta.get("role") != expected_role or any(
+                        train.get(key) != value
+                        for key, value in (
+                            ("run_id", run_id),
+                            ("seed", seed),
+                            ("git_sha", sha),
+                            ("generation", generation),
+                        )
+                    ):
+                        raise ValueError(f"checkpoint provenance mismatch: {checkpoint}")
                 common = {
                     "condition": condition,
                     "seed": seed,
@@ -101,6 +152,8 @@ def collect_fixed(
                 }
                 for reference, metrics in validation["attacker"].items():
                     episodes = _count(metrics.get("episodes"), f"episodes {marker}")
+                    if episodes != config["validation"]["attacker_episodes"]:
+                        raise ValueError(f"wrong attacker episodes in generation: {marker}")
                     for name in ("evasion_rate", "episodes"):
                         value = (
                             _probability(
@@ -119,9 +172,15 @@ def collect_fixed(
                             }
                         )
                 for reference, metrics in validation["defender"].items():
+                    sessions = _count(metrics.get("sessions"), f"sessions {marker}")
+                    if sessions != config["validation"]["defender_sessions"]:
+                        raise ValueError(f"wrong defender sessions in generation: {marker}")
                     attack_requests = _count(
                         metrics.get("attack_requests"), f"attack_requests {marker}"
                     )
+                    requests = _count(metrics.get("requests"), f"requests {marker}")
+                    if attack_requests > requests:
+                        raise ValueError(f"attack_requests exceeds requests: {marker}")
                     for name in ("tpr", "fpr", "attack_requests"):
                         value = (
                             _probability(
@@ -213,15 +272,14 @@ def evaluate_history(runs: list[dict], results_root: Path, *, backend=None) -> l
                 / f"s{seed}"
                 / f"def-{defender_gen:02d}_atk-{attacker_gen:02d}.json"
             )
+            checkpoints = pair["checkpoint_dir"]
+            hashes = {
+                "defender_sha256": _file_sha256(checkpoints / f"def-gen-{defender_gen:02d}/dqn.pt"),
+                "attacker_sha256": _file_sha256(checkpoints / f"atk-gen-{attacker_gen:02d}/pg.pt"),
+            }
             if cell.exists():
                 record = json.loads(cell.read_text())
-                if any(
-                    record.get(key) != pair[key]
-                    for key in ("run_id", "git_sha", "defender_generation", "attacker_generation")
-                ):
-                    raise ValueError(f"stale historical cell: {cell}")
             else:
-                checkpoints = pair["checkpoint_dir"]
                 defender = load_checkpoint(checkpoints / f"def-gen-{defender_gen:02d}")
                 env = DefenderEnv(
                     backend,
@@ -255,6 +313,8 @@ def evaluate_history(runs: list[dict], results_root: Path, *, backend=None) -> l
                     "defender_generation": defender_gen,
                     "attacker_generation": attacker_gen,
                     "split": "val",
+                    "sessions": len(plan),
+                    **hashes,
                     **{
                         key: None
                         if isinstance(value, float) and not math.isfinite(value)
@@ -262,10 +322,12 @@ def evaluate_history(runs: list[dict], results_root: Path, *, backend=None) -> l
                         for key, value in harness.summarize_defender(records).items()
                     },
                 }
+                _check_history_record(record, pair, hashes, cell)
                 cell.parent.mkdir(parents=True, exist_ok=True)
                 temporary = cell.with_suffix(".json.tmp")
                 temporary.write_text(json.dumps(record, indent=2, allow_nan=False) + "\n")
                 os.replace(temporary, cell)
+            _check_history_record(record, pair, hashes, cell)
             rows.append(record)
     finally:
         if own_backend:

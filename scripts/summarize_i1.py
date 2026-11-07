@@ -1,6 +1,7 @@
 """Summarize EXP-I1 fixed and historical self-play comparisons on val."""
 
 import argparse
+import math
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -29,15 +30,26 @@ def plot_tpr(curve: list[dict], path: Path) -> None:
             if len(rows) != 8:
                 raise ValueError(f"missing EXP-I1 TPR generations for {condition}/{reference}")
             x = [row["generation"] for row in rows]
-            y = [row["mean"] for row in rows]
+            y = [row["mean"] if row["mean"] is not None else math.nan for row in rows]
             color = ax.plot(x, y, marker="o", label=label)[0].get_color()
             ax.fill_between(
                 x,
-                [row["ci_low"] for row in rows],
-                [row["ci_high"] for row in rows],
+                [row["ci_low"] if row["ci_low"] is not None else math.nan for row in rows],
+                [row["ci_high"] if row["ci_high"] is not None else math.nan for row in rows],
                 color=color,
                 alpha=0.15,
             )
+            for row in rows:
+                if row["n_defined"] < 3:
+                    ax.annotate(
+                        f"n={row['n_defined']}",
+                        (row["generation"], row["mean"] if row["mean"] is not None else 0.02),
+                        xytext=(0, 7),
+                        textcoords="offset points",
+                        ha="center",
+                        fontsize=7,
+                        color=color,
+                    )
         ax.set_title(reference)
         ax.set_xlabel("Defender generation")
         ax.set_xticks(range(1, 9))
@@ -49,7 +61,7 @@ def plot_tpr(curve: list[dict], path: Path) -> None:
     fig.text(
         0.5,
         0.01,
-        "Three paired seeds; lines are seed means; bands are 95% bootstrap CIs.",
+        "Three paired runs; seed means and 95% bootstrap CIs. Labels show n when <3.",
         ha="center",
         fontsize=8,
     )

@@ -38,8 +38,18 @@ def _write_run(root, checkpoints, config, seed, sha, *, generations=2):
         for role, weight in (("atk", "pg.pt"), ("def", "dqn.pt")):
             path = checkpoints / run_id / f"{role}-gen-{generation:02d}"
             path.mkdir(parents=True)
-            for name in ("meta.yaml", weight, "training_state.pt"):
-                (path / name).touch()
+            checkpoint_meta = {
+                "role": "attacker" if role == "atk" else "defender",
+                "train": {
+                    "run_id": run_id,
+                    "seed": seed,
+                    "git_sha": sha,
+                    "generation": generation,
+                },
+            }
+            (path / "meta.yaml").write_text(yaml.safe_dump(checkpoint_meta))
+            (path / weight).write_bytes(b"checkpoint")
+            (path / "training_state.pt").touch()
         record = {
             "run_id": run_id,
             "generation": generation,
@@ -50,7 +60,13 @@ def _write_run(root, checkpoints, config, seed, sha, *, generations=2):
                     for name in config["validation"]["attacker_defenders"]
                 },
                 "defender": {
-                    name: {"tpr": 0.8 + seed * 0.05, "fpr": 0.0, "attack_requests": 20}
+                    name: {
+                        "tpr": 0.8 + seed * 0.05,
+                        "fpr": 0.0,
+                        "attack_requests": 20,
+                        "requests": 40,
+                        "sessions": config["validation"]["defender_sessions"],
+                    }
                     for name in config["validation"]["defender_attackers"]
                 },
             },
@@ -111,6 +127,33 @@ def test_collect_fixed_rejects_mixed_sha_and_dirty_runs(tmp_path):
         collect_fixed(root, checkpoints, {"pool": config})
 
 
+def test_collect_fixed_rejects_partial_validation_and_wrong_checkpoint(tmp_path):
+    config = deepcopy(BASE)
+    config["seeds"] = [0]
+    config["generations"] = 2
+    root, checkpoints = tmp_path / "results", tmp_path / "checkpoints"
+    run = _write_run(root, checkpoints, config, 0, "abc1234")
+    marker = run / "generation-01.json"
+    record = json.loads(marker.read_text())
+    record["validation"]["attacker"]["DEF-REF-1"]["episodes"] = 1
+    marker.write_text(json.dumps(record))
+    with pytest.raises(ValueError, match="episodes"):
+        collect_fixed(root, checkpoints, {"pool": config})
+    record["validation"]["attacker"]["DEF-REF-1"]["episodes"] = 40
+    record["validation"]["defender"]["ATK-REF-1"]["sessions"] = 1
+    marker.write_text(json.dumps(record))
+    with pytest.raises(ValueError, match="sessions"):
+        collect_fixed(root, checkpoints, {"pool": config})
+    record["validation"]["defender"]["ATK-REF-1"]["sessions"] = 40
+    marker.write_text(json.dumps(record))
+    checkpoint = checkpoints / "EXP-I1__pool__s0__abc1234" / "def-gen-01/meta.yaml"
+    meta = yaml.safe_load(checkpoint.read_text())
+    meta["train"]["seed"] = 99
+    checkpoint.write_text(yaml.safe_dump(meta))
+    with pytest.raises(ValueError, match="checkpoint provenance"):
+        collect_fixed(root, checkpoints, {"pool": config})
+
+
 def test_historical_evaluation_uses_earlier_same_run_attacker_and_caches(tmp_path, monkeypatch):
     from wafarena.eval.metrics import RequestRecord
     from wafarena.selfplay import report
@@ -150,3 +193,21 @@ def test_historical_evaluation_uses_earlier_same_run_attacker_and_caches(tmp_pat
     second = evaluate_history(runs, root, backend=object())
     assert second == first
     assert len(seen) == 3
+    cell = root / "_history_cells/pool/s0/def-02_atk-01.json"
+    record = json.loads(cell.read_text())
+    record["split"] = "train"
+    cell.write_text(json.dumps(record))
+    with pytest.raises(ValueError, match="historical cell"):
+        evaluate_history(runs, root, backend=object())
+    record["split"] = "val"
+    cell.write_text(json.dumps(record))
+    record["er_d"] = 2.0
+    cell.write_text(json.dumps(record))
+    with pytest.raises(ValueError, match="historical cell"):
+        evaluate_history(runs, root, backend=object())
+    record["er_d"] = first[0]["er_d"]
+    cell.write_text(json.dumps(record))
+    attacker_weight = checkpoints / "EXP-I1__pool__s0__abc1234/atk-gen-01/pg.pt"
+    attacker_weight.write_bytes(b"different checkpoint")
+    with pytest.raises(ValueError, match="historical cell"):
+        evaluate_history(runs, root, backend=object())
