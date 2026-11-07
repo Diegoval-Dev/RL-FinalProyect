@@ -1,0 +1,31 @@
+exp_id: EXP-I1
+run_name: pool
+seeds: [0, 1, 2]
+backend: fast
+generations: 8
+
+attacker:
+  initial_checkpoint: checkpoints/refs/ATK-REF-1
+  iterations_per_generation: 3
+  steps_per_iteration: 512
+  env: {split: train, query_budget: 50, max_steps: 150}
+
+defender:
+  initial_checkpoint: checkpoints/refs/DEF-REF-1
+  steps_per_generation: 1024
+  env:
+    split: train
+    attack_ratio: 0.5
+    reward: {alpha: 4.0, beta: 1.0, gamma: 0.5}
+
+pool:
+  current_probability: 0.5
+
+validation:
+  attacker_episodes: 40
+  defender_sessions: 40
+  attacker_defenders: [modsec-pl1, modsec-pl2, modsec-pl3, modsec-pl4, DEF-REF-1]
+  defender_attackers: [corpus-replay, random-mutation, ATK-REF-0, ATK-REF-1]
+
+logging:
+  tensorboard: false
