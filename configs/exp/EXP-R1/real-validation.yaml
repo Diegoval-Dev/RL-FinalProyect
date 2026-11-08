@@ -1,0 +1,16 @@
+exp_id: EXP-R1
+eval_seeds: [0, 1, 2]
+attacker_refs: [ATK-REF-0, ATK-REF-1]
+defender_refs: [DEF-REF-1, selfplay-champion]
+attacker_episode_starts: [1000, 1050, 1100]
+attacker_episodes: 50
+attacker_query_budget: 50
+defender_plan_seeds: [7000, 8000, 9000]
+defender_env_seed_starts: [10000, 10500, 11000]
+defender_sessions: 500
+split: test
+champion_selection: results/summary/EXP-I3_selection.json
+champion_training_sha: eea6f78
+champion_generation: 8
+reference_checkpoint_root: checkpoints/refs
+pool_checkpoint_root: checkpoints/selfplay
