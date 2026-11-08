@@ -6,6 +6,7 @@ import yaml
 from wafarena.eval.real_gap import (
     aggregate_gaps,
     attacker_episode_seeds,
+    cached_r1_cell,
     defender_plans,
     load_spec,
     plan_sha256,
@@ -22,8 +23,8 @@ def test_attacker_episode_blocks_are_fifty_disjoint_test_seeds():
 
 
 def test_spec_rejects_changed_reduced_suite_size(tmp_path):
-    source = yaml.safe_load(open("configs/exp/EXP-R1/real-validation.yaml"))
-    assert load_spec("configs/exp/EXP-R1/real-validation.yaml")["defender_sessions"] == 500
+    source = yaml.safe_load(open("configs/eval/EXP-R1/real-validation.yaml"))
+    assert load_spec("configs/eval/EXP-R1/real-validation.yaml")["defender_sessions"] == 500
     source["defender_sessions"] = 200
     path = tmp_path / "config.yaml"
     path.write_text(yaml.safe_dump(source))
@@ -43,6 +44,13 @@ def test_defender_plan_has_five_hundred_sessions_and_is_reproducible():
     assert plan_sha256(first) != plan_sha256(defender_plans(8000, 10500))
 
 
+def test_plan_fingerprint_covers_attacker_episode_seeds():
+    first = {"split": "test", "seeds": attacker_episode_seeds(1000), "query_budget": 50}
+    second = {**first, "seeds": attacker_episode_seeds(1050)}
+    assert plan_sha256(first) == plan_sha256(dict(reversed(list(first.items()))))
+    assert plan_sha256(first) != plan_sha256(second)
+
+
 def test_gap_aggregation_pairs_modes_by_seed_and_uses_absolute_difference():
     cells = []
     for seed, (fast, real) in enumerate(((0.2, 0.1), (0.4, 0.3), (0.6, 0.5))):
@@ -56,6 +64,8 @@ def test_gap_aggregation_pairs_modes_by_seed_and_uses_absolute_difference():
                     "plan_sha256": f"plan-{seed}",
                     "source_run_id": "source",
                     "weight_sha256": "weights",
+                    "opponent_run_ids": "opponent-run",
+                    "opponent_sha256": "opponent-weights",
                     "eval_run_id": f"run-{seed}-{mode}",
                     "evasion_rate": value,
                     "qfe": None,
@@ -77,3 +87,34 @@ def test_gap_aggregation_pairs_modes_by_seed_and_uses_absolute_difference():
     cells[-1]["plan_sha256"] = "wrong"
     with pytest.raises(ValueError, match="plan"):
         aggregate_gaps(cells)
+    cells[-1]["plan_sha256"] = "plan-2"
+    cells[-1]["opponent_sha256"] = "different"
+    with pytest.raises(ValueError, match="checkpoint"):
+        aggregate_gaps(cells)
+
+
+def test_cached_cell_rejects_changed_plan_without_recomputing(tmp_path):
+    path = tmp_path / "cell.json"
+    expected = {
+        "role": "attacker",
+        "agent": "ATK-REF-0",
+        "seed": 0,
+        "mode": "fast",
+        "plan_sha256": "first",
+        "weight_sha256": "weights",
+        "planned_episodes": 50,
+    }
+    metrics = {
+        "episodes": 50,
+        "evasion_rate": 0.0,
+        "qfe": float("nan"),
+        "qfe_c": 50.0,
+        "diversity": float("nan"),
+        "uniqueness": float("nan"),
+        "break_rate": 0.0,
+    }
+    first = cached_r1_cell(path, expected, lambda: metrics)
+    assert first["qfe"] is None
+    assert cached_r1_cell(path, expected, lambda: pytest.fail("cache was recomputed")) == first
+    with pytest.raises(ValueError, match="stale"):
+        cached_r1_cell(path, {**expected, "plan_sha256": "second"}, lambda: metrics)

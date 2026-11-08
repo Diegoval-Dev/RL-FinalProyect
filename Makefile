@@ -1,4 +1,4 @@
-.PHONY: setup lint test test-lab lab-up lab-down smoke run run-bandit run-dp rq1-table summarize verify-splits build-splits endpoints-doc modsec-baseline operator-preservation bandit-arm-means evasion-reachability dqn-sanity modsec-defender-suites evaluate latency check-refs surrogate-eval selfplay-smoke selfplay-run summarize-i1 crossplay generalization
+.PHONY: setup lint test test-lab lab-up lab-down smoke run run-bandit run-dp rq1-table summarize verify-splits build-splits endpoints-doc modsec-baseline operator-preservation bandit-arm-means evasion-reachability dqn-sanity modsec-defender-suites evaluate latency check-refs surrogate-eval selfplay-smoke selfplay-run summarize-i1 crossplay generalization real-gap
 
 COMPOSE = docker compose -f lab/docker-compose.yml
 
@@ -103,6 +103,9 @@ crossplay: lab-up
 
 generalization: lab-up
 	$(COMPOSE) run --rm runner python scripts/run_i345.py --config configs/selfplay/exp_i345.yaml $(RUN_ARGS)
+
+real-gap: lab-up
+	$(COMPOSE) run --rm runner python scripts/run_r1.py --config configs/eval/EXP-R1/real-validation.yaml $(RUN_ARGS)
 
 summarize:
 	@test -n "$(EXP)" || { echo "usage: make summarize EXP=<exp_id>" >&2; exit 1; }

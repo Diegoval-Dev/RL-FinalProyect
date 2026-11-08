@@ -27,7 +27,7 @@
 
 ### Task 1: Frozen plans and GAP aggregation
 
-**Files:** `wafarena/eval/real_gap.py`, `configs/exp/EXP-R1/real-validation.yaml`, `tests/unit/test_real_gap.py`.
+**Files:** `wafarena/eval/real_gap.py`, `configs/eval/EXP-R1/real-validation.yaml`, `tests/unit/test_real_gap.py`.
 
 - [x] Write failing tests for 50-episode blocks, 500-session plans, pairing, empty/undefined metrics, and absolute GAP aggregation.
 - [x] Implement plan generation and aggregation with exact config validation.
@@ -37,9 +37,9 @@
 
 **Files:** `scripts/run_r1.py`, `Makefile`, `tests/unit/test_r1_script.py`.
 
-- [ ] Write failing tests for source provenance, plan fingerprints, cache validation, and mode routing.
-- [ ] Implement checkpoint-only runner, atomic per-cell records, summary CSVs, and `make real-gap`.
-- [ ] Run focused tests, lint, full unit suite, and commit in English.
+- [x] Write failing tests for source provenance, plan fingerprints, cache validation, and mode routing.
+- [x] Implement checkpoint-only runner, atomic per-cell records, summary CSVs, and `make real-gap`.
+- [x] Run focused tests, lint, full unit suite, and commit in English.
 
 ### Task 3: Execute and document EXP-R1
 

@@ -3,6 +3,7 @@
 import hashlib
 import json
 import math
+import os
 import statistics
 from collections import defaultdict
 from pathlib import Path
@@ -90,12 +91,55 @@ def defender_plans(plan_seed: int, env_seed_start: int) -> dict[str, list[Sessio
 
 def plan_sha256(plan) -> str:
     """Fingerprint the exact opponent, IDs, and environment seeds of a plan."""
-    if isinstance(plan, dict):
-        payload = {key: [vars(item) for item in values] for key, values in sorted(plan.items())}
-    else:
-        payload = plan
-    encoded = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode()
+    encoded = json.dumps(plan, default=vars, sort_keys=True, separators=(",", ":")).encode()
     return hashlib.sha256(encoded).hexdigest()
+
+
+def cached_r1_cell(path: Path, expected: dict, compute) -> dict:
+    """Reuse a complete cell or write its validated result atomically."""
+    path = Path(path)
+    if path.exists():
+        row = json.loads(path.read_text())
+    else:
+        row = {**expected, **compute()}
+        for key, value in row.items():
+            if isinstance(value, float) and not math.isfinite(value):
+                row[key] = None
+        _validate_cell(row, expected, path)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        temporary = path.with_suffix(".json.tmp")
+        temporary.write_text(json.dumps(row, indent=2, allow_nan=False) + "\n")
+        os.replace(temporary, path)
+    _validate_cell(row, expected, path)
+    return row
+
+
+def _validate_cell(row: dict, expected: dict, path: Path) -> None:
+    if any(row.get(key) != value for key, value in expected.items()):
+        raise ValueError(f"stale EXP-R1 cell: {path}")
+    role = expected["role"]
+    if role == "attacker":
+        if row.get("episodes") != expected["planned_episodes"]:
+            raise ValueError(f"incomplete EXP-R1 attacker cell: {path}")
+        metrics = ATTACKER_METRICS
+    elif role == "defender":
+        if (
+            row.get("evaluated_sessions")
+            != expected["planned_sessions"] - row.get("empty_attack_sessions", -1)
+            or row.get("attack_sessions") != expected["planned_attack_sessions"]
+            or row.get("emitting_attack_sessions")
+            != row.get("attack_sessions") - row.get("empty_attack_sessions", -1)
+        ):
+            raise ValueError(f"incomplete EXP-R1 defender cell: {path}")
+        metrics = DEFENDER_METRICS
+    else:
+        raise ValueError(f"invalid EXP-R1 role: {role}")
+    for metric in metrics:
+        if metric not in row:
+            raise ValueError(f"missing EXP-R1 {metric}: {path}")
+        value = row[metric]
+        if value is not None and (type(value) not in (int, float) or not math.isfinite(value)):
+            raise ValueError(f"invalid EXP-R1 {metric}: {path}")
 
 
 def aggregate_gaps(cells: list[dict]) -> list[dict]:
@@ -123,7 +167,13 @@ def aggregate_gaps(cells: list[dict]) -> list[dict]:
             fast, real = pairs[(seed, "fast")], pairs[(seed, "real")]
             if any(
                 fast.get(key) != real.get(key)
-                for key in ("plan_sha256", "source_run_id", "weight_sha256")
+                for key in (
+                    "plan_sha256",
+                    "source_run_id",
+                    "weight_sha256",
+                    "opponent_run_ids",
+                    "opponent_sha256",
+                )
             ):
                 raise ValueError(f"EXP-R1 plan or checkpoint mismatch for {agent} s{seed}")
         for metric in metrics:
