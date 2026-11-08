@@ -40,6 +40,12 @@ SPEC = Path("configs/selfplay/exp_i345.yaml")
 MODSEC_BASELINES = Path("results/summary/modsec_defender_suites.csv")
 
 
+def suite_sessions(suite: str) -> int:
+    """Count the frozen session plan once per scripted attacker in a suite."""
+    spec = harness.DEFENDER_SUITES[suite]
+    return len(harness.build_session_plan(spec)) * len(spec.attackers)
+
+
 def load_spec(path: Path) -> dict:
     """Load the frozen F4-T08 evaluation design."""
     config = yaml.safe_load(Path(path).read_text())
@@ -95,7 +101,7 @@ def load_modsec_baseline(path: Path, suite: str) -> dict:
         "suite": suite,
         "split": harness.DEFENDER_SUITES[suite].benign_split,
         "attack_split": harness.DEFENDER_SUITES[suite].attack_split,
-        "sessions": 2000 * len(harness.DEFENDER_SUITES[suite].attackers),
+        "sessions": suite_sessions(suite),
         "requests": int(rows[0]["requests"]),
         "attack_requests": int(rows[0]["attack_requests"]),
         "eval_run_id": "modsec-defender-suites__d9d7d49",
@@ -358,7 +364,7 @@ def _evaluate_cell(
     eval_seed = defender["seed"] if defender["seed"] is not None else 0
     directory = _run_directory(root, exp_id, run_name, eval_seed)
     eval_run_id = _prepare_run(directory, exp_id, run_name, eval_seed, eval_sha, defender)
-    sessions = 2000 * len(harness.DEFENDER_SUITES[suite].attackers) if attacker is None else 2000
+    sessions = suite_sessions(suite) if attacker is None else len(plan)
     suite_spec = harness.DEFENDER_SUITES.get(suite)
     expected = {
         "exp_id": exp_id,

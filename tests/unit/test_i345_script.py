@@ -51,6 +51,29 @@ def test_modsec_baseline_requires_matching_suite_and_pl2(tmp_path):
         load_modsec_baseline(path, "defender-eval-hard-v1")
 
 
+def test_hard_suite_reports_its_actual_session_count(tmp_path):
+    path = tmp_path / "baseline.csv"
+    with path.open("w", newline="") as handle:
+        writer = csv.DictWriter(
+            handle,
+            fieldnames=["defender", "suite", "requests", "attack_requests", "tpr", "fpr", "er_d"],
+        )
+        writer.writeheader()
+        writer.writerow(
+            {
+                "defender": "modsec-pl2",
+                "suite": "defender-eval-hard-v1",
+                "requests": "2678",
+                "attack_requests": "778",
+                "tpr": "0.9",
+                "fpr": "0.0",
+                "er_d": "0.0",
+            }
+        )
+    row = load_modsec_baseline(path, "defender-eval-hard-v1")
+    assert row["sessions"] == 1360
+
+
 def test_pool_discovery_rejects_wrong_checkpoint_seed(tmp_path):
     root = tmp_path / "checkpoints"
     for seed in range(3):
