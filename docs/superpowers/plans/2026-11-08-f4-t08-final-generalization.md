@@ -39,9 +39,9 @@
 
 **Files:** `wafarena/eval/final_generalization.py`, `scripts/run_i345.py`, `Makefile`, `tests/unit/test_final_generalization.py`, `tests/unit/test_i345_script.py`.
 
-- [ ] Write failing tests for suite routing, fixed I5 plan, same attacker checkpoint across defenders, cache validation, and aggregation over exactly three self-play seeds.
-- [ ] Implement checkpoint-only evaluation, atomic raw cells, CSV summaries, fixed PL2 baseline import, and `make generalization`.
-- [ ] Run focused tests, lint, full unit suite; commit in English.
+- [x] Write failing tests for suite routing, fixed I5 plan, same attacker checkpoint across defenders, cache validation, and aggregation over exactly three self-play seeds.
+- [x] Implement checkpoint-only evaluation, atomic raw cells, CSV summaries, fixed PL2 baseline import, and `make generalization`.
+- [x] Run focused tests, lint, full unit suite; commit in English.
 
 ### Task 3: Execute and document EXP-I3–I5
 
