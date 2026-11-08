@@ -1,4 +1,4 @@
-.PHONY: setup lint test test-lab lab-up lab-down smoke run run-bandit run-dp rq1-table summarize verify-splits build-splits endpoints-doc modsec-baseline operator-preservation bandit-arm-means evasion-reachability dqn-sanity modsec-defender-suites evaluate latency check-refs surrogate-eval selfplay-smoke selfplay-run summarize-i1
+.PHONY: setup lint test test-lab lab-up lab-down smoke run run-bandit run-dp rq1-table summarize verify-splits build-splits endpoints-doc modsec-baseline operator-preservation bandit-arm-means evasion-reachability dqn-sanity modsec-defender-suites evaluate latency check-refs surrogate-eval selfplay-smoke selfplay-run summarize-i1 crossplay
 
 COMPOSE = docker compose -f lab/docker-compose.yml
 
@@ -96,6 +96,10 @@ selfplay-run: lab-up
 summarize-i1: lab-up
 	@test -n "$(RESULTS)" || { echo "usage: make summarize-i1 RESULTS=results/<exp-root>" >&2; exit 1; }
 	$(COMPOSE) run --rm runner python scripts/summarize_i1.py --results $(RESULTS)
+
+crossplay: lab-up
+	@test -n "$(RUN)" || { echo "usage: make crossplay RUN=checkpoints/selfplay/EXP-I1__pool__s0__<sha>" >&2; exit 1; }
+	$(COMPOSE) run --rm runner python scripts/run_crossplay.py --run $(RUN) $(RUN_ARGS)
 
 summarize:
 	@test -n "$(EXP)" || { echo "usage: make summarize EXP=<exp_id>" >&2; exit 1; }
