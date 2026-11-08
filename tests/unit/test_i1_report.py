@@ -66,6 +66,7 @@ def _write_run(root, checkpoints, config, seed, sha, *, generations=2):
                         "attack_requests": 20,
                         "requests": 40,
                         "sessions": config["validation"]["defender_sessions"],
+                        "empty_attack_attempts": 0,
                     }
                     for name in config["validation"]["defender_attackers"]
                 },
@@ -169,7 +170,7 @@ def test_historical_evaluation_uses_earlier_same_run_attacker_and_caches(tmp_pat
     def fake_environment(backend, *, attacker, split, attack_split):
         assert split == attack_split == "val"
         seen.append(attacker["path"])
-        return object()
+        return type("FakeEnvironment", (), {"empty_attack_attempts": 0})()
 
     monkeypatch.setattr(report, "DefenderEnv", fake_environment)
     monkeypatch.setattr(report, "load_checkpoint", lambda path: object())

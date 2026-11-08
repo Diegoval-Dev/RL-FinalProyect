@@ -10,6 +10,8 @@ Use the merged F4-T05 runner, the same initial `ATK-REF-1` and `DEF-REF-1` check
 
 The runner already saves fixed-reference metrics in generation markers. A separate, read-only report command validates all six completed runs and their provenance, extracts per-seed TPR, FPR, and ER curves, and evaluates each defender generation against every *earlier* attacker generation from the same run on the same `val` session plan. It writes raw and seed-aggregated CSVs plus the required fixed-reference TPR figure. Historical comparisons belong to EXP-I1; the full all-pairs heatmap is F4-T07.
 
+A trained attacker can exhaust its mutation limit before issuing a request. `DefenderEnv.reset` retries such empty attempts with the already selected attacker, preserving the opponent mix; the count is recorded for training and validation so this conditioning can be inspected. A run fails explicitly if 100 attempts produce no request.
+
 ## Alternatives considered
 
 Changing checkpoint format or adding a new training loop would duplicate F4-T05 and risk unequal conditions. Evaluating earlier attackers inside every generation would make interrupted runs redo expensive comparisons. The report command can resume historical cells from recorded results and leaves training checkpoints untouched.

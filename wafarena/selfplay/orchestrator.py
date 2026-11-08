@@ -217,6 +217,7 @@ def _run_generation(config, generation, seed, run_dir, checkpoint_dir, meta, bac
         "attacker_training": attacker_training,
         "defender_training": {
             "steps": defender_steps,
+            "empty_attack_attempts": defender_env.empty_attack_attempts,
             "current_opponent": str(checkpoint_dir / f"atk-gen-{generation:02d}"),
             "historical_opponents": historical_attackers,
         },

@@ -59,6 +59,7 @@ def _check_history_record(record: dict, pair: dict, hashes: dict, cell: Path) ->
     )
     if attack_requests > requests:
         raise ValueError(f"historical cell attack_requests exceeds requests: {cell}")
+    _count(record.get("empty_attack_attempts"), f"historical cell empty_attack_attempts {cell}")
     _probability(record.get("tpr"), f"historical cell tpr {cell}", denominator=attack_requests)
     _probability(record.get("fpr"), f"historical cell fpr {cell}")
     for name in ("er_d", "f1", "fpr_h", "fpr_s", "fpr_h_s"):
@@ -175,6 +176,10 @@ def collect_fixed(
                     sessions = _count(metrics.get("sessions"), f"sessions {marker}")
                     if sessions != config["validation"]["defender_sessions"]:
                         raise ValueError(f"wrong defender sessions in generation: {marker}")
+                    _count(
+                        metrics.get("empty_attack_attempts"),
+                        f"empty_attack_attempts {marker}",
+                    )
                     attack_requests = _count(
                         metrics.get("attack_requests"), f"attack_requests {marker}"
                     )
@@ -314,6 +319,7 @@ def evaluate_history(runs: list[dict], results_root: Path, *, backend=None) -> l
                     "attacker_generation": attacker_gen,
                     "split": "val",
                     "sessions": len(plan),
+                    "empty_attack_attempts": env.empty_attack_attempts,
                     **hashes,
                     **{
                         key: None

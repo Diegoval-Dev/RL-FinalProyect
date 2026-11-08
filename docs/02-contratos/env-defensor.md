@@ -25,6 +25,8 @@ gymnasium.make(
 
 `reset(seed=..., options={"base_id": ...})` fija la sesión de ataque sobre ese payload base; `options={"session_id": ...}` fija una sesión benigna. Son excluyentes; sin opciones, el tipo y la sesión se muestrean con el RNG del entorno. Un id fuera del split lanza `ValueError`.
 
+Si un `AttackerPolicy` agota sus mutaciones sin emitir un request, `reset` vuelve a iniciar la sesión con el mismo atacante seleccionado y otro estado de su RNG. Con `base_id` conserva ese payload base; sin `base_id` puede tomar otro payload del split configurado. El entorno cuenta esos intentos en `empty_attack_attempts` y falla explícitamente después de 100 intentos vacíos. El defensor solo recibe episodios con al menos un request.
+
 ## Observación
 
 `Box(low=0, high=1, shape=(37,), dtype=float32)`. Definición exacta de cada feature en [features.md](features.md).
@@ -94,3 +96,4 @@ Igual que en el entorno del atacante: misma semilla, mismo atacante determinista
 - 1.0 — versión inicial.
 - 1.1 — `attack_split` opcional en la construcción y `options` (`base_id`, `session_id`) en `reset`, para las suites de evaluación del defensor (F2-T04). Compatible hacia atrás.
 - 1.2 — `{"type": "pool"}` implementado (entradas por nombre, id de referencia o ruta; sorteo por sesión con el RNG del entorno) y `attacker` acepta un objeto `AttackerPolicy` (F3-T02). Compatible hacia atrás.
+- 1.2 (aclaración F4-T06) — `reset` reintenta sesiones de ataque vacías hasta recibir un request, conservando el atacante seleccionado; `empty_attack_attempts` permite auditar cuántos intentos se descartaron. No cambia observaciones, acciones ni recompensas.
