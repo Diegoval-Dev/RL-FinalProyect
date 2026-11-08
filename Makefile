@@ -14,7 +14,7 @@ lint:
 	uv run ruff format --check .
 
 test:
-	uv run pytest tests/unit
+	uv run --group report pytest tests/unit
 
 test-lab: lab-up
 	uv run pytest tests/lab/test_isolation.py -m lab
