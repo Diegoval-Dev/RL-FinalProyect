@@ -7,6 +7,7 @@ Medir cómo responde cada defensor de las ocho generaciones de self-play con poo
 ## Diseño elegido
 
 - `make crossplay RUN=checkpoints/selfplay/EXP-I1__pool__s0__eea6f78` acepta un directorio de checkpoints de una semilla del pool. La configuración EXP-I2 exige las tres semillas 0–2 y el comando localiza sus directorios hermanos con el mismo SHA de entrenamiento. Solo necesita checkpoints, no resultados crudos de EXP-I1.
+- El YAML específico de self-play vive en `configs/selfplay/exp_i2_crossplay_pool.yaml`, junto a las dos configuraciones de EXP-I1; `configs/exp/` está reservado al esquema general de entrenamiento.
 - Cada celda `(semilla, defensor i, atacante j)` usa `attacker-eval-v1`: 200 episodios de `test`, semillas 1000–1199 y presupuesto de 50 consultas, con el mismo backend rápido del laboratorio. Hay 64 celdas por semilla y 192 en total.
 - El atacante se carga desde `atk-gen-j` y el defensor desde `def-gen-i` del mismo run. Se comprueban rol, generación, semilla, run ID, SHA, contrato y presencia de pesos antes de evaluar. Las celdas se guardan atómicamente y se rechaza una caché obsoleta si cambian los pesos o la configuración.
 - `results/summary/EXP-I2_cells.csv` conserva las 192 tasas y conteos con procedencia; `EXP-I2_matrix.csv` agrega las tres tasas de semilla por celda con IC *bootstrap* del 95 %. `report/figuras/EXP-I2_crossplay.png` muestra un heatmap 8×8 de la media de ER, con filas de defensores y columnas de atacantes. Una tasa indefinida queda sin color y se señala en la figura.
