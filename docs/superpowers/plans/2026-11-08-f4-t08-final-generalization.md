@@ -47,6 +47,6 @@
 
 **Files:** `results/summary/EXP-I3.csv`, `EXP-I4.csv`, `EXP-I5.csv`, `RQ5_final.csv`, `docs/03-plan/fase-4-nelson-planning-selfplay.md`, `docs/07-experimentos/registro.md`.
 
-- [ ] Train clean PPO seed 5, validate its checkpoint and run metadata, then evaluate all I3–I5 cells.
-- [ ] Rerun from cache, verify byte-identical summaries and unchanged source checkpoint hashes; inspect all metric denominators and undefined cells.
-- [ ] Record measured results and limits, mark F4-T08 complete, run final lint/tests, and commit evidence in English.
+- [x] Train clean PPO seed 5, validate its checkpoint and run metadata, then evaluate all I3–I5 cells.
+- [x] Rerun from cache, verify byte-identical summaries and unchanged source checkpoint hashes; inspect all metric denominators and undefined cells.
+- [x] Record measured results and limits, mark F4-T08 complete, run final lint/tests, and commit evidence in English.
