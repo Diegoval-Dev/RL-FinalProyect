@@ -1,0 +1,8 @@
+exp_id: EXP-I2
+run_name: pool-crossplay
+source_exp_id: EXP-I1
+source_condition: pool
+source_seeds: [0, 1, 2]
+generations: 8
+suite: attacker-eval-v1
+backend: fast
