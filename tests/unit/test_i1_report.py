@@ -12,10 +12,17 @@ from wafarena.selfplay.report import (
     collect_fixed,
     evaluate_history,
     historical_pairs,
+    write_csv,
 )
 
 ROOT = Path(__file__).parents[2]
 BASE = yaml.safe_load((ROOT / "configs/selfplay/exp_i1_pool.yaml").read_text())
+
+
+def test_write_csv_uses_lf_line_endings(tmp_path):
+    path = tmp_path / "summary.csv"
+    write_csv(path, [{"condition": "pool", "generation": 8}])
+    assert path.read_bytes() == b"condition,generation\npool,8\n"
 
 
 def _write_run(root, checkpoints, config, seed, sha, *, generations=2):

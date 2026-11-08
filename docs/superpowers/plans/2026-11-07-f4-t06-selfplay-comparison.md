@@ -20,21 +20,21 @@
 
 ### 1. Configurations and runner usability
 
-- [ ] Add `configs/selfplay/exp_i1_naive.yaml` and `exp_i1_pool.yaml`; add tests asserting only run name and pool probability differ, and that each budget crosses the reference learning thresholds.
-- [ ] Add a CLI target/documented commands for running one condition and seed at a time, so interrupted seeds resume independently.
-- [ ] Run config tests and commit.
+- [x] Add `configs/selfplay/exp_i1_naive.yaml` and `exp_i1_pool.yaml`; add tests asserting only run name and pool probability differ, and that each budget crosses the reference learning thresholds.
+- [x] Add a CLI target/documented commands for running one condition and seed at a time, so interrupted seeds resume independently.
+- [x] Run config tests and commit.
 
 ### 2. Read-only EXP-I1 report
 
-- [ ] Add `wafarena/selfplay/report.py` and `scripts/summarize_i1.py`; tests first for missing generations, mixed SHA, malformed metrics, fixed-reference extraction, historical opponent evaluation, and deterministic seed aggregation.
-- [ ] Write `results/summary/EXP-I1_runs.csv`, `EXP-I1_curve.csv`, `EXP-I1_history.csv`, and `report/figuras/EXP-I1_tpr.png` from completed runs; historical cell cache is keyed by run, defender generation, and earlier attacker generation.
-- [ ] Run focused tests and commit.
+- [x] Add `wafarena/selfplay/report.py` and `scripts/summarize_i1.py`; tests first for missing generations, mixed SHA, malformed metrics, fixed-reference extraction, historical opponent evaluation, and deterministic seed aggregation.
+- [x] Write `results/summary/EXP-I1_runs.csv`, `EXP-I1_curve.csv`, `EXP-I1_history.csv`, and `report/figuras/EXP-I1_tpr.png` from completed runs; historical cell cache is keyed by run, defender generation, and earlier attacker generation.
+- [x] Run focused tests and commit.
 
 ### 3. Experiment and acceptance
 
-- [ ] Run one seed for each condition, inspect checkpoints and metrics, then complete all three paired seeds and eight generations using clean code.
-- [ ] Run report command; verify row counts, provenance, and figure; run `make lint` and `make test`.
-- [ ] Record measured results and limitations in the Phase 4 findings and experiment register, mark F4-T06 complete, and commit in English.
+- [x] Run one seed for each condition, inspect checkpoints and metrics, then complete all three paired seeds and eight generations using clean code.
+- [x] Run report command; verify row counts, provenance, and figure; run `make lint` and `make test`.
+- [x] Record measured results and limitations in the Phase 4 findings and experiment register, mark F4-T06 complete, and commit in English.
 
 ## Review focus
 
