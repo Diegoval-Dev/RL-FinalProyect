@@ -43,8 +43,8 @@
 
 ### Task 3: Execute and document EXP-R1
 
-**Files:** `results/summary/EXP-R1_cells.csv`, `EXP-R1_gap.csv`, `docs/03-plan/fase-4-nelson-planning-selfplay.md`, `docs/07-experimentos/registro.md`.
+**Files:** `results/summary/EXP-R1_cells.csv`, `EXP-R1_gap.csv`, `docs/03-plan/fase-4-nelson-planning-selfplay.md`, `docs/07-experimentos/registro.md`, `report/capitulos/07-generalizacion.md`.
 
-- [ ] Run all 24 clean cells against fast and real backends; inspect denominators and undefined metrics.
-- [ ] Rerun from cache and verify byte-identical summaries, cells, and source checkpoint hashes.
-- [ ] Record measured gaps and limitations, mark F4-T09 complete, run final checks, and commit evidence in English.
+- [x] Run all 24 clean cells against fast and real backends; inspect denominators and undefined metrics.
+- [x] Rerun from cache and verify byte-identical summaries, cells, and source checkpoint hashes.
+- [x] Record measured gaps and limitations, mark F4-T09 complete, run final checks, and commit evidence in English.
