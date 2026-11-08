@@ -6,11 +6,14 @@ import json
 import math
 from pathlib import Path
 
+import numpy as np
 import yaml
 
 from wafarena.agents import load_checkpoint
 from wafarena.agents.base import check_contract_versions
+from wafarena.attackers.driver import AttackerDriver
 from wafarena.defenders.modsec_defender import ModSecDefender
+from wafarena.envs.attacker_env import _load_bases
 from wafarena.envs.defender_env import DefenderEnv
 from wafarena.envs.resolve import resolve_backend
 from wafarena.eval import harness
@@ -22,6 +25,7 @@ from wafarena.eval.final_generalization import (
     rank_dyna,
     select_pool_champion,
 )
+from wafarena.mutations.payload import Payload
 from wafarena.runmeta import (
     DirtyTreeError,
     build_meta,
@@ -262,18 +266,44 @@ def _prepare_run(directory: Path, exp_id: str, run_name: str, seed: int, sha: st
     return expected_id
 
 
-def _evaluate_i5(defender, attacker: dict, backend, plan) -> dict:
+def i5_emitting_plan(attacker: dict, plan) -> tuple[list, int]:
+    """Keep the fixed attack sessions where the checkpoint actually sends a request."""
+    bases = {base.base_id: base for base in _load_bases("test")}
+    driver = AttackerDriver(load_checkpoint(attacker["path"]))
+    emitting = []
+    empty = 0
+    for item in plan:
+        if not item.is_attack:
+            emitting.append(item)
+            continue
+        base = bases[item.ref]
+        driver.reset(
+            Payload(base.text, base.location, 0), base.endpoint, np.random.default_rng(item.seed)
+        )
+        if driver.next_request(0) is None:
+            empty += 1
+        else:
+            emitting.append(item)
+    return emitting, empty
+
+
+def _evaluate_i5(defender, attacker: dict, backend, plan, emitting_plan, empty: int) -> dict:
     env = DefenderEnv(
         backend=backend,
         attacker={"type": "checkpoint", "path": str(attacker["path"])},
         split="test",
         attack_split="test",
     )
-    records = [record for item in plan for record in harness._play_session(defender, env, item)]
+    records = [
+        record for item in emitting_plan for record in harness._play_session(defender, env, item)
+    ]
     return {
         **harness.summarize_defender(records),
         "sessions": len(plan),
         "attack_sessions": sum(item.is_attack for item in plan),
+        "evaluated_sessions": len(emitting_plan),
+        "emitting_attack_sessions": sum(item.is_attack for item in emitting_plan),
+        "empty_attack_sessions": empty,
         "empty_attack_attempts": env.empty_attack_attempts,
     }
 
@@ -289,6 +319,9 @@ def _compact(row: dict) -> dict:
         "attack_split",
         "sessions",
         "attack_sessions",
+        "evaluated_sessions",
+        "emitting_attack_sessions",
+        "empty_attack_sessions",
         "requests",
         "attack_requests",
         "empty_attack_attempts",
@@ -316,6 +349,8 @@ def _evaluate_cell(
     backend,
     plan,
     eval_sha: str,
+    emitting_plan=None,
+    empty_attack_sessions: int = 0,
 ) -> dict:
     name = defender["defender"]
     attacker_name = attacker["attacker"] if attacker else "suite-default"
@@ -344,6 +379,15 @@ def _evaluate_cell(
         "attacker_git_sha": attacker["source_git_sha"] if attacker else None,
         "attacker_sha256": attacker["weight_sha256"] if attacker else None,
     }
+    if attacker is not None:
+        if emitting_plan is None:
+            raise ValueError("EXP-I5 needs its fixed emitting session plan")
+        expected.update(
+            evaluated_sessions=len(emitting_plan),
+            attack_sessions=sum(item.is_attack for item in plan),
+            emitting_attack_sessions=sum(item.is_attack for item in emitting_plan),
+            empty_attack_sessions=empty_attack_sessions,
+        )
 
     def compute():
         policy = ModSecDefender(2) if name == "modsec-pl2" else load_checkpoint(defender["path"])
@@ -352,7 +396,7 @@ def _evaluate_cell(
                 **harness.evaluate_defender(policy, suite, backend=backend),
                 "sessions": sessions,
             }
-        return _evaluate_i5(policy, attacker, backend, plan)
+        return _evaluate_i5(policy, attacker, backend, plan, emitting_plan, empty_attack_sessions)
 
     return cached_cell(directory / "cell.json", expected, compute)
 
@@ -415,6 +459,7 @@ def main() -> None:
         cells = []
         for attacker in attackers:
             group = []
+            emitting_plan, empty_attack_sessions = i5_emitting_plan(attacker, plan)
             for defender in [*defenders, modsec]:
                 row = _evaluate_cell(
                     root,
@@ -425,6 +470,8 @@ def main() -> None:
                     backend,
                     plan,
                     eval_sha,
+                    emitting_plan,
+                    empty_attack_sessions,
                 )
                 group.append(row)
                 print(

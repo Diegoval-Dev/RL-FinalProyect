@@ -5,7 +5,13 @@ import csv
 import pytest
 import yaml
 
-from scripts.run_i345 import discover_pool_defenders, load_modsec_baseline, load_spec
+from scripts.run_i345 import (
+    discover_pool_defenders,
+    i5_emitting_plan,
+    load_modsec_baseline,
+    load_spec,
+)
+from wafarena.eval.harness import SessionPlan
 
 
 def test_spec_rejects_short_i5_session_plan(tmp_path):
@@ -68,3 +74,36 @@ def test_pool_discovery_rejects_wrong_checkpoint_seed(tmp_path):
         )
     with pytest.raises(ValueError, match="provenance"):
         discover_pool_defenders(root, "eea6f78")
+
+
+def test_i5_emitting_plan_keeps_only_attack_sessions_with_a_request(monkeypatch):
+    class Base:
+        def __init__(self, base_id):
+            self.base_id = base_id
+            self.text = base_id
+            self.location = "query"
+            self.endpoint = "search"
+
+    class Driver:
+        def __init__(self, agent):
+            assert agent == "checkpoint"
+
+        def reset(self, payload, endpoint, rng):
+            self.base_id = payload.text
+
+        def next_request(self, last_response):
+            assert last_response == 0
+            return None if self.base_id == "empty" else object()
+
+    monkeypatch.setattr("scripts.run_i345.load_checkpoint", lambda path: "checkpoint")
+    monkeypatch.setattr("scripts.run_i345.AttackerDriver", Driver)
+    monkeypatch.setattr("scripts.run_i345._load_bases", lambda split: [Base("send"), Base("empty")])
+    plan = [
+        SessionPlan(False, "benign", 5000),
+        SessionPlan(True, "empty", 5001),
+        SessionPlan(True, "send", 5002),
+    ]
+    eligible, empty = i5_emitting_plan({"path": "unused"}, plan)
+    assert eligible == [plan[0], plan[2]]
+    assert empty == 1
+    assert len(plan) == 3

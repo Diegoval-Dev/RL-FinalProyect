@@ -25,7 +25,7 @@
 - Reject incomplete or stale cached cells; never silently overwrite them.
 - Keep identical session IDs, seeds, and suite settings across defenders for each I5 attacker.
 - A baseline with one fixed checkpoint has no independent three-seed CI.
-- If a Dyna-Q attack yields no requests, fail visibly; do not count it as successful defense.
+- If a Dyna-Q attack yields no requests, record the empty session and exclude it from request-based defender metrics; use the same emitting sessions for every defender.
 
 ### Task 1: Validation-only selection and new PPO configuration
 
