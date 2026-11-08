@@ -1,0 +1,28 @@
+{
+  "winner_seed": 0,
+  "feasible_count": 0,
+  "fpr_cap": 0.0,
+  "candidates": [
+    {
+      "seed": 0,
+      "run_id": "EXP-I1__pool__s0__eea6f78",
+      "mean_tpr": 0.9872300664451827,
+      "fpr": 0.016666666666666666,
+      "feasible": false
+    },
+    {
+      "seed": 2,
+      "run_id": "EXP-I1__pool__s2__eea6f78",
+      "mean_tpr": 0.9535710685528129,
+      "fpr": 0.016666666666666666,
+      "feasible": false
+    },
+    {
+      "seed": 1,
+      "run_id": "EXP-I1__pool__s1__eea6f78",
+      "mean_tpr": 0.9836065573770492,
+      "fpr": 0.03333333333333333,
+      "feasible": false
+    }
+  ]
+}

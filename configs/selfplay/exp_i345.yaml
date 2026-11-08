@@ -1,0 +1,21 @@
+source_exp_id: EXP-I1
+source_condition: pool
+source_git_sha: eea6f78
+source_seeds: [0, 1, 2]
+source_generation: 8
+history_csv: results/summary/EXP-I1_history.csv
+checkpoint_root: checkpoints/selfplay
+fpr_cap: 0.0
+ppo_config: configs/exp/EXP-I5/ppo-unseen-defref1.yaml
+ppo_seed: 5
+ppo_results_root: results/_i5_ppo_final
+dyna_results_root: results/_h1_final_9d54cd2
+dyna_method: dyna-5-defref1
+dyna_seed: 0
+reference_checkpoint: checkpoints/refs/DEF-REF-1
+modsec_level: 2
+backend: fast
+i3_suite: defender-eval-family-v1
+i4_suite: defender-eval-hard-v1
+i5_sessions: 2000
+i5_attack_ratio: 0.1

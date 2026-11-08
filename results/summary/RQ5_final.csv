@@ -1,0 +1,17 @@
+exp_id,attacker,defender,n_seeds,eval_run_ids,tpr_n_defined,tpr,tpr_low,tpr_high,fpr_n_defined,fpr,fpr_low,fpr_high,er_d_n_defined,er_d,er_d_low,er_d_high
+EXP-I3,,selfplay-cohort,3,EXP-I3__selfplay__s0__bf14912 EXP-I3__selfplay__s1__bf14912 EXP-I3__selfplay__s2__bf14912,3,0.9470443349753694,0.9445812807881774,0.9519704433497537,3,0.009167154281256095,0.0011702750146284377,0.017749171055197972,3,0.0,0.0,0.0
+EXP-I3,,selfplay-champion,1,EXP-I3__selfplay__s0__bf14912,1,0.9445812807881774,,,1,0.0011702750146284377,,,1,0.0,,
+EXP-I3,,DEF-REF-1,1,EXP-I3__DEF-REF-1__s0__bf14912,1,1.0,,,1,0.0007801833430856252,,,1,0.0,,
+EXP-I3,,modsec-pl2,1,modsec-defender-suites__d9d7d49,1,0.9926108374384236,,,1,0.0,,,1,0.0,,
+EXP-I4,,selfplay-cohort,3,EXP-I4__selfplay__s0__bf14912 EXP-I4__selfplay__s1__bf14912 EXP-I4__selfplay__s2__bf14912,3,0.9588688946015423,0.9215938303341901,0.987146529562982,3,0.3112280701754386,0.26105263157894737,0.40842105263157896,3,0.004100761570005858,0.0,0.0070298769771529
+EXP-I4,,selfplay-champion,1,EXP-I4__selfplay__s0__bf14912,1,0.967866323907455,,,1,0.40842105263157896,,,1,0.005272407732864675,,
+EXP-I4,,DEF-REF-1,1,EXP-I4__DEF-REF-1__s0__bf14912,1,1.0,,,1,0.33473684210526317,,,1,0.0,,
+EXP-I4,,modsec-pl2,1,modsec-defender-suites__d9d7d49,1,0.9845758354755784,,,1,0.0,,,1,0.0,,
+EXP-I5,ppo-unseen-defref1,selfplay-cohort,3,EXP-I5__selfplay-ppo-unseen-defref1__s0__bf14912 EXP-I5__selfplay-ppo-unseen-defref1__s1__bf14912 EXP-I5__selfplay-ppo-unseen-defref1__s2__bf14912,3,0.6108179770884444,0.5595615806172484,0.6812435941236762,3,0.009167154281256095,0.0011702750146284377,0.017749171055197972,3,0.0030303030303030303,0.0,0.00909090909090909
+EXP-I5,ppo-unseen-defref1,selfplay-champion,1,EXP-I5__selfplay-ppo-unseen-defref1__s0__bf14912,1,0.591648756524409,,,1,0.0011702750146284377,,,1,0.0,,
+EXP-I5,ppo-unseen-defref1,DEF-REF-1,1,EXP-I5__DEF-REF-1-ppo-unseen-defref1__s0__bf14912,1,0.999000999000999,,,1,0.0007801833430856252,,,1,0.0,,
+EXP-I5,ppo-unseen-defref1,modsec-pl2,1,EXP-I5__modsec-pl2-ppo-unseen-defref1__s0__bf14912,1,0.9975062344139651,,,1,0.0,,,1,0.0,,
+EXP-I5,dyna-5-defref1,selfplay-cohort,3,EXP-I5__selfplay-dyna-5-defref1__s0__bf14912 EXP-I5__selfplay-dyna-5-defref1__s1__bf14912 EXP-I5__selfplay-dyna-5-defref1__s2__bf14912,3,1.0,1.0,1.0,3,0.009167154281256095,0.0011702750146284377,0.017749171055197972,3,0.0,0.0,0.0
+EXP-I5,dyna-5-defref1,selfplay-champion,1,EXP-I5__selfplay-dyna-5-defref1__s0__bf14912,1,1.0,,,1,0.0011702750146284377,,,1,0.0,,
+EXP-I5,dyna-5-defref1,DEF-REF-1,1,EXP-I5__DEF-REF-1-dyna-5-defref1__s0__bf14912,1,1.0,,,1,0.0007801833430856252,,,1,0.0,,
+EXP-I5,dyna-5-defref1,modsec-pl2,1,EXP-I5__modsec-pl2-dyna-5-defref1__s0__bf14912,1,1.0,,,1,0.0,,,1,0.0,,
