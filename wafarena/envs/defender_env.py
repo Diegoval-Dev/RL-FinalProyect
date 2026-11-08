@@ -25,6 +25,7 @@ from wafarena.splits.builder import SPLITS_PATH
 OBS_SIZE = 37
 N_ACTIONS = 5
 MAX_SESSION_STEPS = 200
+MAX_EMPTY_ATTACK_RETRIES = 100
 ENDPOINT_BY_PATH = {spec.path: spec.name for spec in ENDPOINTS}
 ATTACKERS = {"corpus_replay": CorpusReplayAttacker, "random_mutation": RandomMutationAttacker}
 REFS_DIR = Path("checkpoints/refs")
@@ -101,6 +102,7 @@ class DefenderEnv(gym.Env):
         self._abandon_prob = benign_abandon_prob
         self._bases = _load_bases(attack_split or split)
         self._benign = _load_benign_sessions(split)
+        self.empty_attack_attempts = 0
 
     def reset(self, *, seed=None, options=None):
         super().reset(seed=seed)
@@ -116,20 +118,28 @@ class DefenderEnv(gym.Env):
             self._is_attack = self.np_random.random() < self._attack_ratio
         self._step_index = 0
         if self._is_attack:
-            self._start_attack_session(options.get("base_id"))
+            attacker = self._attacker_factory(self.np_random)
+            for _ in range(MAX_EMPTY_ATTACK_RETRIES):
+                self._start_attack_session(options.get("base_id"), attacker)
+                self._pending = self._next_request()
+                if self._pending is not None:
+                    break
+                self.empty_attack_attempts += 1
+            else:
+                raise RuntimeError("attacker emitted no request after 100 session attempts")
         else:
             self._start_benign_session(options.get("session_id"))
-        self._pending = self._next_request()
+            self._pending = self._next_request()
         return self._obs(), self._info()
 
-    def _start_attack_session(self, base_id=None):
+    def _start_attack_session(self, base_id, attacker):
         if base_id is None:
             base = self._bases[int(self.np_random.integers(len(self._bases)))]
         else:
             base = _find(self._bases, lambda b: b.base_id == base_id, base_id)
         self._session_id = f"atk-{base.base_id}"
         self._endpoint, self._param = base.endpoint, PARAM_BY_ENDPOINT[base.endpoint]
-        self._attacker = self._attacker_factory(self.np_random)
+        self._attacker = attacker
         self._attacker.reset(Payload(base.text, base.location, 0), base.endpoint, self.np_random)
         self._last_response = 0
 

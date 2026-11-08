@@ -148,4 +148,43 @@ def test_atk_ref_0_runs_100_sessions_without_errors():
             _obs, _reward, terminated, truncated, _info = env.step(0)
             done = terminated or truncated
             steps += 1
-            assert steps <= 300, f"session {seed} did not terminate"
+        assert steps <= 300, f"session {seed} did not terminate"
+
+
+def test_reset_retries_attack_policy_that_initially_emits_no_request():
+    class IntermittentAttacker:
+        def __init__(self):
+            self.resets = 0
+
+        def reset(self, base, endpoint, rng):
+            self.resets += 1
+            self.base = base
+
+        def next_request(self, last_response):
+            return None if self.resets == 1 else self.base
+
+    attacker = IntermittentAttacker()
+    env = DefenderEnv(backend=FakeBackend(), attacker=attacker, split="train", attack_ratio=1.0)
+    base_id = sorted(SPLITS["payloads"]["train"])[0]
+    obs, info = env.reset(seed=0, options={"base_id": base_id})
+    assert attacker.resets == 2
+    assert env.empty_attack_attempts == 1
+    assert info["session_id"] == f"atk-{base_id}"
+    assert obs.shape == env.observation_space.shape
+    env.step(1)
+
+
+def test_reset_rejects_attack_policy_that_never_emits_a_request():
+    class SilentAttacker:
+        def reset(self, base, endpoint, rng):
+            pass
+
+        def next_request(self, last_response):
+            return None
+
+    env = DefenderEnv(
+        backend=FakeBackend(), attacker=SilentAttacker(), split="train", attack_ratio=1.0
+    )
+    with pytest.raises(RuntimeError, match="no request"):
+        env.reset(seed=0)
+    assert env.empty_attack_attempts == 100

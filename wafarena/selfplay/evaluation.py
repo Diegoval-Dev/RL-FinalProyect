@@ -55,5 +55,9 @@ def evaluate_generation(
     for name in defender_attackers:
         env = DefenderEnv(backend, attacker=_attacker_spec(name), split="val", attack_split="val")
         records = [record for item in plan for record in harness._play_session(defender, env, item)]
-        defend_results[name] = harness.summarize_defender(records)
+        defend_results[name] = {
+            **harness.summarize_defender(records),
+            "sessions": len(plan),
+            "empty_attack_attempts": env.empty_attack_attempts,
+        }
     return {"split": "val", "attacker": attack_results, "defender": defend_results}

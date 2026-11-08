@@ -26,6 +26,8 @@ def test_evaluation_reports_each_fixed_reference_on_val():
     assert set(result["attacker"]) == {"modsec-pl1", "DEF-REF-1"}
     assert set(result["defender"]) == {"corpus-replay", "ATK-REF-0"}
     assert all(row["episodes"] == 2 for row in result["attacker"].values())
+    assert all(row["sessions"] == 4 for row in result["defender"].values())
+    assert all("empty_attack_attempts" in row for row in result["defender"].values())
     assert all(row["requests"] >= 4 for row in result["defender"].values())
 
     reversed_result = evaluate_generation(

@@ -21,7 +21,7 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends git \
     && rm -rf /var/lib/apt/lists/* \
     && git config --system --add safe.directory /workspace
-RUN uv sync --frozen --no-install-project
+RUN uv sync --frozen --group report --no-install-project
 ENV PYTHONPATH=/workspace:/workspace/lab/vulnapp
 CMD ["sleep", "infinity"]
 

@@ -1,4 +1,4 @@
-.PHONY: setup lint test test-lab lab-up lab-down smoke run run-bandit run-dp rq1-table summarize verify-splits build-splits endpoints-doc modsec-baseline operator-preservation bandit-arm-means evasion-reachability dqn-sanity modsec-defender-suites evaluate latency check-refs surrogate-eval selfplay-smoke
+.PHONY: setup lint test test-lab lab-up lab-down smoke run run-bandit run-dp rq1-table summarize verify-splits build-splits endpoints-doc modsec-baseline operator-preservation bandit-arm-means evasion-reachability dqn-sanity modsec-defender-suites evaluate latency check-refs surrogate-eval selfplay-smoke selfplay-run summarize-i1
 
 COMPOSE = docker compose -f lab/docker-compose.yml
 
@@ -14,7 +14,7 @@ lint:
 	uv run ruff format --check .
 
 test:
-	uv run pytest tests/unit
+	uv run --group report pytest tests/unit
 
 test-lab: lab-up
 	uv run pytest tests/lab/test_isolation.py -m lab
@@ -88,6 +88,14 @@ surrogate-eval: lab-up
 
 selfplay-smoke: lab-up
 	$(COMPOSE) run --rm runner python scripts/run_selfplay.py --config configs/selfplay/f4_t05_smoke.yaml $(RUN_ARGS)
+
+selfplay-run: lab-up
+	@test -n "$(CONFIG)" || { echo "usage: make selfplay-run CONFIG=configs/selfplay/<file>.yaml RUN_ARGS='--seed 0'" >&2; exit 1; }
+	$(COMPOSE) run --rm runner python scripts/run_selfplay.py --config $(CONFIG) $(RUN_ARGS)
+
+summarize-i1: lab-up
+	@test -n "$(RESULTS)" || { echo "usage: make summarize-i1 RESULTS=results/<exp-root>" >&2; exit 1; }
+	$(COMPOSE) run --rm runner python scripts/summarize_i1.py --results $(RESULTS)
 
 summarize:
 	@test -n "$(EXP)" || { echo "usage: make summarize EXP=<exp_id>" >&2; exit 1; }
