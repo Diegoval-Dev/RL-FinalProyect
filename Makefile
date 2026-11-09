@@ -1,6 +1,7 @@
-.PHONY: setup lint test test-lab lab-up lab-down smoke run run-bandit run-dp rq1-table summarize verify-splits build-splits endpoints-doc modsec-baseline operator-preservation bandit-arm-means evasion-reachability dqn-sanity modsec-defender-suites evaluate latency check-refs surrogate-eval selfplay-smoke selfplay-run summarize-i1 crossplay generalization real-gap
+.PHONY: setup lint test test-lab lab-up lab-down smoke run run-bandit run-dp rq1-table summarize verify-splits build-splits endpoints-doc modsec-baseline operator-preservation bandit-arm-means evasion-reachability dqn-sanity modsec-defender-suites evaluate latency check-refs surrogate-eval selfplay-smoke selfplay-run summarize-i1 crossplay generalization real-gap demo demo-video
 
 COMPOSE = docker compose -f lab/docker-compose.yml
+DEMO_COMPOSE = docker compose -f lab/docker-compose.yml -f dashboard/docker-compose.yml
 
 define not_implemented
 	@echo "$(1) is created by task $(2)" >&2; exit 1
@@ -106,6 +107,13 @@ generalization: lab-up
 
 real-gap: lab-up
 	$(COMPOSE) run --rm runner python scripts/run_r1.py --config configs/eval/EXP-R1/real-validation.yaml $(RUN_ARGS)
+
+demo: lab-up
+	$(DEMO_COMPOSE) --profile tools up -d --build --wait dashboard
+	@echo "WAF Arena demo: http://127.0.0.1:8501"
+
+demo-video:
+	uv run --group report python -m dashboard.make_video
 
 summarize:
 	@test -n "$(EXP)" || { echo "usage: make summarize EXP=<exp_id>" >&2; exit 1; }
