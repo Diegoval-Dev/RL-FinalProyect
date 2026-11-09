@@ -2,6 +2,8 @@
 
 La documentación es la fuente de verdad del proyecto. Si el código y un documento se contradicen, se trata como bug: se decide cuál está bien, se corrige el otro y, si fue una decisión de diseño, se registra un ADR.
 
+Para preparar una presentación, consulte la [guía de pruebas y demo](guia-presentacion.md).
+
 ## Orden de lectura recomendado
 
 1. [CLAUDE.md](../CLAUDE.md) — mapa general y reglas.

@@ -1,22 +1,24 @@
-# Referencias
+# Referencias verificadas
 
-Ninguna referencia entra al informe con estado distinto de **verificada**. Verificar significa: abrir la fuente, confirmar título, autores, año y lugar de publicación, y confirmar que respalda la afirmación concreta para la que se cita. El agente no agrega referencias por su cuenta.
+Se cotejaron título, autoría y año en la página editorial, el archivo oficial del congreso o el DOI enlazado. La revisión confirma los metadatos y la pertinencia general indicada; antes de la entrega académica, el equipo debe aplicar el formato bibliográfico que solicite el catedrático y comprobar que cada cita aparezca en el texto correspondiente.
 
-| Clave | Referencia (a confirmar al verificar) | Se usa para | Estado | Verificó |
-|---|---|---|---|---|
-| `sutton2018` | Sutton y Barto, *Reinforcement Learning: An Introduction*, 2.ª ed., MIT Press, 2018 | Bandits, DP, MC, TD, aproximación, Dyna, *cliff walking*, triada mortal | por verificar | |
-| `demetrio2020wafamole` | Demetrio et al., WAF-A-MoLE: evasión de WAF basados en ML mediante mutación guiada, 2020 | Operadores de mutación y literatura de evasión | por verificar | |
-| `mnih2015dqn` | Mnih et al., control a nivel humano con deep RL (DQN), *Nature*, 2015 | DQN | por verificar | |
-| `vanhasselt2016double` | van Hasselt et al., Double Q-learning con redes profundas, AAAI 2016 | Double DQN | por verificar | |
-| `wang2016dueling` | Wang et al., arquitecturas Dueling para deep RL, ICML 2016 | Dueling DQN | por verificar | |
-| `schaul2016per` | Schaul et al., Prioritized Experience Replay, ICLR 2016 | PER | por verificar | |
-| `schulman2016gae` | Schulman et al., Generalized Advantage Estimation, ICLR 2016 | GAE | por verificar | |
-| `schulman2017ppo` | Schulman et al., Proximal Policy Optimization, 2017 | PPO | por verificar | |
-| `mnih2016a3c` | Mnih et al., métodos asíncronos para deep RL (A3C/A2C), ICML 2016 | A2C | por verificar | |
-| `williams1992reinforce` | Williams, algoritmos de gradiente estadístico para RL conexionista, *Machine Learning*, 1992 | REINFORCE | por verificar | |
-| `sutton1990dyna` | Sutton, arquitecturas integradas de aprendizaje, planificación y reacción (Dyna), 1990 | Dyna | por verificar | |
-| `huang2022cleanrl` | Huang et al., CleanRL: implementaciones de un solo archivo de deep RL, *JMLR*, 2022 | Base de implementación | por verificar | |
-| `owaspcrs` | Documentación del OWASP Core Rule Set (paranoia levels, modo de anomalía) | ModSecurity y CRS | por verificar | |
-| `gymnasium` | Documentación de Gymnasium (Farama Foundation) | Entornos | por verificar | |
+| Clave | Referencia verificada | Se usa para | Estado y comprobación |
+|---|---|---|---|
+| `sutton2018` | [Sutton, R. S., & Barto, A. G. (2018). *Reinforcement Learning: An Introduction* (2.ª ed.). MIT Press.](https://mitpress.mit.edu/9780262039246/reinforcement-learning/) | Bandits, DP, MC, TD, aproximación y planificación | Verificada: página editorial MIT Press; Agente F4-T11, 2026-11-08 |
+| `demetrio2020wafamole` | [Demetrio, L., Valenza, A., Costa, G., & Lagorio, G. (2020). WAF-A-MoLE: Evading Web Application Firewalls through Adversarial Machine Learning. *Proceedings of the 35th Annual ACM Symposium on Applied Computing*, 1745–1752.](https://doi.org/10.1145/3341105.3373962) | Contexto de mutación y evasión de WAF | Verificada: DOI y repositorio institucional del artículo; Agente F4-T11, 2026-11-08 |
+| `mnih2015dqn` | [Mnih, V., et al. (2015). Human-level control through deep reinforcement learning. *Nature, 518*, 529–533.](https://doi.org/10.1038/nature14236) | DQN | Verificada: DOI/página de Nature; Agente F4-T11, 2026-11-08 |
+| `vanhasselt2016double` | [van Hasselt, H., Guez, A., & Silver, D. (2016). Deep Reinforcement Learning with Double Q-Learning. *Proceedings of the AAAI Conference on Artificial Intelligence, 30*(1).](https://doi.org/10.1609/aaai.v30i1.10295) | Double DQN | Verificada: registro editorial AAAI y DOI; Agente F4-T11, 2026-11-08 |
+| `wang2016dueling` | [Wang, Z., Schaul, T., Hessel, M., van Hasselt, H., Lanctot, M., & de Freitas, N. (2016). Dueling Network Architectures for Deep Reinforcement Learning. *Proceedings of the 33rd International Conference on Machine Learning*, 48, 1995–2003.](https://proceedings.mlr.press/v48/wangf16.html) | Dueling DQN | Verificada: Proceedings of Machine Learning Research; Agente F4-T11, 2026-11-08 |
+| `schaul2016per` | [Schaul, T., Quan, J., Antonoglou, I., & Silver, D. (2016). Prioritized Experience Replay. *International Conference on Learning Representations*.](https://openreview.net/pdf?id=BklRFpVKPH) | Prioritized Experience Replay | Verificada: manuscrito de ICLR/OpenReview; Agente F4-T11, 2026-11-08 |
+| `schulman2016gae` | [Schulman, J., Moritz, P., Levine, S., Jordan, M., & Abbeel, P. (2016). High-Dimensional Continuous Control Using Generalized Advantage Estimation. *International Conference on Learning Representations*.](https://arxiv.org/abs/1506.02438) | Estimación GAE | Verificada: metadatos del manuscrito y versión presentada en ICLR; Agente F4-T11, 2026-11-08 |
+| `schulman2017ppo` | [Schulman, J., Wolski, F., Dhariwal, P., Radford, A., & Klimov, O. (2017). Proximal Policy Optimization Algorithms. *arXiv:1707.06347*.](https://arxiv.org/abs/1707.06347) | PPO | Verificada: registro arXiv de los autores; Agente F4-T11, 2026-11-08 |
+| `mnih2016a3c` | [Mnih, V., et al. (2016). Asynchronous Methods for Deep Reinforcement Learning. *Proceedings of the 33rd International Conference on Machine Learning*, 48, 1928–1937.](https://proceedings.mlr.press/v48/mniha16.html) | Métodos actor-critic asíncronos, incluido A3C | Verificada: Proceedings of Machine Learning Research. Esta referencia sustenta A3C/actor-critic asíncrono, no se atribuye como publicación original de A2C; Agente F4-T11, 2026-11-08 |
+| `williams1992reinforce` | [Williams, R. J. (1992). Simple Statistical Gradient-Following Algorithms for Connectionist Reinforcement Learning. *Machine Learning, 8*, 229–256.](https://doi.org/10.1007/BF00992696) | REINFORCE | Verificada: DOI y metadatos editoriales; Agente F4-T11, 2026-11-08 |
+| `sutton1990dyna` | [Sutton, R. S. (1991). Dyna, an integrated architecture for learning, planning, and reacting. *ACM SIGART Bulletin, 2*, 160–163.](https://doi.org/10.1145/122344.122377) | Dyna | Verificada: DOI y registro editorial. Corrección: el artículo de SIGART se publicó en 1991, no en 1990; Agente F4-T11, 2026-11-08 |
+| `huang2022cleanrl` | [Huang, S., et al. (2022). CleanRL: High-quality Single-file Implementations of Deep Reinforcement Learning Algorithms. *Journal of Machine Learning Research, 23*(274), 1–18.](https://www.jmlr.org/papers/v23/21-1342.html) | Contexto de implementación de deep RL | Verificada: página editorial JMLR; Agente F4-T11, 2026-11-08 |
+| `owaspcrs` | [OWASP Core Rule Set. *CRS Documentation*.](https://coreruleset.org/docs/) | ModSecurity/CRS y niveles de paranoia | Verificada: documentación oficial del proyecto; consulta 2026-11-08 |
+| `gymnasium` | [Farama Foundation. *Gymnasium Documentation*.](https://gymnasium.farama.org/) | API de entornos | Verificada: documentación oficial; consulta 2026-11-08 |
 
-Formato final de cita: el que pida el catedrático (APA 7 si no se indica otra cosa).
+Las referencias todavía deben vincularse explícitamente con el capítulo 2 de trabajo relacionado, que no está incluido en el repositorio actual. No se agregaron fuentes nuevas durante esta verificación; se cotejaron los elementos que ya estaban en la tabla de referencias.
+
+El formato final de bibliografía será el que pida el catedrático (APA 7 si no indica otro).
