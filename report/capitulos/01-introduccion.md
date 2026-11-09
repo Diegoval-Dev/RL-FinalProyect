@@ -18,10 +18,10 @@ La pregunta general y las cinco preguntas de investigación (RQ1–RQ5) están d
   y métodos tabulares)?
 - **RQ2:** ¿Mejora un defensor con aprendizaje profundo (DQN) la frontera entre bloqueo de ataques
   y falsos positivos frente a ModSecurity fijo?
-- **RQ3:** ¿Qué aporta la planificación (Dyna) frente a métodos libres de modelo con el mismo
-  presupuesto de consultas?
-- **RQ4:** ¿El self-play con un *pool* de oponentes produce políticas más generales que el
+- **RQ3:** ¿El self-play con un *pool* de oponentes produce políticas más generales que el
   entrenamiento contra un oponente fijo?
+- **RQ4:** ¿Qué aporta la planificación (Dyna) frente a métodos libres de modelo con el mismo
+  presupuesto de consultas?
 - **RQ5:** ¿Cuánto generalizan los agentes a familias de ataque y a tráfico benigno difícil no
   vistos, y cuál es la brecha entre el modo rápido y el modo real?
 
