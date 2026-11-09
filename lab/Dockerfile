@@ -3,6 +3,7 @@ COPY --from=ghcr.io/astral-sh/uv:0.12.3 /uv /usr/local/bin/uv
 ENV UV_PROJECT_ENVIRONMENT=/opt/venv \
     UV_LINK_MODE=copy \
     UV_PYTHON_DOWNLOADS=never \
+    UV_HTTP_TIMEOUT=120 \
     PATH="/opt/venv/bin:$PATH" \
     PYTHONUNBUFFERED=1
 WORKDIR /workspace
@@ -31,6 +32,11 @@ COPY lab/honeypot/honeypot /app/honeypot
 ENV PYTHONPATH=/app
 WORKDIR /app
 CMD ["uvicorn", "honeypot.app:app", "--host", "0.0.0.0", "--port", "8000"]
+
+FROM runner AS dashboard
+RUN uv sync --frozen --group report --group demo --no-install-project
+ENV STREAMLIT_BROWSER_GATHER_USAGE_STATS=false
+CMD ["streamlit", "run", "dashboard/app.py", "--server.address=0.0.0.0", "--server.port=8501", "--server.headless=true"]
 
 FROM base AS proxy
 RUN uv sync --frozen --no-dev --no-install-project

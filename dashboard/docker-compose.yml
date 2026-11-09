@@ -1,0 +1,43 @@
+networks:
+  demo-ui: {}
+
+services:
+  dashboard:
+    build:
+      context: ..
+      dockerfile: lab/Dockerfile
+      target: dashboard
+    profiles: [tools]
+    working_dir: /workspace
+    volumes:
+      - ..:/workspace:ro
+      - modsec-audit:/var/log/modsec-audit
+    environment:
+      VULNAPP_URL: http://vulnapp:8000
+      APP_DATABASE_URL: postgresql://app:lab-app-password@db:5432/wafarena
+      ORACLE_DATABASE_URL: postgresql://oracle:lab-oracle-password@db:5432/wafarena
+      MODSEC_AUDIT_DIR: /var/log/modsec-audit
+      PYTHONPATH: /workspace:/workspace/lab/vulnapp
+    ports:
+      - "127.0.0.1:8501:8501"
+    depends_on:
+      db:
+        condition: service_healthy
+      vulnapp:
+        condition: service_healthy
+      proxy:
+        condition: service_healthy
+      modsec-pl1:
+        condition: service_started
+      modsec-pl2:
+        condition: service_started
+      modsec-pl3:
+        condition: service_started
+      modsec-pl4:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8501/_stcore/health')"]
+      interval: 2s
+      timeout: 3s
+      retries: 60
+    networks: [lab, demo-ui]

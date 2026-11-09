@@ -54,7 +54,8 @@ def test_compose_publishes_no_ports():
 
 
 def test_running_containers_are_attached_only_to_internal_networks():
-    container_ids = compose("ps", "-q").stdout.split()
+    lab_services = tuple(yaml.safe_load(COMPOSE_FILE.read_text())["services"])
+    container_ids = compose("ps", "-q", *lab_services).stdout.split()
     assert container_ids
 
     for container_id in container_ids:

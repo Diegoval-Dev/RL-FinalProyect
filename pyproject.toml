@@ -18,6 +18,9 @@ dependencies = [
 ]
 
 [dependency-groups]
+demo = [
+    "streamlit>=1.40,<2",
+]
 dev = [
     "pytest",
     "hypothesis",
