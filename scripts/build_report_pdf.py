@@ -21,7 +21,8 @@ FIGURES_BY_CHAPTER = {
     "04": [
         (
             "EXP-D1_sarsa_vs_qlearning.png",
-            "EXP-D1: SARSA frente a Q-learning. ER de validación en 0 (arriba) y tasa de rotura BRK durante el entrenamiento (abajo).",
+            "EXP-D1: SARSA frente a Q-learning. ER de validación en 0 (arriba) y "
+            "tasa de rotura BRK durante el entrenamiento (abajo).",
         ),
     ],
     "05": [
