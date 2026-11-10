@@ -19,12 +19,10 @@ VERSION = "Versión v1.0"
 
 FIGURES_BY_CHAPTER = {
     "04": [
-        ("EXP-A1_mean_reward.png", "EXP-A1: recompensa media de los bandits."),
-        ("EXP-A1_regret.png", "EXP-A1: regret acumulado de los bandits."),
-        ("EXP-A2_regret.png", "EXP-A2: recuperación ante cambio de nivel de paranoia."),
-        ("EXP-C1_er_vs_steps.png", "EXP-C1: tasa de evasión contra pasos de entrenamiento."),
-        ("EXP-D1_sarsa_vs_qlearning.png", "EXP-D1: SARSA frente a Q-learning."),
-        ("EXP-D2_er_vs_steps.png", "EXP-D2: tasa de evasión contra pasos de entrenamiento."),
+        (
+            "EXP-D1_sarsa_vs_qlearning.png",
+            "EXP-D1: SARSA frente a Q-learning. ER de validación en 0 (arriba) y tasa de rotura BRK durante el entrenamiento (abajo).",
+        ),
     ],
     "05": [
         ("EXP-E2_weight_norm.png", "EXP-E2: norma de los pesos, Q-learning frente a SARSA lineal."),
@@ -37,7 +35,6 @@ FIGURES_BY_CHAPTER = {
     ],
     "06": [
         ("EXP-H1_er_vs_queries.png", "EXP-H1: evasión contra consultas reales."),
-        ("EXP-H2_recovery.png", "EXP-H2: recuperación tras el cambio de defensor."),
         ("EXP-I1_tpr.png", "EXP-I1: TPR por generación, ingenuo frente a pool."),
         ("EXP-I2_crossplay.png", "EXP-I2: matriz de cruces defensor por atacante."),
     ],
