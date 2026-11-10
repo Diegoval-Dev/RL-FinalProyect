@@ -1,5 +1,8 @@
 # WAF Arena
 
+- [Abrir la presentación (PDF)](WAF_Arena_Presentacion.pdf)
+- [Ver el video explicativo](https://youtu.be/fLi-7GjwPf4)
+
 Proyecto académico de aprendizaje por refuerzo para estudiar un defensor WAF y un atacante de inyección SQL dentro de un laboratorio propio y aislado. El alcance es SQL injection contra PostgreSQL en `vulnapp`; no se dirige tráfico a sistemas externos.
 
 ## Requisitos
