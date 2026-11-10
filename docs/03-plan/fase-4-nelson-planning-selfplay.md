@@ -106,7 +106,7 @@ El riesgo de *model error* (planificar sobre un sustituto malo) se mide reportan
 - [x] F4-T08 Generalización final (EXP-I3–I5 y tabla RQ5)
 - [x] F4-T09 Validación en modo real (EXP-R1: 24 celdas pareadas, 3 semillas)
 - [x] F4-T10 Dashboard y demo (Streamlit, laboratorio en vivo, video EXP-I1)
-- [ ] F4-T11 Informe integrado y entrega
+- [x] F4-T11 Informe integrado y entrega (capítulo 2 agregado, referencias verificadas, clonación limpia probada; tag `v1.0` pendiente de merge)
 
 ## Hallazgos
 

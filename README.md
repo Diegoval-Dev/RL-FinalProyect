@@ -68,6 +68,7 @@ Los comandos de entrenamiento vuelven a ejecutar configuraciones; no reconstruye
 ## Informe
 
 - [Capítulo 1: introducción](report/capitulos/01-introduccion.md)
+- [Capítulo 2: trabajo relacionado](report/capitulos/02-trabajo-relacionado.md)
 - [Capítulo 3: laboratorio](report/capitulos/03-laboratorio.md)
 - [Capítulo 4: atacante clásico](report/capitulos/04-atacante-clasico.md)
 - [Capítulo 5: deep RL](report/capitulos/05-deep-rl.md)
@@ -76,8 +77,8 @@ Los comandos de entrenamiento vuelven a ejecutar configuraciones; no reconstruye
 - [Capítulo 8: ética](report/capitulos/08-etica.md)
 - [Capítulo 9: conclusiones](report/capitulos/09-conclusiones.md)
 
-El capítulo 2 (trabajo relacionado) todavía no está en el repositorio. La lista de fuentes existente se mantiene en [referencias verificadas](docs/08-informe/referencias.md); su formato final debe ajustarse a lo que pida el curso.
+La lista de fuentes está en [referencias verificadas](docs/08-informe/referencias.md); su formato final debe ajustarse a lo que pida el curso.
 
 ## Estado de entrega
 
-El laboratorio, los resultados versionados y el dashboard están en el repositorio. La publicación final `v1.0` requiere además que otra persona distinta de Nelson siga el inicio rápido desde una clonación limpia y que el equipo revise el informe completo y sus referencias. Esta revisión independiente no se debe inferir de una ejecución local.
+El laboratorio, los resultados versionados, el dashboard y el informe completo (capítulos 1 a 9) están en el repositorio. El inicio rápido se verificó desde una clonación limpia de `main` (`94fc1cd`) hecha por un integrante distinto de Nelson: `uv sync --frozen`, `make lint`, 798 pruebas unitarias y `docker compose -f lab/docker-compose.yml up --build --wait` con los ocho servicios en estado saludable. La entrega final se marca con el tag `v1.0` sobre `main`.
