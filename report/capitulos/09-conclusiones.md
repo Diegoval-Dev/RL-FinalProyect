@@ -41,7 +41,7 @@ En conjunto, los resultados contestan las RQ dentro del laboratorio y las suites
 
 ### Reproducibilidad y uso
 
-- Los resúmenes compactos y las figuras están versionados; las corridas crudas se excluyen del repositorio. La regeneración requiere las configuraciones, checkpoints fuente y servicios del laboratorio. El [README](../../README.md) documenta los puntos de entrada, pero una persona distinta de Nelson todavía debe completar la prueba desde una clonación limpia antes del tag final.
+- Los resúmenes compactos y las figuras están versionados; las corridas crudas se excluyen del repositorio. La regeneración requiere las configuraciones, checkpoints fuente y servicios del laboratorio. El [README](../../README.md) documenta los puntos de entrada, y el inicio rápido se verificó desde una clonación limpia de `main` (ocho servicios del laboratorio saludables, 798 pruebas unitarias). No se reconstruyó la campaña completa desde esa clonación.
 - La matriz de cruces y la demo son instrumentos de evaluación y presentación del laboratorio, no una certificación del producto ni una recomendación de despliegue.
 
 ## Trabajo futuro
@@ -51,4 +51,4 @@ En conjunto, los resultados contestan las RQ dentro del laboratorio y las suites
 3. Aumentar semillas y sesiones para self-play, y evaluar generaciones frente a atacantes retenidos sin usar el conjunto de prueba para selección.
 4. Mejorar la calibración y el *recall* minoritario del sustituto antes de atribuir beneficios a más pasos de planificación.
 5. Medir latencia y costo operacional en una suite dedicada; la igualdad de decisiones de R1 no sustituye una medición de rendimiento.
-6. Completar el capítulo 2 de trabajo relacionado, la revisión final de fuentes y la prueba independiente de reproducción antes de publicar `v1.0`.
+6. Ampliar el capítulo 2 con una revisión sistemática de la literatura sobre WAF con aprendizaje automático y RL ofensivo; el actual cubre solo las fuentes verificadas.
