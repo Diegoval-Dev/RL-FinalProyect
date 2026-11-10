@@ -30,13 +30,13 @@ Una fase está terminada cuando:
 
 El proyecto está terminado cuando:
 
-- [ ] RQ1 a RQ5 tienen respuesta en el informe respaldada por runs registrados.
-- [ ] Las configuraciones principales tienen al menos 5 semillas (10 en bandits y tabulares), o la excepción está justificada en el informe.
-- [ ] `git clone` + `make setup` + `docker compose up` funciona en una máquina limpia, probado por alguien que no sea Nelson.
-- [ ] La matriz de cruces se regenera desde checkpoints con un comando.
-- [ ] El dashboard o su reemplazo funciona en la demo.
-- [ ] Cada número del informe se puede rastrear a un `exp_id` y `run_name`.
-- [ ] Todas las referencias del informe están verificadas.
-- [ ] El capítulo de ética y limitaciones está completo.
+- [x] RQ1 a RQ5 tienen respuesta en el informe respaldada por runs registrados.
+- [x] Las configuraciones principales tienen al menos 5 semillas (10 en bandits y tabulares), o la excepción está justificada en el informe.
+- [x] `git clone` + `make setup` + `docker compose up` funciona en una máquina limpia, probado por alguien que no sea Nelson.
+- [x] La matriz de cruces se regenera desde checkpoints con un comando.
+- [x] El dashboard o su reemplazo funciona en la demo.
+- [x] Cada número del informe se puede rastrear a un `exp_id` y `run_name`. (Cierre F4-T11: `uv run python scripts/audit_report_numbers.py` comprueba que cada cifra decimal de los capítulos 4 a 7 y 9 aparece en `results/summary/`; solo las dos medias descriptivas de EXP-I1 se derivan de `EXP-I1_history.csv`. Además, todos los enlaces y commits citados resuelven.)
+- [x] Todas las referencias del informe están verificadas.
+- [x] El capítulo de ética y limitaciones está completo.
 - [ ] Cada integrante ensayó la explicación de su fase.
 - [ ] Existe el tag `v1.0`.
