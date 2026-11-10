@@ -35,7 +35,7 @@ El proyecto está terminado cuando:
 - [x] `git clone` + `make setup` + `docker compose up` funciona en una máquina limpia, probado por alguien que no sea Nelson.
 - [x] La matriz de cruces se regenera desde checkpoints con un comando.
 - [x] El dashboard o su reemplazo funciona en la demo.
-- [ ] Cada número del informe se puede rastrear a un `exp_id` y `run_name`. (Cierre F4-T11: se comprobó que todos los enlaces a CSV y figuras existen y que todos los commits citados resuelven; falta una auditoría número por número.)
+- [x] Cada número del informe se puede rastrear a un `exp_id` y `run_name`. (Cierre F4-T11: `uv run python scripts/audit_report_numbers.py` comprueba que cada cifra decimal de los capítulos 4 a 7 y 9 aparece en `results/summary/`; solo las dos medias descriptivas de EXP-I1 se derivan de `EXP-I1_history.csv`. Además, todos los enlaces y commits citados resuelven.)
 - [x] Todas las referencias del informe están verificadas.
 - [x] El capítulo de ética y limitaciones está completo.
 - [ ] Cada integrante ensayó la explicación de su fase.
